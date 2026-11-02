@@ -81,7 +81,7 @@ class _LandingPageState extends State<LandingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
       // CHANGED: AppBackground replaces the old Stack + AnimatedAuraBackground.
       // The background stays fixed while the CustomScrollView scrolls on top.
       body: AppBackground(
@@ -108,7 +108,7 @@ class _LandingPageState extends State<LandingPage> {
                   AboutSection(key: aboutSectionKey),
                   CtaSection(
                     key: ctaSectionKey,
-                    onGetStarted: () => _scrollTo(featuresSectionKey),
+                    onGetStarted: () => Navigator.of(context).pushNamed('/signup'),
                     onSignIn: () => Navigator.of(context).pushNamed('/login'),
                   ),
                   LandingFooter(
@@ -245,7 +245,7 @@ class _LandingNav extends StatelessWidget {
                   ),
                 _ActionButton(
                   label: 'Get Started',
-                  onPressed: () => onNavigate(1),
+                  onPressed: () => Navigator.of(context).pushNamed('/signup'),
                 ),
               ],
             ),
