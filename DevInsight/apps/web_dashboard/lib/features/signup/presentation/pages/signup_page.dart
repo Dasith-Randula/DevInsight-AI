@@ -45,7 +45,7 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
       body: CharmingAuthBackground(
         child: SafeArea(
           child: Stack(

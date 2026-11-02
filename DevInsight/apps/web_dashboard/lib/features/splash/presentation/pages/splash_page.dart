@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/connectivity_service.dart';
-// CHANGED: removed animated_aura_background import, added AppBackground
-import '../../../landing/presentation/widgets/app_background.dart';
+import '../widgets/charming_splash_background.dart';
+import '../widgets/logo_reveal_view.dart';
 import '../widgets/splash_loader.dart';
 
 enum _SplashConnectionState { checking, offline }
@@ -23,7 +23,7 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _fadeController;
+  late final AnimationController _revealController;
   _SplashConnectionState _connectionState = _SplashConnectionState.checking;
   bool _checkInProgress = false;
   bool _hasNavigated = false;
@@ -33,11 +33,11 @@ class _SplashPageState extends State<SplashPage>
   @override
   void initState() {
     super.initState();
-    _fadeController = AnimationController(
+    _revealController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 2200),
     );
-    _fadeController.forward();
+    _revealController.forward();
     _checkConnection();
   }
 
@@ -79,164 +79,164 @@ class _SplashPageState extends State<SplashPage>
   Widget _buildLoadingArea({required bool isCompact}) {
     if (_connectionState == _SplashConnectionState.offline) {
       return AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
-        child: Column(
+        duration: const Duration(milliseconds: 300),
+        child: Container(
           key: const ValueKey('offline'),
-          children: [
-            Text(
-              'Check your internet connection',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.slateText,
-                fontSize: isCompact ? 17 : 20,
-                fontWeight: FontWeight.w600,
-              ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.92),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFFE2E8F0),
+              width: 1.2,
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'No internet connection detected. Please reconnect and try again.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFF7A879D),
-                fontSize: 13,
-                height: 1.35,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
-            ),
-            const SizedBox(height: 18),
-            ElevatedButton(
-              onPressed: _checkInProgress ? null : _checkConnection,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryBlue,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 26,
-                  vertical: 12,
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF2F2),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: const Color(0xFFFCA5A5).withValues(alpha: 0.4),
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(7),
+                child: const Icon(
+                  Icons.wifi_off_rounded,
+                  color: Color(0xFFEF4444),
+                  size: 22,
                 ),
               ),
-              child: const Text('Retry'),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Text(
+                'Check your internet connection',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.plusJakartaSans(
+                  color: const Color(0xFF1E293B),
+                  fontSize: isCompact ? 16 : 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: Text(
+                  'No internet connection detected. Please reconnect and try again.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    color: const Color(0xFF64748B),
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              ElevatedButton.icon(
+                onPressed: _checkInProgress ? null : _checkConnection,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shadowColor: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                    vertical: 13,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  textStyle: GoogleFonts.plusJakartaSans(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
 
     return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 250),
-      child: Column(
+      duration: const Duration(milliseconds: 300),
+      child: Container(
         key: const ValueKey('checking'),
-        children: [
-          SplashLoader(
-            size: isCompact ? 68.0 : 78.0,
-            strokeWidth: isCompact ? 4.5 : 5,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: const Color(0xFF38BDF8).withValues(alpha: 0.35),
+            width: 1.2,
           ),
-          const SizedBox(height: 18),
-          Text(
-            'Checking connection...',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: AppColors.slateText,
-              fontSize: isCompact ? 17.0 : 20.0,
-              fontWeight: FontWeight.w500,
-              fontFamily: 'sans-serif',
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0664F2).withValues(alpha: 0.07),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SplashLoader(
+              size: isCompact ? 28.0 : 32.0,
+              strokeWidth: 3.2,
+            ),
+            const SizedBox(width: 14),
+            Text(
+              'Checking connection...',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                color: const Color(0xFF334155),
+                fontSize: isCompact ? 14.0 : 15.0,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.2,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   @override
   void dispose() {
-    _fadeController.dispose();
+    _revealController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isCompact = constraints.maxWidth < 700;
-          final logoSize = isCompact ? 92.0 : 120.0;
-          final titleSize = isCompact ? 50.0 : 68.0;
-          final subtitleSize = isCompact ? 18.0 : 22.0;
 
-          // CHANGED: AppBackground now paints the background and holds the
-          // content. The old AnimatedAuraBackground layer was removed.
-          return AppBackground(
+          return CharmingSplashBackground(
+            isAnimating: _connectionState == _SplashConnectionState.checking,
             child: Center(
-              child: FadeTransition(
-                opacity: _fadeController,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: isCompact ? 420 : 760),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Semantics(
-                        label: 'DevInsight logo',
-                        image: true,
-                        child: Image.asset(
-                          AppAssets.devInsightLogo,
-                          width: logoSize,
-                          height: logoSize,
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.high,
-                          semanticLabel: 'DevInsight logo',
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(
-                              text: 'Dev',
-                              style: TextStyle(
-                                color: AppColors.black,
-                                fontSize: titleSize,
-                                fontWeight: FontWeight.w800,
-                                fontFamily: 'sans-serif',
-                                letterSpacing: -1.4,
-                                height: 2,
-                              ),
-                            ),
-                            TextSpan(
-                              text: 'Insight',
-                              style: TextStyle(
-                                color: AppColors.primaryBlue,
-                                fontSize: titleSize,
-                                fontWeight: FontWeight.w800,
-                                fontFamily: 'sans-serif',
-                                letterSpacing: -1.4,
-                                height: 2,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'AI-Powered intelligence for Smarter Software Projects',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: AppColors.slateText,
-                            fontSize: subtitleSize,
-                            fontWeight: FontWeight.w500,
-                            height: 1.35,
-                            fontFamily: 'sans-serif',
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 54),
-                      _buildLoadingArea(isCompact: isCompact),
-                    ],
-                  ),
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: LogoRevealView(
+                  revealController: _revealController,
+                  isCompact: isCompact,
+                  loadingArea: _buildLoadingArea(isCompact: isCompact),
                 ),
               ),
             ),

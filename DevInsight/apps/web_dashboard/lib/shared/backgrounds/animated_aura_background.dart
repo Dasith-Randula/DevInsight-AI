@@ -81,11 +81,6 @@ class _AnimatedAuraBackgroundState extends State<AnimatedAuraBackground>
               fit: StackFit.expand,
               clipBehavior: Clip.none,
               children: [
-                const Positioned.fill(
-                  child: RepaintBoundary(
-                    child: CustomPaint(painter: AuraGridPainter()),
-                  ),
-                ),
                 _positionedGlow(
                   controller: _blueController,
                   left: width * 0.30 - firstWidth / 2,
@@ -187,27 +182,6 @@ class _AnimatedAuraBackgroundState extends State<AnimatedAuraBackground>
       ),
     );
   }
-}
-
-class AuraGridPainter extends CustomPainter {
-  const AuraGridPainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0x1414B8A6)
-      ..strokeWidth = 1.0;
-
-    for (double x = 0; x <= size.width; x += 48) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
-    }
-    for (double y = 0; y <= size.height; y += 48) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant AuraGridPainter oldDelegate) => false;
 }
 
 class _InkBloomGlowPainter extends CustomPainter {
