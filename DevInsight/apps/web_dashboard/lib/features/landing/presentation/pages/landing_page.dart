@@ -108,7 +108,7 @@ class _LandingPageState extends State<LandingPage> {
                   AboutSection(key: aboutSectionKey),
                   CtaSection(
                     key: ctaSectionKey,
-                    onGetStarted: () => Navigator.of(context).pushNamed('/signup'),
+                    onGetStarted: () => Navigator.of(context).pushNamed('/login'),
                     onSignIn: () => Navigator.of(context).pushNamed('/login'),
                   ),
                   LandingFooter(
@@ -245,7 +245,7 @@ class _LandingNav extends StatelessWidget {
                   ),
                 _ActionButton(
                   label: 'Get Started',
-                  onPressed: () => Navigator.of(context).pushNamed('/signup'),
+                  onPressed: () => Navigator.of(context).pushNamed('/login'),
                 ),
               ],
             ),
@@ -447,7 +447,7 @@ class _HeroCopy extends StatelessWidget {
             children: [
               _ActionButton(
                 label: 'Get Started  →',
-                onPressed: () => Navigator.of(context).pushNamed('/signup'),
+                onPressed: () => Navigator.of(context).pushNamed('/login'),
               ),
               _GhostButton(
                 label: 'Sign in',

@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 /// Reusable decorative Ink Bloom background; place it behind page content.
-enum AuraBackgroundVariant { splash, landing, internal }
+enum AuraBackgroundVariant { splash, landing, internal, auth }
 
 class AnimatedAuraBackground extends StatefulWidget {
   const AnimatedAuraBackground({
@@ -26,6 +26,7 @@ class _AnimatedAuraBackgroundState extends State<AnimatedAuraBackground>
     AuraBackgroundVariant.splash => 1,
     AuraBackgroundVariant.landing => 0.82,
     AuraBackgroundVariant.internal => 0.52,
+    AuraBackgroundVariant.auth => 0.28,
   };
 
   @override
@@ -74,6 +75,7 @@ class _AnimatedAuraBackgroundState extends State<AnimatedAuraBackground>
             : isMobile
             ? 80 / 115
             : 0.88;
+        final authVariant = widget.variant == AuraBackgroundVariant.auth;
 
         return IgnorePointer(
           child: RepaintBoundary(
@@ -81,14 +83,34 @@ class _AnimatedAuraBackgroundState extends State<AnimatedAuraBackground>
               fit: StackFit.expand,
               clipBehavior: Clip.none,
               children: [
+                if (authVariant)
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFFF5F9FF),
+                            Color(0xFFEAF6FF),
+                            Color(0xFFF9FBFF),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 _positionedGlow(
                   controller: _blueController,
                   left: width * 0.30 - firstWidth / 2,
                   top: height * 0.42 - firstHeight / 2,
                   width: firstWidth,
                   height: firstHeight,
-                  colors: const [Color(0xFF2563EB), Color(0xFF1E40AF)],
-                  alphas: [0.70 * _intensity, 0.16 * _intensity],
+                  colors: authVariant
+                      ? const [Color(0xFF0664F2), Color(0xFF7DD3FC)]
+                      : const [Color(0xFF2563EB), Color(0xFF1E40AF)],
+                  alphas: authVariant
+                      ? [0.28, 0.12]
+                      : [0.70 * _intensity, 0.16 * _intensity],
                   stops: const [0, 0.50, 0.74],
                   blurSigma: (isDesktop ? 115 : 80) * blurScale,
                   beginOffset: const Offset(-20, 10),
@@ -101,8 +123,12 @@ class _AnimatedAuraBackgroundState extends State<AnimatedAuraBackground>
                   top: height * 0.55 - secondHeight / 2,
                   width: secondWidth,
                   height: secondHeight,
-                  colors: const [Color(0xFF7C3AED), Color(0xFF5B21B6)],
-                  alphas: [0.68 * _intensity, 0.14 * _intensity],
+                  colors: authVariant
+                      ? const [Color(0xFF14A8EF), Color(0xFF7DD3FC)]
+                      : const [Color(0xFF7C3AED), Color(0xFF5B21B6)],
+                  alphas: authVariant
+                      ? [0.24, 0.10]
+                      : [0.68 * _intensity, 0.14 * _intensity],
                   stops: const [0, 0.48, 0.72],
                   blurSigma: (isDesktop ? 144 : 100) * blurScale,
                   beginOffset: const Offset(20, -10),
@@ -115,8 +141,10 @@ class _AnimatedAuraBackgroundState extends State<AnimatedAuraBackground>
                   top: height * 0.30 - thirdHeight / 2,
                   width: thirdWidth,
                   height: thirdHeight,
-                  colors: const [Color(0xFF60A5FA)],
-                  alphas: [0.38 * _intensity],
+                  colors: authVariant
+                      ? const [Color(0xFFFFFFFF)]
+                      : const [Color(0xFF60A5FA)],
+                  alphas: authVariant ? [0.22] : [0.38 * _intensity],
                   stops: const [0, 0.68],
                   blurSigma: (isDesktop ? 101 : 70) * blurScale,
                   beginOffset: const Offset(10, -6),
