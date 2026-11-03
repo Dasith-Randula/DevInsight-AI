@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../shared/widgets/liquid_glass_card.dart';
 // CHANGED: removed animated_aura_background import, added AppBackground
 import '../widgets/app_background.dart';
 import '../widgets/dashboard_preview.dart';
@@ -161,10 +162,10 @@ class _NavbarDelegate extends SliverPersistentHeaderDelegate {
           decoration: BoxDecoration(
             // CHANGED: transparent at the top (like the Figma), frosted white
             // once the page is scrolled under the navbar.
-            color: Colors.white.withValues(alpha: overlapsContent ? 0.85 : 0.0),
+            color: Colors.white.withValues(alpha: overlapsContent ? 0.48 : 0.0),
             border: overlapsContent
                 ? const Border(
-                    bottom: BorderSide(color: Color(0xFFEAEEF5), width: 1),
+                    bottom: BorderSide(color: Color(0x88FFFFFF), width: 1),
                   )
                 : null,
             boxShadow: overlapsContent
@@ -343,20 +344,10 @@ class _HeroSection extends StatelessWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1400),
-            child: Container(
+            child: LiquidGlassCard(
+              borderRadius: 32,
+              variant: LiquidGlassVariant.standard,
               padding: EdgeInsets.all(isMobile ? 20 : 32),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.52),
-                borderRadius: BorderRadius.circular(32),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.78)),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primaryBlue.withValues(alpha: 0.06),
-                    blurRadius: 36,
-                    offset: const Offset(0, 16),
-                  ),
-                ],
-              ),
               child: isMobile
                   ? Column(
                       children: [
@@ -432,7 +423,7 @@ class _HeroCopy extends StatelessWidget {
                   style: TextStyle(
                     foreground: Paint()
                       ..shader = const LinearGradient(
-                        colors: [Color(0xFF0664F2), Color(0xFF5E4FE8)],
+                        colors: [Color(0xFF0664F2), Color(0xFF14A8EF)],
                       ).createShader(const Rect.fromLTWH(0, 0, 700, 0)),
                   ),
                 ),

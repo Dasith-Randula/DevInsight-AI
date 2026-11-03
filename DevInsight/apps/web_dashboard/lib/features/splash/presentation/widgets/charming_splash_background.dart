@@ -122,6 +122,7 @@ class _CharmingAuraPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
+    _drawTileGrid(canvas, size, progress);
 
     // Orb 1: Center-Top Electric Azure Halo (behind the logo/title)
     final orb1Center = Offset(
@@ -207,6 +208,61 @@ class _CharmingAuraPainter extends CustomPainter {
         ..style = PaintingStyle.fill;
 
       _drawStar(canvas, center, s.size * (0.8 + 0.4 * twinkle), p);
+    }
+  }
+
+  void _drawTileGrid(Canvas canvas, Size size, double progress) {
+    const tileSize = 112.0;
+    const gap = 8.0;
+    final stride = tileSize + gap;
+    final glowCenter = Offset(
+      size.width * (0.18 + progress * 0.64),
+      size.height * (0.82 - progress * 0.10),
+    );
+
+    for (var row = -1; row * stride < size.height + tileSize; row++) {
+      final offset = row.isEven ? 0.0 : stride * 0.5;
+      for (var column = -1; column * stride < size.width + tileSize; column++) {
+        final left = column * stride + offset;
+        final top = row * stride;
+        final tileCenter = Offset(left + tileSize / 2, top + tileSize / 2);
+        final distance = (tileCenter - glowCenter).distance;
+        final intensity = (1 - distance / (size.width * 0.52)).clamp(0.0, 1.0);
+        final lowerGlow = (top / size.height).clamp(0.0, 1.0);
+        final rect = Rect.fromLTWH(left, top, tileSize, tileSize);
+        final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(24));
+
+        canvas.drawRRect(
+          rrect.shift(const Offset(2, 4)),
+          Paint()
+            ..color = const Color(
+              0xFF2C6FA8,
+            ).withValues(alpha: 0.035 + lowerGlow * 0.045 + intensity * 0.035)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+        );
+        canvas.drawRRect(
+          rrect,
+          Paint()
+            ..shader = LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withValues(alpha: 0.72 + intensity * 0.10),
+                const Color(0xFFEAF7FF).withValues(alpha: 0.48),
+                const Color(
+                  0xFF66C2FF,
+                ).withValues(alpha: 0.06 + lowerGlow * 0.15 + intensity * 0.10),
+              ],
+            ).createShader(rect),
+        );
+        canvas.drawRRect(
+          rrect,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1
+            ..color = Colors.white.withValues(alpha: 0.48 + intensity * 0.22),
+        );
+      }
     }
   }
 

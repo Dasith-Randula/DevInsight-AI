@@ -69,31 +69,62 @@ class _DashboardPreviewState extends State<DashboardPreview>
 // Dashboard window shell
 // ---------------------------------------------------------------------------
 
-class _DashboardWindow extends StatelessWidget {
+class _DashboardWindow extends StatefulWidget {
   const _DashboardWindow();
 
   @override
+  State<_DashboardWindow> createState() => _DashboardWindowState();
+}
+
+class _DashboardWindowState extends State<_DashboardWindow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _floatController;
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 7),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: LiquidGlassCard(
-        borderRadius: 20,
-        variant: LiquidGlassVariant.standard,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Top browser-style bar
-            _TopBar(),
-            // Sidebar + main content
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const _Sidebar(),
-                  Expanded(child: _MainContent()),
-                ],
+    return AnimatedBuilder(
+      animation: _floatController,
+      builder: (context, child) => Transform.translate(
+        offset: Offset(
+          0,
+          -5 * Curves.easeInOutSine.transform(_floatController.value),
+        ),
+        child: child,
+      ),
+      child: RepaintBoundary(
+        child: LiquidGlassCard(
+          borderRadius: 20,
+          variant: LiquidGlassVariant.standard,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _TopBar(),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _Sidebar(),
+                    Expanded(child: _MainContent()),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

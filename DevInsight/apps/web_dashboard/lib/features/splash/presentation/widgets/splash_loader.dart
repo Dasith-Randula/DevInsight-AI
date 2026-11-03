@@ -43,10 +43,7 @@ class SplashLoader extends StatelessWidget {
                       child: DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [
-                              AppColors.primaryBlue,
-                              AppColors.secondaryBlue,
-                            ],
+                            colors: [Color(0xFF0077B6), Color(0xFF00B4D8)],
                           ),
                           boxShadow: const [
                             BoxShadow(

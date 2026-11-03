@@ -1027,7 +1027,7 @@ class _Eyebrow extends StatelessWidget {
 // Feature card
 // ---------------------------------------------------------------------------
 
-class _FeatureCard extends StatelessWidget {
+class _FeatureCard extends StatefulWidget {
   const _FeatureCard({
     required this.icon,
     required this.title,
@@ -1041,69 +1041,101 @@ class _FeatureCard extends StatelessWidget {
   final List<Color> gradientColors;
 
   @override
-  Widget build(BuildContext context) => LiquidGlassCard(
-    borderRadius: 16,
-    variant: LiquidGlassVariant.standard,
-    child: InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () {},
-      hoverColor: const Color(0xFFEAF4FF),
-      child: Container(
-        padding: const EdgeInsets.all(22),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFE8EFF8)),
+  State<_FeatureCard> createState() => _FeatureCardState();
+}
+
+class _FeatureCardState extends State<_FeatureCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) => MouseRegion(
+    cursor: SystemMouseCursors.click,
+    onEnter: (_) => setState(() => _hovered = true),
+    onExit: (_) => setState(() => _hovered = false),
+    child: AnimatedSlide(
+      offset: _hovered ? const Offset(0, -0.025) : Offset.zero,
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      child: LiquidGlassCard(
+        borderRadius: 16,
+        variant: LiquidGlassVariant.standard,
+        child: InkWell(
           borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: gradientColors,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+          onTap: () {},
+          hoverColor: const Color(0xFFEAF4FF),
+          child: Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: _hovered
+                    ? AppColors.primaryBlue.withValues(alpha: 0.35)
+                    : const Color(0x66E8EFF8),
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: _hovered
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primaryBlue.withValues(alpha: 0.10),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: widget.gradientColors,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: widget.gradientColors.first.withValues(
+                          alpha: 0.28,
+                        ),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Icon(widget.icon, color: Colors.white, size: 22),
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: gradientColors.first.withValues(alpha: 0.28),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15.5,
+                          color: Color(0xFF0D1B38),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        widget.description,
+                        style: const TextStyle(
+                          color: AppColors.slateText,
+                          height: 1.45,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Icon(icon, color: Colors.white, size: 22),
-              ),
+                ),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15.5,
-                      color: Color(0xFF0D1B38),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    description,
-                    style: const TextStyle(
-                      color: AppColors.slateText,
-                      height: 1.45,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     ),
