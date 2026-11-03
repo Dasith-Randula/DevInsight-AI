@@ -6,6 +6,7 @@ import '../../../../shared/auth/auth_brand_panel.dart';
 import '../../../../shared/auth/auth_mode_switcher.dart';
 import '../../../../shared/auth/auth_primary_button.dart';
 import '../../../../shared/auth/auth_text_field.dart';
+import '../../../../shared/widgets/liquid_glass_card.dart';
 
 // Re-export enum so Login.dart and signup_page.dart don't need changes.
 enum AuthMode { signUp, logIn }
@@ -207,35 +208,12 @@ class _ModernAuthCardState extends State<ModernAuthCard>
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1150),
-        child: Container(
-          margin: EdgeInsets.symmetric(
-            horizontal: isDesktop ? 0 : 8,
-            vertical: 12,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: AppColors.cardBorder, width: 1.2),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primaryBlue.withValues(alpha: 0.08),
-                blurRadius: 48,
-                spreadRadius: 2,
-                offset: const Offset(0, 16),
-              ),
-              BoxShadow(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-                blurRadius: 24,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(26),
-            child: isDesktop
-                ? _buildDesktopLayout(isTablet)
-                : _buildMobileLayout(),
-          ),
+        child: LiquidGlassCard(
+          borderRadius: 26,
+          variant: LiquidGlassVariant.strong,
+          child: isDesktop
+              ? _buildDesktopLayout(isTablet)
+              : _buildMobileLayout(),
         ),
       ),
     );
@@ -249,10 +227,10 @@ class _ModernAuthCardState extends State<ModernAuthCard>
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Left: Brand (42%)
-          Expanded(flex: 42, child: AuthBrandPanel(isCompact: false)),
-          // Right: Form (58%)
+          // Left: Form (58%)
           Expanded(flex: 58, child: _buildFormPanel(isCompact: false)),
+          // Right: Brand (42%)
+          Expanded(flex: 42, child: AuthBrandPanel(isCompact: false)),
         ],
       ),
     );
@@ -266,9 +244,9 @@ class _ModernAuthCardState extends State<ModernAuthCard>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Let the compact brand panel size to its copy and illustration.
-        AuthBrandPanel(isCompact: true),
         _buildFormPanel(isCompact: true),
+        // Keep the form first on narrow layouts; the visual is decorative.
+        AuthBrandPanel(isCompact: true),
       ],
     );
   }

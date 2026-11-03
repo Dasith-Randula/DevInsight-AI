@@ -108,7 +108,8 @@ class _LandingPageState extends State<LandingPage> {
                   AboutSection(key: aboutSectionKey),
                   CtaSection(
                     key: ctaSectionKey,
-                    onGetStarted: () => Navigator.of(context).pushNamed('/login'),
+                    onGetStarted: () =>
+                        Navigator.of(context).pushNamed('/login'),
                     onSignIn: () => Navigator.of(context).pushNamed('/login'),
                   ),
                   LandingFooter(
@@ -294,16 +295,12 @@ class _Wordmark extends StatelessWidget {
     if (onTap != null) {
       return MouseRegion(
         cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: onTap,
-          child: row,
-        ),
+        child: GestureDetector(onTap: onTap, child: row),
       );
     }
     return row;
   }
 }
-
 
 class _NavText extends StatelessWidget {
   const _NavText(this.text, this.index, this.active, this.onPressed);
@@ -346,22 +343,37 @@ class _HeroSection extends StatelessWidget {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1400),
-            child: isMobile
-                ? Column(
-                    children: [
-                      const _HeroCopy(),
-                      const SizedBox(height: 44),
-                      const _PreviewArea(),
-                    ],
-                  )
-                : const Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(flex: 10, child: _HeroCopy()),
-                      SizedBox(width: 40),
-                      Expanded(flex: 10, child: _PreviewArea()),
-                    ],
+            child: Container(
+              padding: EdgeInsets.all(isMobile ? 20 : 32),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.52),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.78)),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primaryBlue.withValues(alpha: 0.06),
+                    blurRadius: 36,
+                    offset: const Offset(0, 16),
                   ),
+                ],
+              ),
+              child: isMobile
+                  ? Column(
+                      children: [
+                        const _HeroCopy(),
+                        const SizedBox(height: 44),
+                        const _PreviewArea(),
+                      ],
+                    )
+                  : const Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(flex: 10, child: _HeroCopy()),
+                        SizedBox(width: 40),
+                        Expanded(flex: 10, child: _PreviewArea()),
+                      ],
+                    ),
+            ),
           ),
         ),
       ),
@@ -621,7 +633,9 @@ class _PreviewAreaState extends State<_PreviewArea> {
               decoration: BoxDecoration(
                 color: const Color(0xFF0F172A).withValues(alpha: 0.88),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.4)),
+                border: Border.all(
+                  color: const Color(0xFF38BDF8).withValues(alpha: 0.4),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -663,7 +677,10 @@ class _PreviewAreaState extends State<_PreviewArea> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF0664F2).withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(8),
@@ -686,7 +703,6 @@ class _PreviewAreaState extends State<_PreviewArea> {
     );
   }
 }
-
 
 // ---------------------------------------------------------------------------
 // Buttons

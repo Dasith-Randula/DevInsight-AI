@@ -91,9 +91,9 @@ class _AnimatedAuraBackgroundState extends State<AnimatedAuraBackground>
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Color(0xFFF5F9FF),
-                            Color(0xFFEAF6FF),
-                            Color(0xFFF9FBFF),
+                            Color(0xFFEEF4FB),
+                            Color(0xFFE8F1FA),
+                            Color(0xFFF8FBFF),
                           ],
                         ),
                       ),
@@ -109,7 +109,7 @@ class _AnimatedAuraBackgroundState extends State<AnimatedAuraBackground>
                       ? const [Color(0xFF0664F2), Color(0xFF7DD3FC)]
                       : const [Color(0xFF2563EB), Color(0xFF1E40AF)],
                   alphas: authVariant
-                      ? [0.28, 0.12]
+                      ? [0.34, 0.14]
                       : [0.70 * _intensity, 0.16 * _intensity],
                   stops: const [0, 0.50, 0.74],
                   blurSigma: (isDesktop ? 115 : 80) * blurScale,
@@ -127,7 +127,7 @@ class _AnimatedAuraBackgroundState extends State<AnimatedAuraBackground>
                       ? const [Color(0xFF14A8EF), Color(0xFF7DD3FC)]
                       : const [Color(0xFF7C3AED), Color(0xFF5B21B6)],
                   alphas: authVariant
-                      ? [0.24, 0.10]
+                      ? [0.30, 0.12]
                       : [0.68 * _intensity, 0.14 * _intensity],
                   stops: const [0, 0.48, 0.72],
                   blurSigma: (isDesktop ? 144 : 100) * blurScale,

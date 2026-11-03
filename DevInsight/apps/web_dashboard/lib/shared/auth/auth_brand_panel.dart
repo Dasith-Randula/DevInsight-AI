@@ -5,7 +5,7 @@ import '../../core/constants/app_assets.dart';
 import '../../core/constants/app_colors.dart';
 import 'auth_dot_surface.dart';
 
-/// Left brand panel for the auth split-layout.
+/// Right brand panel for the auth split-layout.
 ///
 /// Shows:
 /// - DevInsight logo + wordmark (Dev black, Insight blue).

@@ -66,9 +66,9 @@ class _AuthDotSurfaceState extends State<AuthDotSurface>
             builder: (context, _) {
               final phase = _controller.value * math.pi * 2;
               final widthFactor =
-                  0.68 + 0.32 * (0.5 + 0.5 * math.sin(phase * 2 + 0.4));
+                  0.72 + 0.28 * (0.5 + 0.5 * math.sin(phase * 19.2 + 0.4));
               final heightFactor =
-                  0.68 + 0.32 * (0.5 + 0.5 * math.sin(phase * 2 + 2.1));
+                  0.72 + 0.28 * (0.5 + 0.5 * math.sin(phase * 19.2 + 2.1));
 
               return Align(
                 alignment: Alignment.center,
@@ -96,22 +96,28 @@ class _DotSurfacePainter extends CustomPainter {
 
   static const int _latitudeRows = 30;
   static const int _longitudeColumns = 52;
+  static const Color _white = Color(0xFFFFFFFF);
+  static const Color _ice = Color(0xFFEAF6FF);
+  static const Color _sky = Color(0xFFA9DDFF);
   static const Color _cyan = Color(0xFF14A8EF);
   static const Color _blue = Color(0xFF0664F2);
-  static const Color _violet = Color(0xFF9B63F6);
-  static const Color _pink = Color(0xFFD66BFF);
 
   @override
   void paint(Canvas canvas, Size size) {
     if (size.isEmpty) return;
 
     final phase = time * math.pi * 2;
+    final shapePhase = phase * 19.2;
+    final rotationPhase = phase * 4.8;
+    final colorPhase = phase * 8;
+    final wavePhase = phase * 12;
     final center = Offset(size.width / 2, size.height / 2);
     final scale = math.min(size.width, size.height) * 0.31;
     final widthScale =
-        scale * (0.74 + 0.26 * (0.5 + 0.5 * math.sin(phase * 2 + 0.9)));
+        scale * (0.74 + 0.26 * (0.5 + 0.5 * math.sin(shapePhase + 0.9)));
     final heightScale =
-        scale * (0.74 + 0.26 * (0.5 + 0.5 * math.sin(phase * 3 + 1.7)));
+        scale * (0.74 + 0.26 * (0.5 + 0.5 * math.sin(shapePhase * 1.08 + 1.7)));
+    final spacingScale = 1.01 + 0.11 * math.sin(time * math.pi * 32);
 
     final glow = Paint()
       ..shader = RadialGradient(
@@ -125,10 +131,12 @@ class _DotSurfacePainter extends CustomPainter {
     canvas.drawCircle(center, scale * 1.15, glow);
 
     final rotateX =
-        0.56 * math.sin(phase * 2) + 0.22 * math.sin(phase * 3 + 0.7);
-    final rotateY = phase * 3 + 0.28 * math.sin(phase * 2 + 0.6);
+        0.56 * math.sin(rotationPhase * 0.7) +
+        0.22 * math.sin(rotationPhase * 1.35 + 0.7);
+    final rotateY = rotationPhase + 0.28 * math.sin(rotationPhase * 0.8 + 0.6);
     final rotateZ =
-        0.34 * math.sin(phase * 3 + 0.8) + 0.2 * math.sin(phase * 2);
+        0.34 * math.sin(rotationPhase * 1.2 + 0.8) +
+        0.2 * math.sin(rotationPhase * 0.65);
     final cosX = math.cos(rotateX);
     final sinX = math.sin(rotateX);
     final cosY = math.cos(rotateY);
@@ -146,11 +154,11 @@ class _DotSurfacePainter extends CustomPainter {
         final shape =
             1 +
             0.23 *
-                math.sin(longitude * 3 + phase * 2) *
-                math.cos(latitude * 2 - phase * 3) +
-            0.15 * math.cos(longitude * 5 - latitude * 2 + phase * 4) +
-            0.09 * math.sin(latitude * 4 + phase * 2) +
-            0.06 * math.cos(longitude * 2 + latitude * 3 - phase * 5);
+                math.sin(longitude * 3 + shapePhase) *
+                math.cos(latitude * 2 - shapePhase * 1.15) +
+            0.15 * math.cos(longitude * 5 - latitude * 2 + shapePhase * 1.4) +
+            0.09 * math.sin(latitude * 4 + shapePhase * 0.8) +
+            0.06 * math.cos(longitude * 2 + latitude * 3 - shapePhase * 1.7);
 
         final x = shape * cosLatitude * math.cos(longitude);
         final y = shape * sinLatitude;
@@ -167,7 +175,7 @@ class _DotSurfacePainter extends CustomPainter {
 
         final perspective = 5 / (5 - zX);
         final point = Offset(
-          center.dx + xZ * widthScale * perspective,
+          center.dx + xZ * widthScale * perspective * spacingScale,
           center.dy - yZ * heightScale * perspective,
         );
         final depth = ((zX + 1.3) / 2.6).clamp(0.0, 1.0);
@@ -177,14 +185,16 @@ class _DotSurfacePainter extends CustomPainter {
                 math.sin(
                   longitude * 1.5 +
                       latitude * 2.1 +
-                      phase * 2 +
-                      math.sin(phase * 2 + longitude * 2) * 0.42,
+                      colorPhase +
+                      math.sin(wavePhase + longitude * 2) * 0.42,
                 );
-        final color = colorWave < 0.34
-            ? Color.lerp(_cyan, _blue, colorWave / 0.34)!
-            : colorWave < 0.68
-            ? Color.lerp(_blue, _violet, (colorWave - 0.34) / 0.34)!
-            : Color.lerp(_violet, _pink, (colorWave - 0.68) / 0.32)!;
+        final color = colorWave < 0.25
+            ? Color.lerp(_white, _ice, colorWave / 0.25)!
+            : colorWave < 0.5
+            ? Color.lerp(_ice, _sky, (colorWave - 0.25) / 0.25)!
+            : colorWave < 0.76
+            ? Color.lerp(_sky, _cyan, (colorWave - 0.5) / 0.26)!
+            : Color.lerp(_cyan, _blue, (colorWave - 0.76) / 0.24)!;
         final dotRadius = 1.0 + depth * 0.9;
         final alpha = 0.64 + depth * 0.34;
 

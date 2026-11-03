@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/connectivity_service.dart';
+import '../../../../shared/widgets/liquid_glass_card.dart';
 import '../widgets/charming_splash_background.dart';
 import '../widgets/logo_reveal_view.dart';
 import '../widgets/splash_loader.dart';
@@ -10,10 +11,8 @@ import '../widgets/splash_loader.dart';
 enum _SplashConnectionState { checking, offline }
 
 class SplashPage extends StatefulWidget {
-  const SplashPage({
-    super.key,
-    ConnectivityService? connectivityService,
-  }) : _connectivityService = connectivityService ?? const ConnectivityService();
+  const SplashPage({super.key, ConnectivityService? connectivityService})
+    : _connectivityService = connectivityService ?? const ConnectivityService();
 
   final ConnectivityService _connectivityService;
 
@@ -21,12 +20,13 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
-    with SingleTickerProviderStateMixin {
+class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   late final AnimationController _revealController;
+  late final AnimationController _progressController;
   _SplashConnectionState _connectionState = _SplashConnectionState.checking;
   bool _checkInProgress = false;
   bool _hasNavigated = false;
+  int _attempt = 0;
 
   ConnectivityService get _connectivityService => widget._connectivityService;
 
@@ -36,6 +36,10 @@ class _SplashPageState extends State<SplashPage>
     _revealController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2200),
+    );
+    _progressController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 7),
     );
     _revealController.forward();
     _checkConnection();
@@ -47,57 +51,51 @@ class _SplashPageState extends State<SplashPage>
     }
 
     _checkInProgress = true;
+    final attempt = ++_attempt;
     if (mounted) {
       setState(() {
         _connectionState = _SplashConnectionState.checking;
       });
     }
 
-    final minimumSplash = Future<void>.delayed(
-      const Duration(milliseconds: 2500),
-    );
+    _progressController
+      ..stop()
+      ..value = 0;
+    final progressComplete = _progressController.forward();
     final isOnline = await _connectivityService.hasConnection();
-    await minimumSplash;
 
-    if (!mounted) {
-      _checkInProgress = false;
+    if (!mounted || attempt != _attempt) {
       return;
     }
 
-    if (isOnline) {
-      _checkInProgress = false;
-      _hasNavigated = true;
-      Navigator.of(context).pushReplacementNamed('/landing');
-    } else {
+    if (!isOnline) {
+      _progressController.stop();
       _checkInProgress = false;
       setState(() {
         _connectionState = _SplashConnectionState.offline;
       });
+      return;
     }
+
+    await progressComplete;
+    if (!mounted || attempt != _attempt) {
+      return;
+    }
+
+    _checkInProgress = false;
+    _hasNavigated = true;
+    Navigator.of(context).pushReplacementNamed('/landing');
   }
 
   Widget _buildLoadingArea({required bool isCompact}) {
     if (_connectionState == _SplashConnectionState.offline) {
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
-        child: Container(
+        child: LiquidGlassCard(
           key: const ValueKey('offline'),
+          borderRadius: 16,
+          variant: LiquidGlassVariant.strong,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.92),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: const Color(0xFFE2E8F0),
-              width: 1.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.06),
-                blurRadius: 24,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -171,32 +169,18 @@ class _SplashPageState extends State<SplashPage>
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
-      child: Container(
-        key: const ValueKey('checking'),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.85),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: const Color(0xFF38BDF8).withValues(alpha: 0.35),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0664F2).withValues(alpha: 0.07),
-              blurRadius: 18,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
+      child: AnimatedBuilder(
+        animation: _progressController,
+        builder: (context, _) => Column(
+          key: const ValueKey('checking'),
           mainAxisSize: MainAxisSize.min,
           children: [
             SplashLoader(
-              size: isCompact ? 28.0 : 32.0,
-              strokeWidth: 3.2,
+              progress: _progressController.value,
+              width: isCompact ? 180 : 240,
+              height: 7,
             ),
-            const SizedBox(width: 14),
+            const SizedBox(height: 10),
             Text(
               'Checking connection...',
               textAlign: TextAlign.center,
@@ -216,6 +200,7 @@ class _SplashPageState extends State<SplashPage>
   @override
   void dispose() {
     _revealController.dispose();
+    _progressController.dispose();
     super.dispose();
   }
 

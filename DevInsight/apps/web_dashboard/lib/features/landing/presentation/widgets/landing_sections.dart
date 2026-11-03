@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../shared/widgets/liquid_glass_card.dart';
 
 // ---------------------------------------------------------------------------
 // Features Section
@@ -248,10 +249,7 @@ class AboutSection extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.94),
               borderRadius: BorderRadius.circular(32),
-              border: Border.all(
-                color: const Color(0xFFDCE7F6),
-                width: 1.5,
-              ),
+              border: Border.all(color: const Color(0xFFDCE7F6), width: 1.5),
               boxShadow: [
                 BoxShadow(
                   color: const Color(0xFF0664F2).withValues(alpha: 0.08),
@@ -279,12 +277,19 @@ class AboutSection extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF0664F2).withValues(alpha: 0.10),
+                              color: const Color(
+                                0xFF0664F2,
+                              ).withValues(alpha: 0.10),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: const Color(0xFF0664F2).withValues(alpha: 0.25),
+                                color: const Color(
+                                  0xFF0664F2,
+                                ).withValues(alpha: 0.25),
                               ),
                             ),
                             child: Row(
@@ -323,7 +328,10 @@ class AboutSection extends StatelessWidget {
                     ),
                     if (isTablet)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(12),
@@ -361,10 +369,7 @@ class AboutSection extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        flex: 11,
-                        child: _buildAboutNarrative(),
-                      ),
+                      Expanded(flex: 11, child: _buildAboutNarrative()),
                       const SizedBox(width: 44),
                       Expanded(
                         flex: 13,
@@ -480,44 +485,52 @@ class AboutSection extends StatelessWidget {
         icon: Icons.science_rounded,
         tag: 'DOMAIN',
         title: 'Software Engineering Intelligence',
-        desc: 'Mining repositories, commits, and developer metadata to build holistic predictive models of software quality.',
+        desc:
+            'Mining repositories, commits, and developer metadata to build holistic predictive models of software quality.',
         gradient: [Color(0xFF0664F2), Color(0xFF3B82F6)],
       ),
       (
         icon: Icons.trending_up_rounded,
         tag: 'INNOVATION',
         title: 'Technical Risk → Project Priority',
-        desc: 'Translating raw defect probabilities into actionable business priorities aligned with client deliverables.',
+        desc:
+            'Translating raw defect probabilities into actionable business priorities aligned with client deliverables.',
         gradient: [Color(0xFF7C3AED), Color(0xFFA855F7)],
       ),
       (
         icon: Icons.devices_rounded,
         tag: 'ECOSYSTEM',
         title: 'Web Console + Mobile App',
-        desc: 'A full-featured management web console paired with an on-the-go developer companion mobile app.',
+        desc:
+            'A full-featured management web console paired with an on-the-go developer companion mobile app.',
         gradient: [Color(0xFF0891B2), Color(0xFF06B6D4)],
       ),
       (
         icon: Icons.psychology_rounded,
         tag: 'METHODOLOGY',
         title: 'Prediction • Priority • XAI',
-        desc: 'Combining ML defect forecasting with interpretable SHAP/LIME features for grounded decision support.',
+        desc:
+            'Combining ML defect forecasting with interpretable SHAP/LIME features for grounded decision support.',
         gradient: [Color(0xFF059669), Color(0xFF10B981)],
       ),
     ];
 
     if (columns == 1) {
       return Column(
-        children: pillars.map((p) => Padding(
-          padding: const EdgeInsets.only(bottom: 14),
-          child: _AboutPillarCard(
-            icon: p.icon,
-            tag: p.tag,
-            title: p.title,
-            description: p.desc,
-            gradient: p.gradient,
-          ),
-        )).toList(),
+        children: pillars
+            .map(
+              (p) => Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: _AboutPillarCard(
+                  icon: p.icon,
+                  tag: p.tag,
+                  title: p.title,
+                  description: p.desc,
+                  gradient: p.gradient,
+                ),
+              ),
+            )
+            .toList(),
       );
     }
 
@@ -572,26 +585,34 @@ class AboutSection extends StatelessWidget {
       return Wrap(
         spacing: 20,
         runSpacing: 20,
-        children: items.map((item) => _AboutMetricItem(
-          title: item.title,
-          subtitle: item.subtitle,
-          icon: item.icon,
-        )).toList(),
+        children: items
+            .map(
+              (item) => _AboutMetricItem(
+                title: item.title,
+                subtitle: item.subtitle,
+                icon: item.icon,
+              ),
+            )
+            .toList(),
       );
     }
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: items.map((item) => Expanded(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: _AboutMetricItem(
-            title: item.title,
-            subtitle: item.subtitle,
-            icon: item.icon,
-          ),
-        ),
-      )).toList(),
+      children: items
+          .map(
+            (item) => Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: _AboutMetricItem(
+                  title: item.title,
+                  subtitle: item.subtitle,
+                  icon: item.icon,
+                ),
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 }
@@ -700,16 +721,25 @@ class CtaSection extends StatelessWidget {
                     children: [
                       // Badge
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 7,
+                        ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0664F2).withValues(alpha: 0.22),
+                          color: const Color(
+                            0xFF0664F2,
+                          ).withValues(alpha: 0.22),
                           borderRadius: BorderRadius.circular(30),
                           border: Border.all(
-                            color: const Color(0xFF60A5FA).withValues(alpha: 0.40),
+                            color: const Color(
+                              0xFF60A5FA,
+                            ).withValues(alpha: 0.40),
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0664F2).withValues(alpha: 0.25),
+                              color: const Color(
+                                0xFF0664F2,
+                              ).withValues(alpha: 0.25),
                               blurRadius: 16,
                             ),
                           ],
@@ -993,7 +1023,6 @@ class _Eyebrow extends StatelessWidget {
   );
 }
 
-
 // ---------------------------------------------------------------------------
 // Feature card
 // ---------------------------------------------------------------------------
@@ -1012,14 +1041,13 @@ class _FeatureCard extends StatelessWidget {
   final List<Color> gradientColors;
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(16),
-    elevation: 0,
+  Widget build(BuildContext context) => LiquidGlassCard(
+    borderRadius: 16,
+    variant: LiquidGlassVariant.standard,
     child: InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: () {},
-      hoverColor: const Color(0xFFF5F8FF),
+      hoverColor: const Color(0xFFEAF4FF),
       child: Container(
         padding: const EdgeInsets.all(22),
         decoration: BoxDecoration(
@@ -1171,7 +1199,6 @@ class _WorkflowCard extends StatelessWidget {
   );
 }
 
-
 // ---------------------------------------------------------------------------
 // About section components
 // ---------------------------------------------------------------------------
@@ -1258,7 +1285,10 @@ class _AboutPillarCardState extends State<_AboutPillarCard> {
                   child: Icon(widget.icon, color: Colors.white, size: 20),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: widget.gradient[0].withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
@@ -1428,7 +1458,9 @@ class _CtaElevatedButtonState extends State<_CtaElevatedButton> {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF0664F2).withValues(alpha: _isHovered ? 0.55 : 0.35),
+              color: const Color(
+                0xFF0664F2,
+              ).withValues(alpha: _isHovered ? 0.55 : 0.35),
               blurRadius: _isHovered ? 24 : 16,
               offset: Offset(0, _isHovered ? 8 : 4),
             ),
@@ -1442,7 +1474,9 @@ class _CtaElevatedButtonState extends State<_CtaElevatedButton> {
             foregroundColor: Colors.white,
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 18),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
           child: Text(
             widget.label,
@@ -1507,12 +1541,18 @@ class _CtaDarkGlassButtonState extends State<_CtaDarkGlassButton> {
             side: BorderSide.none,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 18),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.login_rounded, size: 18, color: Color(0xFF38BDF8)),
+              const Icon(
+                Icons.login_rounded,
+                size: 18,
+                color: Color(0xFF38BDF8),
+              ),
               const SizedBox(width: 10),
               Text(
                 widget.label,
@@ -1556,7 +1596,6 @@ class _CtaTrustBadge extends StatelessWidget {
   }
 }
 
-
 // ---------------------------------------------------------------------------
 // Footer link
 // ---------------------------------------------------------------------------
@@ -1590,10 +1629,7 @@ class _NeuralPipelineBanner extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: const Color(0xFF1E293B),
-              width: 1.2,
-            ),
+            border: Border.all(color: const Color(0xFF1E293B), width: 1.2),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFFEC4899).withValues(alpha: 0.12),
@@ -1641,18 +1677,29 @@ class _NeuralPipelineBanner extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEC4899).withValues(alpha: 0.18),
+                              color: const Color(
+                                0xFFEC4899,
+                              ).withValues(alpha: 0.18),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: const Color(0xFFEC4899).withValues(alpha: 0.4),
+                                color: const Color(
+                                  0xFFEC4899,
+                                ).withValues(alpha: 0.4),
                               ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.hub_rounded, color: Color(0xFFF472B6), size: 14),
+                                const Icon(
+                                  Icons.hub_rounded,
+                                  color: Color(0xFFF472B6),
+                                  size: 14,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
                                   'THE NEURAL INTELLIGENCE PIPELINE',
@@ -1704,10 +1751,26 @@ class _NeuralPipelineBanner extends StatelessWidget {
                         spacing: 12,
                         runSpacing: 10,
                         children: [
-                          _buildStagePill('1. Predict Risk', Icons.analytics_outlined, const Color(0xFF38BDF8)),
-                          _buildStagePill('2. Prioritize Context', Icons.low_priority_rounded, const Color(0xFFA855F7)),
-                          _buildStagePill('3. Explain Root Causes', Icons.psychology_outlined, const Color(0xFFEC4899)),
-                          _buildStagePill('4. Recommend Action', Icons.auto_awesome_rounded, const Color(0xFF34D399)),
+                          _buildStagePill(
+                            '1. Predict Risk',
+                            Icons.analytics_outlined,
+                            const Color(0xFF38BDF8),
+                          ),
+                          _buildStagePill(
+                            '2. Prioritize Context',
+                            Icons.low_priority_rounded,
+                            const Color(0xFFA855F7),
+                          ),
+                          _buildStagePill(
+                            '3. Explain Root Causes',
+                            Icons.psychology_outlined,
+                            const Color(0xFFEC4899),
+                          ),
+                          _buildStagePill(
+                            '4. Recommend Action',
+                            Icons.auto_awesome_rounded,
+                            const Color(0xFF34D399),
+                          ),
                         ],
                       ),
                     ],
@@ -1729,10 +1792,7 @@ class _NeuralPipelineBanner extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: accent.withValues(alpha: 0.4)),
         boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.18),
-            blurRadius: 10,
-          ),
+          BoxShadow(color: accent.withValues(alpha: 0.18), blurRadius: 10),
         ],
       ),
       child: Row(
@@ -1772,10 +1832,7 @@ class _ResearchInnovationShowcase extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFF070B14),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: const Color(0xFF1E293B),
-              width: 1.2,
-            ),
+            border: Border.all(color: const Color(0xFF1E293B), width: 1.2),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFFA855F7).withValues(alpha: 0.14),
@@ -1794,10 +1851,7 @@ class _ResearchInnovationShowcase extends StatelessWidget {
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Expanded(
-                      flex: 11,
-                      child: _buildBrainImageSide(),
-                    ),
+                    Expanded(flex: 11, child: _buildBrainImageSide()),
                     Expanded(
                       flex: 13,
                       child: Padding(
@@ -1855,7 +1909,9 @@ class _ResearchInnovationShowcase extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF0B132B).withValues(alpha: 0.90),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFA855F7).withValues(alpha: 0.4)),
+                border: Border.all(
+                  color: const Color(0xFFA855F7).withValues(alpha: 0.4),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFFA855F7).withValues(alpha: 0.22),
@@ -1865,7 +1921,11 @@ class _ResearchInnovationShowcase extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.psychology_rounded, color: Color(0xFFC084FC), size: 22),
+                  const Icon(
+                    Icons.psychology_rounded,
+                    color: Color(0xFFC084FC),
+                    size: 22,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -1910,7 +1970,9 @@ class _ResearchInnovationShowcase extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFFA855F7).withValues(alpha: 0.18),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFA855F7).withValues(alpha: 0.45)),
+            border: Border.all(
+              color: const Color(0xFFA855F7).withValues(alpha: 0.45),
+            ),
           ),
           child: Text(
             'ACADEMIC RESEARCH PROTOTYPE',
@@ -1968,8 +2030,13 @@ class _ResearchInnovationShowcase extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryBlue,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 28,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 elevation: 4,
               ),
               child: Text(
@@ -1985,7 +2052,9 @@ class _ResearchInnovationShowcase extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFFFFF7ED).withValues(alpha: 0.10),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFFED7AA).withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: const Color(0xFFFED7AA).withValues(alpha: 0.3),
+                ),
               ),
               child: Text(
                 'Academic Research Edition',
@@ -2006,7 +2075,11 @@ class _ResearchInnovationShowcase extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.check_circle_rounded, color: Color(0xFF38BDF8), size: 18),
+        const Icon(
+          Icons.check_circle_rounded,
+          color: Color(0xFF38BDF8),
+          size: 18,
+        ),
         const SizedBox(width: 12),
         Expanded(
           child: RichText(

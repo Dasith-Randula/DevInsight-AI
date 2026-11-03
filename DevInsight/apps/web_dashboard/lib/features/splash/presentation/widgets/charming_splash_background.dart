@@ -68,10 +68,10 @@ class _CharmingSplashBackgroundState extends State<CharmingSplashBackground>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Color(0xFFFFFFFF),
-                Color(0xFFF9FBFE),
-                Color(0xFFF2F7FD),
-                Color(0xFFEEF5FF),
+                Color(0xFFF8FBFF),
+                Color(0xFFEEF4FB),
+                Color(0xFFE8F1FA),
+                Color(0xFFDCEAF8),
               ],
               stops: [0.0, 0.35, 0.70, 1.0],
             ),
@@ -197,7 +197,9 @@ class _CharmingAuraPainter extends CustomPainter {
       final center = Offset(s.relX * w, sparkleY * h);
 
       // Twinkle calculation
-      final twinkle = 0.5 + 0.5 * math.sin((progress * 2 * math.pi) + (s.phase * 2 * math.pi));
+      final twinkle =
+          0.5 +
+          0.5 * math.sin((progress * 2 * math.pi) + (s.phase * 2 * math.pi));
       final alpha = (s.maxAlpha * (0.3 + 0.7 * twinkle)).clamp(0.0, 1.0);
 
       final p = Paint()

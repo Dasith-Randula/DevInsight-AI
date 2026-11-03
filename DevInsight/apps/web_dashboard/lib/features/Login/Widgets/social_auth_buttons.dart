@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/constants/app_colors.dart';
+import '../../../../shared/widgets/liquid_glass_card.dart';
 
 class SocialAuthButtons extends StatelessWidget {
   final VoidCallback? onGithub;
@@ -68,61 +68,49 @@ class _SocialButtonState extends State<_SocialButton> {
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
+      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
-      cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: widget.onPressed,
-        child: AnimatedContainer(
+        child: AnimatedScale(
+          scale: _isHovered ? 1.01 : 1,
           duration: const Duration(milliseconds: 160),
-          height: 48,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            color: _isHovered ? const Color(0xFFF8FAFC) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _isHovered ? AppColors.primaryBlue : const Color(0xFFE2E8F0),
-              width: _isHovered ? 1.6 : 1.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _isHovered
-                    ? AppColors.primaryBlue.withValues(alpha: 0.12)
-                    : const Color(0xFF0F172A).withValues(alpha: 0.03),
-                blurRadius: _isHovered ? 12 : 4,
-                offset: Offset(0, _isHovered ? 4 : 2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              widget.icon,
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  widget.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.plusJakartaSans(
-                    color: const Color(0xFF1E293B),
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.2,
-                  ),
+          child: LiquidGlassCard(
+            borderRadius: 12,
+            variant: LiquidGlassVariant.subtle,
+            child: SizedBox(
+              height: 48,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    widget.icon,
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(
+                          color: const Color(0xFF1E293B),
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Custom Vector Icons
-// ---------------------------------------------------------------------------
 
 class _MicrosoftIcon extends StatelessWidget {
   final double size;
@@ -140,43 +128,15 @@ class _MicrosoftIcon extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: s,
-                height: s,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF25022),
-                  borderRadius: BorderRadius.all(Radius.circular(1)),
-                ),
-              ),
-              Container(
-                width: s,
-                height: s,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF7FBA00),
-                  borderRadius: BorderRadius.all(Radius.circular(1)),
-                ),
-              ),
+              _Square(color: const Color(0xFFF25022), size: s),
+              _Square(color: const Color(0xFF7FBA00), size: s),
             ],
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: s,
-                height: s,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF00A4EF),
-                  borderRadius: BorderRadius.all(Radius.circular(1)),
-                ),
-              ),
-              Container(
-                width: s,
-                height: s,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFFB900),
-                  borderRadius: BorderRadius.all(Radius.circular(1)),
-                ),
-              ),
+              _Square(color: const Color(0xFF00A4EF), size: s),
+              _Square(color: const Color(0xFFFFB900), size: s),
             ],
           ),
         ],
@@ -185,69 +145,66 @@ class _MicrosoftIcon extends StatelessWidget {
   }
 }
 
+class _Square extends StatelessWidget {
+  const _Square({required this.color, required this.size});
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      color: color,
+      borderRadius: BorderRadius.circular(1),
+    ),
+  );
+}
+
 class _GoogleIcon extends StatelessWidget {
   final double size;
   const _GoogleIcon({required this.size});
 
   @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size(size, size),
-      painter: _GoogleLogoPainter(),
-    );
-  }
+  Widget build(BuildContext context) =>
+      CustomPaint(size: Size(size, size), painter: _GoogleLogoPainter());
 }
 
 class _GoogleLogoPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    final center = Offset(w / 2, h / 2);
-    final radius = w / 2;
-    final strokeWidth = radius * 0.38;
-    final arcRadius = radius - strokeWidth / 2;
-    final arcRect = Rect.fromCircle(center: center, radius: arcRadius);
-
-    final bluePaint = Paint()
-      ..color = const Color(0xFF4285F4)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
-
-    final greenPaint = Paint()
-      ..color = const Color(0xFF34A853)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
-
-    final yellowPaint = Paint()
-      ..color = const Color(0xFFFBBC05)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
-
-    final redPaint = Paint()
-      ..color = const Color(0xFFEA4335)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth;
-
-    // Draw Google 4 arc segments
-    canvas.drawArc(arcRect, -0.65, 1.25, false, bluePaint);
-    canvas.drawArc(arcRect, 0.60, 1.55, false, greenPaint);
-    canvas.drawArc(arcRect, 2.15, 1.25, false, yellowPaint);
-    canvas.drawArc(arcRect, 3.40, 1.75, false, redPaint);
-
-    // Blue horizontal bar
-    final barPaint = Paint()
-      ..color = const Color(0xFF4285F4)
-      ..style = PaintingStyle.fill;
+    final center = Offset(size.width / 2, size.height / 2);
+    final strokeWidth = size.width / 2 * 0.38;
+    final arcRect = Rect.fromCircle(
+      center: center,
+      radius: size.width / 2 - strokeWidth / 2,
+    );
+    for (final segment in [
+      (-0.65, 1.25, const Color(0xFF4285F4)),
+      (0.60, 1.55, const Color(0xFF34A853)),
+      (2.15, 1.25, const Color(0xFFFBBC05)),
+      (3.40, 1.75, const Color(0xFFEA4335)),
+    ]) {
+      canvas.drawArc(
+        arcRect,
+        segment.$1,
+        segment.$2,
+        false,
+        Paint()
+          ..color = segment.$3
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth,
+      );
+    }
     final barRect = Rect.fromLTRB(
       center.dx,
       center.dy - strokeWidth / 2,
-      w,
+      size.width,
       center.dy + strokeWidth / 2,
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(barRect, Radius.circular(strokeWidth / 4)),
-      barPaint,
+      Paint()..color = const Color(0xFF4285F4),
     );
   }
 
@@ -260,25 +217,14 @@ class _GithubIcon extends StatelessWidget {
   const _GithubIcon({required this.size});
 
   @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size(size, size),
-      painter: _GithubLogoPainter(),
-    );
-  }
+  Widget build(BuildContext context) =>
+      CustomPaint(size: Size(size, size), painter: _GithubLogoPainter());
 }
 
 class _GithubLogoPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final scale = size.width / 24.0;
-    final paint = Paint()
-      ..color = const Color(0xFF1E293B)
-      ..style = PaintingStyle.fill;
-
-    canvas.save();
-    canvas.scale(scale, scale);
-
+    final scale = size.width / 24;
     final path = Path()
       ..moveTo(12, 0)
       ..cubicTo(5.37, 0, 0, 5.37, 0, 12)
@@ -307,9 +253,11 @@ class _GithubLogoPainter extends CustomPainter {
       ..cubicTo(20.595, 21.795, 24.03, 17.31, 24.03, 12)
       ..cubicTo(24.03, 5.37, 18.66, 0, 12, 0)
       ..close();
-
-    canvas.drawPath(path, paint);
-    canvas.restore();
+    canvas
+      ..save()
+      ..scale(scale, scale)
+      ..drawPath(path, Paint()..color = const Color(0xFF1E293B))
+      ..restore();
   }
 
   @override
