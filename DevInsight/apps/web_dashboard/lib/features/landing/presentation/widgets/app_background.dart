@@ -34,15 +34,26 @@ class _AppBackgroundState extends State<AppBackground>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Stack(
       fit: StackFit.expand,
       children: [
-        const DecoratedBox(
+        DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFFF8FBFF), Color(0xFFEDF5FF), Color(0xFFE6F1FC)],
+              colors: isDark
+                  ? const [
+                      Color(0xFF080F20),
+                      Color(0xFF101C32),
+                      Color(0xFF14243F),
+                    ]
+                  : const [
+                      Color(0xFFF8FBFF),
+                      Color(0xFFEDF5FF),
+                      Color(0xFFE6F1FC),
+                    ],
             ),
           ),
         ),
@@ -51,7 +62,10 @@ class _AppBackgroundState extends State<AppBackground>
             child: AnimatedBuilder(
               animation: _controller,
               builder: (context, _) => CustomPaint(
-                painter: _AmbientBackgroundPainter(progress: _controller.value),
+                painter: _AmbientBackgroundPainter(
+                  progress: _controller.value,
+                  isDark: isDark,
+                ),
               ),
             ),
           ),
@@ -63,15 +77,19 @@ class _AppBackgroundState extends State<AppBackground>
 }
 
 class _AmbientBackgroundPainter extends CustomPainter {
-  const _AmbientBackgroundPainter({required this.progress});
+  const _AmbientBackgroundPainter({
+    required this.progress,
+    required this.isDark,
+  });
 
   final double progress;
+  final bool isDark;
 
   @override
   void paint(Canvas canvas, Size size) {
     final phase = progress * math.pi * 2;
     final gridPaint = Paint()
-      ..color = const Color(0x1414B8A6)
+      ..color = (isDark ? const Color(0x223B82F6) : const Color(0x1414B8A6))
       ..strokeWidth = 1;
     for (var x = 0.0; x <= size.width; x += 48) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
@@ -110,8 +128,8 @@ class _AmbientBackgroundPainter extends CustomPainter {
       final paint = Paint()
         ..shader = RadialGradient(
           colors: [
-            glow.$3.withValues(alpha: 0.075),
-            glow.$3.withValues(alpha: 0.02),
+            glow.$3.withValues(alpha: isDark ? 0.12 : 0.075),
+            glow.$3.withValues(alpha: isDark ? 0.035 : 0.02),
             Colors.transparent,
           ],
           stops: const [0, 0.52, 1],

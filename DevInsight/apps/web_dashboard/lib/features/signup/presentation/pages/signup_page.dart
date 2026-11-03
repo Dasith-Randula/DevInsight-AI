@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/theme_controller.dart';
 import '../../../../shared/auth/auth_page_shell.dart';
 import '../../../Login/Pages/Login.dart';
 import '../../../Login/Widgets/modern_auth_card.dart';
 
 class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
+  const SignUpPage({super.key, this.themeController});
+
+  final ThemeController? themeController;
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -36,7 +39,9 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   void _navigateToLogin() {
-    Navigator.of(context).pushReplacement(_pageRoute(const LoginPage()));
+    Navigator.of(context).pushReplacement(
+      _pageRoute(LoginPage(themeController: widget.themeController)),
+    );
   }
 
   void _showNotice(String message, {bool isError = false}) {
@@ -62,20 +67,20 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return AuthPageShell(
+      themeController: widget.themeController,
       onNavigateHome: _navigateToLanding,
       child: ModernAuthCard(
         initialMode: AuthMode.signUp,
         onModeChanged: (mode) {
           if (mode == AuthMode.logIn) {
-            Navigator.of(context).pushReplacement(_pageRoute(const LoginPage()));
+            Navigator.of(context).pushReplacement(
+              _pageRoute(LoginPage(themeController: widget.themeController)),
+            );
           }
         },
         onSignUp: (firstName, lastName, email, password) {
           _showNotice('Welcome $firstName! Account created.');
-          Future.delayed(
-            const Duration(milliseconds: 900),
-            _navigateToLogin,
-          );
+          Future.delayed(const Duration(milliseconds: 900), _navigateToLogin);
         },
         onLogIn: (email, password) {
           _showNotice('Signing in as $email…');
@@ -84,7 +89,8 @@ class _SignUpPageState extends State<SignUpPage> {
           _showNotice('Password reset link sent to your email.');
         },
         onGoogleAuth: () => _showNotice('Google sign-in not yet configured.'),
-        onFacebookAuth: () => _showNotice('Facebook sign-in not yet configured.'),
+        onFacebookAuth: () =>
+            _showNotice('Facebook sign-in not yet configured.'),
         onAppleAuth: () => _showNotice('Apple sign-in not yet configured.'),
         onGithubAuth: () => _showNotice('GitHub sign-in not yet configured.'),
       ),

@@ -4,16 +4,10 @@ import 'package:flutter/material.dart';
 class CharmingAuthBackground extends StatelessWidget {
   final Widget child;
 
-  const CharmingAuthBackground({
-    super.key,
-    required this.child,
-  });
+  const CharmingAuthBackground({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Colors.white,
-      child: child,
-    );
+    return ColoredBox(color: Colors.white, child: child);
   }
 }

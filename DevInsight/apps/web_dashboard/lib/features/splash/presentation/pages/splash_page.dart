@@ -120,7 +120,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                 'Check your internet connection',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.plusJakartaSans(
-                  color: const Color(0xFF1E293B),
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: isCompact ? 16 : 18,
                   fontWeight: FontWeight.w700,
                 ),
@@ -132,7 +132,9 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                   'No internet connection detected. Please reconnect and try again.',
                   textAlign: TextAlign.center,
                   style: GoogleFonts.plusJakartaSans(
-                    color: const Color(0xFF64748B),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.68),
                     fontSize: 13,
                     height: 1.4,
                   ),
@@ -185,7 +187,9 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
               'Checking connection...',
               textAlign: TextAlign.center,
               style: GoogleFonts.plusJakartaSans(
-                color: const Color(0xFF334155),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.72),
                 fontSize: isCompact ? 14.0 : 15.0,
                 fontWeight: FontWeight.w600,
                 letterSpacing: -0.2,
@@ -207,7 +211,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final isCompact = constraints.maxWidth < 700;

@@ -24,10 +24,11 @@ class LiquidGlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final opacity = switch (variant) {
-      LiquidGlassVariant.subtle => 0.40,
-      LiquidGlassVariant.standard => 0.52,
-      LiquidGlassVariant.strong => 0.64,
+      LiquidGlassVariant.subtle => isDark ? 0.42 : 0.40,
+      LiquidGlassVariant.standard => isDark ? 0.56 : 0.52,
+      LiquidGlassVariant.strong => isDark ? 0.72 : 0.64,
     };
     final blur = switch (variant) {
       LiquidGlassVariant.subtle => 10.0,
@@ -46,24 +47,32 @@ class LiquidGlassCard extends StatelessWidget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withValues(alpha: opacity + 0.10),
-                const Color(0xFFF5FAFF).withValues(alpha: opacity),
-                const Color(0xFFDCEEFF).withValues(alpha: opacity - 0.08),
+                (isDark ? const Color(0xFF29466C) : Colors.white).withValues(
+                  alpha: opacity + 0.08,
+                ),
+                (isDark ? const Color(0xFF172B49) : const Color(0xFFF5FAFF))
+                    .withValues(alpha: opacity),
+                (isDark ? const Color(0xFF10213A) : const Color(0xFFDCEEFF))
+                    .withValues(alpha: opacity - 0.08),
               ],
             ),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: Colors.white.withValues(alpha: 0.82),
+              color: (isDark ? const Color(0xFF7DD3FC) : Colors.white)
+                  .withValues(alpha: isDark ? 0.28 : 0.82),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryBlue.withValues(alpha: 0.10),
+                color:
+                    (isDark ? const Color(0xFF0664F2) : AppColors.primaryBlue)
+                        .withValues(alpha: isDark ? 0.18 : 0.10),
                 blurRadius: 28,
                 offset: const Offset(0, 12),
               ),
               BoxShadow(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.035),
+                color: (isDark ? Colors.black : const Color(0xFF0F172A))
+                    .withValues(alpha: isDark ? 0.16 : 0.035),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),

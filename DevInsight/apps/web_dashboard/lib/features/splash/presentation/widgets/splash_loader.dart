@@ -18,6 +18,7 @@ class SplashLoader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clampedProgress = progress.clamp(0.0, 1.0);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return RepaintBoundary(
       child: SizedBox(
         width: width,
@@ -32,7 +33,11 @@ class SplashLoader extends StatelessWidget {
               child: Stack(
                 children: [
                   ColoredBox(
-                    color: AppColors.loaderTrack.withValues(alpha: 0.75),
+                    color:
+                        (isDark
+                                ? const Color(0xFF15243B)
+                                : AppColors.loaderTrack)
+                            .withValues(alpha: 0.75),
                     child: const SizedBox.expand(),
                   ),
                   Align(

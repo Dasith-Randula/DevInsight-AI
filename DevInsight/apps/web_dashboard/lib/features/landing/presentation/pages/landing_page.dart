@@ -5,14 +5,18 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/theme/theme_controller.dart';
 import '../../../../shared/widgets/liquid_glass_card.dart';
+import '../../../../shared/widgets/theme_toggle_button.dart';
 // CHANGED: removed animated_aura_background import, added AppBackground
 import '../widgets/app_background.dart';
 import '../widgets/dashboard_preview.dart';
 import '../widgets/landing_sections.dart';
 
 class LandingPage extends StatefulWidget {
-  const LandingPage({super.key});
+  const LandingPage({super.key, this.themeController});
+
+  final ThemeController? themeController;
 
   @override
   State<LandingPage> createState() => _LandingPageState();
@@ -82,7 +86,7 @@ class _LandingPageState extends State<LandingPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       // CHANGED: AppBackground replaces the old Stack + AnimatedAuraBackground.
       // The background stays fixed while the CustomScrollView scrolls on top.
       body: AppBackground(
@@ -94,6 +98,7 @@ class _LandingPageState extends State<LandingPage> {
               delegate: _NavbarDelegate(
                 activeSection: _activeSection,
                 onNavigate: (index) => _scrollTo(_sectionKeys[index]),
+                themeController: widget.themeController,
               ),
             ),
             SliverToBoxAdapter(
@@ -137,10 +142,12 @@ class _NavbarDelegate extends SliverPersistentHeaderDelegate {
   const _NavbarDelegate({
     required this.activeSection,
     required this.onNavigate,
+    this.themeController,
   });
 
   final int activeSection;
   final ValueChanged<int> onNavigate;
+  final ThemeController? themeController;
 
   @override
   double get minExtent => 72;
@@ -154,6 +161,7 @@ class _NavbarDelegate extends SliverPersistentHeaderDelegate {
     double shrinkOffset,
     bool overlapsContent,
   ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
@@ -162,10 +170,17 @@ class _NavbarDelegate extends SliverPersistentHeaderDelegate {
           decoration: BoxDecoration(
             // CHANGED: transparent at the top (like the Figma), frosted white
             // once the page is scrolled under the navbar.
-            color: Colors.white.withValues(alpha: overlapsContent ? 0.48 : 0.0),
+            color: (isDark ? const Color(0xFF101C32) : Colors.white).withValues(
+              alpha: overlapsContent ? 0.72 : 0.0,
+            ),
             border: overlapsContent
-                ? const Border(
-                    bottom: BorderSide(color: Color(0x88FFFFFF), width: 1),
+                ? Border(
+                    bottom: BorderSide(
+                      color: isDark
+                          ? const Color(0xFF304562)
+                          : const Color(0x88FFFFFF),
+                      width: 1,
+                    ),
                   )
                 : null,
             boxShadow: overlapsContent
@@ -185,6 +200,7 @@ class _NavbarDelegate extends SliverPersistentHeaderDelegate {
               child: _LandingNav(
                 activeSection: activeSection,
                 onNavigate: onNavigate,
+                themeController: themeController,
               ),
             ),
           ),
@@ -199,10 +215,15 @@ class _NavbarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class _LandingNav extends StatelessWidget {
-  const _LandingNav({required this.activeSection, required this.onNavigate});
+  const _LandingNav({
+    required this.activeSection,
+    required this.onNavigate,
+    this.themeController,
+  });
 
   final int activeSection;
   final ValueChanged<int> onNavigate;
+  final ThemeController? themeController;
 
   @override
   Widget build(BuildContext context) {
@@ -240,11 +261,15 @@ class _LandingNav extends StatelessWidget {
                 ] else
                   IconButton(
                     onPressed: () {},
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.menu_rounded,
-                      color: AppColors.slateText,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
+                if (themeController != null) ...[
+                  const SizedBox(width: 10),
+                  ThemeToggleButton(controller: themeController!),
+                ],
                 _ActionButton(
                   label: 'Get Started',
                   onPressed: () => Navigator.of(context).pushNamed('/login'),
@@ -269,12 +294,12 @@ class _Wordmark extends StatelessWidget {
         Image.asset(AppAssets.devInsightLogo, width: 42, height: 42),
         const SizedBox(width: 9),
         RichText(
-          text: const TextSpan(
+          text: TextSpan(
             children: [
               TextSpan(
                 text: 'Dev',
                 style: TextStyle(
-                  color: AppColors.black,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 23,
                   fontWeight: FontWeight.w800,
                 ),
@@ -282,7 +307,7 @@ class _Wordmark extends StatelessWidget {
               TextSpan(
                 text: 'Insight',
                 style: TextStyle(
-                  color: AppColors.primaryBlue,
+                  color: Theme.of(context).colorScheme.primary,
                   fontSize: 23,
                   fontWeight: FontWeight.w800,
                 ),

@@ -69,9 +69,7 @@ class _AuthPrimaryButtonState extends State<AuthPrimaryButton> {
             splashColor: Colors.white.withValues(alpha: 0.1),
             highlightColor: Colors.white.withValues(alpha: 0.05),
             child: Center(
-              child: widget.isLoading
-                  ? _buildLoading()
-                  : _buildLabel(),
+              child: widget.isLoading ? _buildLoading() : _buildLabel(),
             ),
           ),
         ),
@@ -120,7 +118,9 @@ class _AuthPrimaryButtonState extends State<AuthPrimaryButton> {
         ),
         const SizedBox(width: 10),
         Text(
-          widget.label.contains('Create') ? 'Creating account...' : 'Signing in...',
+          widget.label.contains('Create')
+              ? 'Creating account...'
+              : 'Signing in...',
           style: GoogleFonts.plusJakartaSans(
             color: Colors.white,
             fontSize: 15,
@@ -131,4 +131,3 @@ class _AuthPrimaryButtonState extends State<AuthPrimaryButton> {
     );
   }
 }
-

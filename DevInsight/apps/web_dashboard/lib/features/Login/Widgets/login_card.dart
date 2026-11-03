@@ -70,10 +70,7 @@ class _LoginCardState extends State<LoginCard> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-          width: 1.2,
-        ),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF0F172A).withValues(alpha: 0.07),
@@ -209,10 +206,7 @@ class _LoginCardState extends State<LoginCard> {
                       ? AppColors.primaryBlue
                       : Colors.white,
                   borderRadius: BorderRadius.circular(25),
-                  border: Border.all(
-                    color: AppColors.primaryBlue,
-                    width: 2.0,
-                  ),
+                  border: Border.all(color: AppColors.primaryBlue, width: 2.0),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.primaryBlue.withValues(
@@ -263,10 +257,7 @@ class _LoginCardState extends State<LoginCard> {
             Row(
               children: [
                 Expanded(
-                  child: Container(
-                    height: 1,
-                    color: const Color(0xFFE2E8F0),
-                  ),
+                  child: Container(height: 1, color: const Color(0xFFE2E8F0)),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -280,10 +271,7 @@ class _LoginCardState extends State<LoginCard> {
                   ),
                 ),
                 Expanded(
-                  child: Container(
-                    height: 1,
-                    color: const Color(0xFFE2E8F0),
-                  ),
+                  child: Container(height: 1, color: const Color(0xFFE2E8F0)),
                 ),
               ],
             ),
@@ -371,11 +359,7 @@ class _LoginCardState extends State<LoginCard> {
           fontSize: 14,
           fontWeight: FontWeight.w400,
         ),
-        prefixIcon: Icon(
-          icon,
-          color: const Color(0xFF64748B),
-          size: 21,
-        ),
+        prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 21),
         suffixIcon: suffixIcon,
         contentPadding: const EdgeInsets.symmetric(
           vertical: 16,
@@ -383,17 +367,11 @@ class _LoginCardState extends State<LoginCard> {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFFCBD5E1),
-            width: 1.2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFFCBD5E1),
-            width: 1.2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -404,17 +382,11 @@ class _LoginCardState extends State<LoginCard> {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFFEF4444),
-            width: 1.2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFFEF4444),
-            width: 1.8,
-          ),
+          borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.8),
         ),
       ),
     );

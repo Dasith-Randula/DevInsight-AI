@@ -69,6 +69,8 @@ class _AuthTextFieldState extends State<AuthTextField> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
@@ -95,17 +97,17 @@ class _AuthTextFieldState extends State<AuthTextField> {
         autofocus: widget.autofocus,
         validator: widget.validator,
         style: GoogleFonts.plusJakartaSans(
-          color: AppColors.darkText,
+          color: theme.colorScheme.onSurface,
           fontSize: 14.5,
           fontWeight: FontWeight.w500,
         ),
-        cursorColor: AppColors.primaryBlue,
+        cursorColor: theme.colorScheme.primary,
         decoration: InputDecoration(
           filled: true,
-          fillColor: AppColors.inputBg,
+          fillColor: isDark ? const Color(0xFF15243B) : AppColors.inputBg,
           hintText: widget.hintText,
           hintStyle: GoogleFonts.plusJakartaSans(
-            color: AppColors.slateText.withValues(alpha: 0.7),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
             fontSize: 14,
             fontWeight: FontWeight.w400,
           ),
@@ -116,8 +118,8 @@ class _AuthTextFieldState extends State<AuthTextField> {
               widget.prefixIcon,
               size: 20,
               color: _isFocused
-                  ? AppColors.primaryBlue
-                  : AppColors.slateText.withValues(alpha: 0.75),
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface.withValues(alpha: 0.62),
             ),
           ),
           suffixIcon: widget.suffixIcon,
@@ -125,9 +127,15 @@ class _AuthTextFieldState extends State<AuthTextField> {
             vertical: 16,
             horizontal: 16,
           ),
-          border: _border(AppColors.inputBorder, 1.2),
-          enabledBorder: _border(AppColors.inputBorder, 1.2),
-          focusedBorder: _border(AppColors.primaryBlue, 1.8),
+          border: _border(
+            isDark ? const Color(0xFF31435E) : AppColors.inputBorder,
+            1.2,
+          ),
+          enabledBorder: _border(
+            isDark ? const Color(0xFF31435E) : AppColors.inputBorder,
+            1.2,
+          ),
+          focusedBorder: _border(theme.colorScheme.primary, 1.8),
           errorBorder: _border(AppColors.error, 1.2),
           focusedErrorBorder: _border(AppColors.error, 1.8),
           errorStyle: GoogleFonts.plusJakartaSans(
@@ -147,4 +155,3 @@ class _AuthTextFieldState extends State<AuthTextField> {
     );
   }
 }
-

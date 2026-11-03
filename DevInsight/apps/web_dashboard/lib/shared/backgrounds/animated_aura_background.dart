@@ -86,15 +86,22 @@ class _AnimatedAuraBackgroundState extends State<AnimatedAuraBackground>
                 if (authVariant)
                   Positioned.fill(
                     child: DecoratedBox(
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFFEEF4FB),
-                            Color(0xFFE8F1FA),
-                            Color(0xFFF8FBFF),
-                          ],
+                          colors:
+                              Theme.of(context).brightness == Brightness.dark
+                              ? const [
+                                  Color(0xFF080F20),
+                                  Color(0xFF101C32),
+                                  Color(0xFF0B1528),
+                                ]
+                              : const [
+                                  Color(0xFFEEF4FB),
+                                  Color(0xFFE8F1FA),
+                                  Color(0xFFF8FBFF),
+                                ],
                         ),
                       ),
                     ),

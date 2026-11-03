@@ -8,11 +8,7 @@ class LoginBranding extends StatelessWidget {
   final bool isCompact;
   final VoidCallback? onLogoTap;
 
-  const LoginBranding({
-    super.key,
-    this.isCompact = false,
-    this.onLogoTap,
-  });
+  const LoginBranding({super.key, this.isCompact = false, this.onLogoTap});
 
   @override
   Widget build(BuildContext context) {
@@ -21,8 +17,9 @@ class LoginBranding extends StatelessWidget {
     final imageWidth = isCompact ? 320.0 : 490.0;
 
     return Column(
-      crossAxisAlignment:
-          isCompact ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+      crossAxisAlignment: isCompact
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         // Brand Header (Glowing Attractive Logo + Rich Gradient Typography)
@@ -103,14 +100,15 @@ class LoginBranding extends StatelessWidget {
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: -1.2,
                                   foreground: Paint()
-                                    ..shader = const LinearGradient(
-                                      colors: [
-                                        Color(0xFF0664F2),
-                                        Color(0xFF0EA5E9),
-                                      ],
-                                    ).createShader(
-                                      const Rect.fromLTWH(0, 0, 160, 40),
-                                    ),
+                                    ..shader =
+                                        const LinearGradient(
+                                          colors: [
+                                            Color(0xFF0664F2),
+                                            Color(0xFF0EA5E9),
+                                          ],
+                                        ).createShader(
+                                          const Rect.fromLTWH(0, 0, 160, 40),
+                                        ),
                                 ),
                               ),
                             ],
@@ -130,8 +128,9 @@ class LoginBranding extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryBlue
-                                    .withValues(alpha: 0.35),
+                                color: AppColors.primaryBlue.withValues(
+                                  alpha: 0.35,
+                                ),
                                 blurRadius: 10,
                                 offset: const Offset(0, 3),
                               ),
@@ -162,17 +161,11 @@ class LoginBranding extends StatelessWidget {
         Padding(
           padding: EdgeInsets.symmetric(horizontal: isCompact ? 16 : 0),
           child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 9,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
             decoration: BoxDecoration(
               color: Colors.white.withValues(alpha: 0.82),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: const Color(0xFFBFDBFE),
-                width: 1.2,
-              ),
+              border: Border.all(color: const Color(0xFFBFDBFE), width: 1.2),
               boxShadow: [
                 BoxShadow(
                   color: AppColors.primaryBlue.withValues(alpha: 0.08),

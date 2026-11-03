@@ -11,7 +11,8 @@ class SignUpCard extends StatefulWidget {
     String username,
     String email,
     String password,
-  )? onSignUp;
+  )?
+  onSignUp;
   final VoidCallback? onGithubSignUp;
   final VoidCallback? onGoogleSignUp;
   final VoidCallback? onMicrosoftSignUp;
@@ -63,7 +64,9 @@ class _SignUpCardState extends State<SignUpCard> {
           ),
           backgroundColor: const Color(0xFFEF4444),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -95,10 +98,7 @@ class _SignUpCardState extends State<SignUpCard> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: AppColors.primaryBlue,
-          width: 2.0,
-        ),
+        border: Border.all(color: AppColors.primaryBlue, width: 2.0),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF0F172A).withValues(alpha: 0.08),
@@ -158,9 +158,8 @@ class _SignUpCardState extends State<SignUpCard> {
               _buildField(
                 controller: _usernameController,
                 hintText: 'Username',
-                validator: (val) => val == null || val.trim().isEmpty
-                    ? 'Enter username'
-                    : null,
+                validator: (val) =>
+                    val == null || val.trim().isEmpty ? 'Enter username' : null,
               ),
             ] else ...[
               Row(
@@ -196,7 +195,8 @@ class _SignUpCardState extends State<SignUpCard> {
               hintText: 'Email Address',
               keyboardType: TextInputType.emailAddress,
               validator: (val) {
-                if (val == null || val.trim().isEmpty) return 'Enter email address';
+                if (val == null || val.trim().isEmpty)
+                  return 'Enter email address';
                 if (!val.contains('@')) return 'Enter a valid email';
                 return null;
               },
@@ -221,9 +221,8 @@ class _SignUpCardState extends State<SignUpCard> {
                   onPressed: () =>
                       setState(() => _obscurePassword = !_obscurePassword),
                 ),
-                validator: (val) => (val == null || val.length < 6)
-                    ? 'Min 6 characters'
-                    : null,
+                validator: (val) =>
+                    (val == null || val.length < 6) ? 'Min 6 characters' : null,
               ),
               const SizedBox(height: 14),
               _buildField(
@@ -261,8 +260,9 @@ class _SignUpCardState extends State<SignUpCard> {
                           color: const Color(0xFF64748B),
                           size: 19,
                         ),
-                        onPressed: () =>
-                            setState(() => _obscurePassword = !_obscurePassword),
+                        onPressed: () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                       ),
                       validator: (val) => (val == null || val.length < 6)
                           ? 'Min 6 characters'
@@ -383,10 +383,7 @@ class _SignUpCardState extends State<SignUpCard> {
                       ? AppColors.primaryBlue
                       : Colors.white,
                   borderRadius: BorderRadius.circular(25),
-                  border: Border.all(
-                    color: AppColors.primaryBlue,
-                    width: 2.0,
-                  ),
+                  border: Border.all(color: AppColors.primaryBlue, width: 2.0),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.primaryBlue.withValues(
@@ -437,10 +434,7 @@ class _SignUpCardState extends State<SignUpCard> {
             Row(
               children: [
                 Expanded(
-                  child: Container(
-                    height: 1,
-                    color: const Color(0xFFE2E8F0),
-                  ),
+                  child: Container(height: 1, color: const Color(0xFFE2E8F0)),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -454,10 +448,7 @@ class _SignUpCardState extends State<SignUpCard> {
                   ),
                 ),
                 Expanded(
-                  child: Container(
-                    height: 1,
-                    color: const Color(0xFFE2E8F0),
-                  ),
+                  child: Container(height: 1, color: const Color(0xFFE2E8F0)),
                 ),
               ],
             ),
@@ -515,17 +506,11 @@ class _SignUpCardState extends State<SignUpCard> {
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFFCBD5E1),
-            width: 1.2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFFCBD5E1),
-            width: 1.2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -536,17 +521,11 @@ class _SignUpCardState extends State<SignUpCard> {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFFEF4444),
-            width: 1.2,
-          ),
+          borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.2),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(
-            color: Color(0xFFEF4444),
-            width: 1.8,
-          ),
+          borderSide: const BorderSide(color: Color(0xFFEF4444), width: 1.8),
         ),
       ),
     );

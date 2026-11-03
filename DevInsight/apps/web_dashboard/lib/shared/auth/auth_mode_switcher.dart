@@ -93,6 +93,7 @@ class _Tab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Expanded(
       child: MouseRegion(
         cursor: isActive ? SystemMouseCursors.basic : SystemMouseCursors.click,
@@ -102,7 +103,9 @@ class _Tab extends StatelessWidget {
             child: AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 200),
               style: GoogleFonts.plusJakartaSans(
-                color: isActive ? Colors.white : AppColors.slateText,
+                color: isActive
+                    ? Colors.white
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.64),
                 fontSize: 13.5,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
               ),

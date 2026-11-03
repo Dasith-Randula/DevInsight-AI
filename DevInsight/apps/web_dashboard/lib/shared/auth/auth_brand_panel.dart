@@ -21,13 +21,24 @@ class AuthBrandPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return RepaintBoundary(
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFEAF4FF), Color(0xFFF4F9FF), Color(0xFFFFFFFF)],
+            colors: isDark
+                ? const [
+                    Color(0xFF101C32),
+                    Color(0xFF172B49),
+                    Color(0xFF0B1528),
+                  ]
+                : const [
+                    Color(0xFFEAF4FF),
+                    Color(0xFFF4F9FF),
+                    Color(0xFFFFFFFF),
+                  ],
             stops: [0.0, 0.55, 1.0],
           ),
         ),
@@ -85,12 +96,12 @@ class AuthBrandPanel extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Logo + wordmark
-                  _buildBranding(),
+                  _buildBranding(context),
 
                   SizedBox(height: isCompact ? 20 : 32),
 
                   // Main heading
-                  _buildHeading(isCompact),
+                  _buildHeading(context, isCompact),
 
                   SizedBox(height: isCompact ? 10 : 14),
 
@@ -129,7 +140,7 @@ class AuthBrandPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildBranding() {
+  Widget _buildBranding(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -140,7 +151,7 @@ class AuthBrandPanel extends StatelessWidget {
           height: 38,
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(11),
             border: Border.all(color: const Color(0xFFBFDBFE), width: 1.3),
             boxShadow: [
@@ -171,7 +182,7 @@ class AuthBrandPanel extends StatelessWidget {
               TextSpan(
                 text: 'Dev',
                 style: GoogleFonts.plusJakartaSans(
-                  color: AppColors.darkText,
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontSize: 19,
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.6,
@@ -193,14 +204,14 @@ class AuthBrandPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildHeading(bool compact) {
+  Widget _buildHeading(BuildContext context, bool compact) {
     return RichText(
       text: TextSpan(
         children: [
           TextSpan(
             text: 'Engineering\n',
             style: GoogleFonts.plusJakartaSans(
-              color: AppColors.darkText,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: compact ? 22 : 28,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.8,
@@ -220,7 +231,7 @@ class AuthBrandPanel extends StatelessWidget {
           TextSpan(
             text: ', Made Smarter.',
             style: GoogleFonts.plusJakartaSans(
-              color: AppColors.darkText,
+              color: Theme.of(context).colorScheme.onSurface,
               fontSize: compact ? 22 : 28,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.8,

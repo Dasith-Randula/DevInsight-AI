@@ -138,11 +138,16 @@ class _DashboardWindowState extends State<_DashboardWindow>
 class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       height: 36,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE4EDF8))),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF172B49) : Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? const Color(0xFF304562) : const Color(0xFFE4EDF8),
+          ),
+        ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
@@ -158,15 +163,21 @@ class _TopBar extends StatelessWidget {
             child: Container(
               height: 20,
               decoration: BoxDecoration(
-                color: const Color(0xFFF0F4FC),
+                color: isDark
+                    ? const Color(0xFF15243B)
+                    : const Color(0xFFF0F4FC),
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: const Color(0xFFDDE7F6)),
+                border: Border.all(
+                  color: isDark
+                      ? const Color(0xFF31435E)
+                      : const Color(0xFFDDE7F6),
+                ),
               ),
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: const Text(
+              child: Text(
                 'devinsight.app/dashboard',
-                style: TextStyle(color: Color(0xFF8EA8CC), fontSize: 9.5),
+                style: TextStyle(color: Color(0xFFA6B7D1), fontSize: 9.5),
               ),
             ),
           ),
@@ -196,11 +207,16 @@ class _Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 52,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(right: BorderSide(color: Color(0xFFE4EDF8))),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF101C32) : Colors.white,
+        border: Border(
+          right: BorderSide(
+            color: isDark ? const Color(0xFF304562) : const Color(0xFFE4EDF8),
+          ),
+        ),
       ),
       child: const Column(
         children: [
@@ -284,13 +300,16 @@ class _MainContent extends StatelessWidget {
 class _ChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF172B49) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE4EDF8)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF304562) : const Color(0xFFE4EDF8),
+        ),
       ),
-      child: const Padding(
+      child: Padding(
         padding: EdgeInsets.fromLTRB(14, 12, 14, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,7 +321,9 @@ class _ChartCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF152846),
+                    color: isDark
+                        ? const Color(0xFFF8FAFC)
+                        : const Color(0xFF152846),
                   ),
                 ),
                 Spacer(),
@@ -385,21 +406,24 @@ class _CompletionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF172B49) : Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE4EDF8)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF304562) : const Color(0xFFE4EDF8),
+        ),
       ),
       padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             'Completion',
             style: TextStyle(
-              color: AppColors.slateText,
+              color: isDark ? const Color(0xFFA6B7D1) : AppColors.slateText,
               fontSize: 9.5,
               fontWeight: FontWeight.w600,
             ),
@@ -410,8 +434,10 @@ class _CompletionCard extends StatelessWidget {
             duration: const Duration(milliseconds: 1200),
             builder: (context, v, _) => Text(
               '$v%',
-              style: const TextStyle(
-                color: Color(0xFF10233E),
+              style: TextStyle(
+                color: isDark
+                    ? const Color(0xFFF8FAFC)
+                    : const Color(0xFF10233E),
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
               ),
@@ -426,7 +452,9 @@ class _CompletionCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: v,
                 minHeight: 4,
-                backgroundColor: const Color(0xFFDEE9F8),
+                backgroundColor: isDark
+                    ? const Color(0xFF31435E)
+                    : const Color(0xFFDEE9F8),
                 valueColor: const AlwaysStoppedAnimation<Color>(
                   AppColors.primaryBlue,
                 ),
@@ -485,11 +513,14 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF172B49) : Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE4EDF8)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF304562) : const Color(0xFFE4EDF8),
+        ),
       ),
       padding: const EdgeInsets.all(10),
       child: Column(
@@ -498,8 +529,8 @@ class _MetricCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.slateText,
+            style: TextStyle(
+              color: isDark ? const Color(0xFFA6B7D1) : AppColors.slateText,
               fontSize: 9.5,
               fontWeight: FontWeight.w600,
             ),
@@ -517,8 +548,10 @@ class _MetricCard extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       '$v$suffix',
-                      style: const TextStyle(
-                        color: Color(0xFF10233E),
+                      style: TextStyle(
+                        color: isDark
+                            ? const Color(0xFFF8FAFC)
+                            : const Color(0xFF10233E),
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                       ),

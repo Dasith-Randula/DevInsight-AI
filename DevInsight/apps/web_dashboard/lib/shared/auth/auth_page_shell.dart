@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/constants/app_colors.dart';
+import '../../core/theme/theme_controller.dart';
 import '../backgrounds/animated_aura_background.dart';
+import '../widgets/theme_toggle_button.dart';
 
 /// Full-page shell for authentication screens.
 ///
@@ -16,11 +17,13 @@ import '../backgrounds/animated_aura_background.dart';
 class AuthPageShell extends StatefulWidget {
   final Widget child;
   final VoidCallback onNavigateHome;
+  final ThemeController? themeController;
 
   const AuthPageShell({
     super.key,
     required this.child,
     required this.onNavigateHome,
+    this.themeController,
   });
 
   @override
@@ -41,18 +44,12 @@ class _AuthPageShellState extends State<AuthPageShell>
       duration: const Duration(milliseconds: 620),
     );
 
-    _fadeAnim = CurvedAnimation(
-      parent: _enterCtrl,
-      curve: Curves.easeOutCubic,
-    );
+    _fadeAnim = CurvedAnimation(parent: _enterCtrl, curve: Curves.easeOutCubic);
 
     _slideAnim = Tween<Offset>(
       begin: const Offset(0, 0.025), // ~16px at typical auth card height
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _enterCtrl,
-      curve: Curves.easeOutCubic,
-    ));
+    ).animate(CurvedAnimation(parent: _enterCtrl, curve: Curves.easeOutCubic));
 
     // Slight delay so the background is visible first.
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -69,14 +66,12 @@ class _AuthPageShellState extends State<AuthPageShell>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.softBlueBg,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         fit: StackFit.expand,
         children: [
           // 1. Aura background (auth variant — very low intensity blue only)
-          const AnimatedAuraBackground(
-            variant: AuraBackgroundVariant.auth,
-          ),
+          const AnimatedAuraBackground(variant: AuraBackgroundVariant.auth),
 
           // 2. Scrollable auth content with page-enter animation
           SafeArea(
@@ -106,6 +101,16 @@ class _AuthPageShellState extends State<AuthPageShell>
               ),
             ),
           ),
+          if (widget.themeController != null)
+            SafeArea(
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 20, top: 16),
+                  child: ThemeToggleButton(controller: widget.themeController!),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -136,11 +141,13 @@ class _HomeButtonState extends State<_HomeButton> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
             color: _hovered
-                ? AppColors.primaryBlue.withValues(alpha: 0.06)
-                : Colors.white,
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.10)
+                : Theme.of(context).colorScheme.surface.withValues(alpha: 0.82),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: _hovered ? AppColors.primaryBlue : AppColors.cardBorder,
+              color: _hovered
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).dividerColor,
               width: 1.2,
             ),
             boxShadow: [
@@ -157,13 +164,21 @@ class _HomeButtonState extends State<_HomeButton> {
               Icon(
                 Icons.arrow_back_rounded,
                 size: 16,
-                color: _hovered ? AppColors.primaryBlue : AppColors.slateText,
+                color: _hovered
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.68),
               ),
               const SizedBox(width: 6),
               Text(
                 'Home',
                 style: GoogleFonts.plusJakartaSans(
-                  color: _hovered ? AppColors.primaryBlue : AppColors.slateText,
+                  color: _hovered
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.68),
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -175,4 +190,3 @@ class _HomeButtonState extends State<_HomeButton> {
     );
   }
 }
-
