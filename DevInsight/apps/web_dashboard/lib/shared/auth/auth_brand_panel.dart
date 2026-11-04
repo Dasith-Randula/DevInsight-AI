@@ -5,134 +5,99 @@ import '../../core/constants/app_assets.dart';
 import '../../core/constants/app_colors.dart';
 import 'auth_dot_surface.dart';
 
-/// Right brand panel for the auth split-layout.
-///
-/// Shows:
-/// - DevInsight logo + wordmark (Dev black, Insight blue).
-/// - Main heading with blue-highlighted words.
-/// - Supporting tagline.
-/// - [AuthDotSurface] with an animated, depth-based dot surface.
-///
-/// Background is a very light blue-to-white gradient.
-/// Wrapped in [RepaintBoundary] so illustration repaints don't affect parent.
-class AuthBrandPanel extends StatelessWidget {
-  final bool isCompact;
+class AuthBrandPanel extends StatefulWidget {
   const AuthBrandPanel({super.key, this.isCompact = false});
+
+  final bool isCompact;
+
+  @override
+  State<AuthBrandPanel> createState() => _AuthBrandPanelState();
+}
+
+class _AuthBrandPanelState extends State<AuthBrandPanel>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _entranceController;
+  late final List<Animation<double>> _cardFades;
+  late final List<Animation<Offset>> _cardSlides;
+
+  @override
+  void initState() {
+    super.initState();
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1050),
+    )..forward();
+    _cardFades = List.generate(3, (index) {
+      final start = 0.38 + index * 0.16;
+      return CurvedAnimation(
+        parent: _entranceController,
+        curve: Interval(
+          start,
+          (start + 0.36).clamp(0.0, 1.0).toDouble(),
+          curve: Curves.easeOut,
+        ),
+      );
+    });
+    _cardSlides = List.generate(3, (index) {
+      final start = 0.38 + index * 0.16;
+      return Tween<Offset>(
+        begin: const Offset(0, 0.12),
+        end: Offset.zero,
+      ).animate(
+        CurvedAnimation(
+          parent: _entranceController,
+          curve: Interval(
+            start,
+            (start + 0.36).clamp(0.0, 1.0).toDouble(),
+            curve: Curves.easeOutCubic,
+          ),
+        ),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _entranceController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return RepaintBoundary(
       child: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: isDark
-                ? const [
-                    Color(0xFF101C32),
-                    Color(0xFF172B49),
-                    Color(0xFF0B1528),
-                  ]
-                : const [
-                    Color(0xFFEAF4FF),
-                    Color(0xFFF4F9FF),
-                    Color(0xFFFFFFFF),
-                  ],
-            stops: [0.0, 0.55, 1.0],
+            colors: [
+              AppColors.authDeepBlue,
+              AppColors.authAzureBlue,
+              AppColors.authRoyalBlue,
+            ],
+            stops: [0, 0.52, 1],
           ),
         ),
         child: Stack(
           children: [
-            // Soft ambient blue glow in the corner
-            Positioned(
-              top: -60,
-              left: -40,
-              child: Container(
-                width: 280,
-                height: 280,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.10),
-                      blurRadius: 100,
-                      spreadRadius: 40,
-                    ),
-                  ],
-                ),
-              ),
+            const Positioned(
+              top: -150,
+              right: -100,
+              child: _AmbientGlow(size: 370, opacity: 0.2),
             ),
-
-            Positioned(
-              bottom: -30,
-              right: -20,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.secondaryBlue.withValues(alpha: 0.08),
-                      blurRadius: 80,
-                      spreadRadius: 30,
-                    ),
-                  ],
-                ),
-              ),
+            const Positioned(
+              bottom: -180,
+              left: -150,
+              child: _AmbientGlow(size: 390, opacity: 0.16),
             ),
-
-            // Main content
             Padding(
               padding: EdgeInsets.fromLTRB(
-                isCompact ? 24 : 36,
-                isCompact ? 24 : 40,
-                isCompact ? 24 : 32,
-                isCompact ? 20 : 32,
+                widget.isCompact ? 22 : 42,
+                widget.isCompact ? 18 : 34,
+                widget.isCompact ? 22 : 38,
+                widget.isCompact ? 18 : 30,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Logo + wordmark
-                  _buildBranding(context),
-
-                  SizedBox(height: isCompact ? 20 : 32),
-
-                  // Main heading
-                  _buildHeading(context, isCompact),
-
-                  SizedBox(height: isCompact ? 10 : 14),
-
-                  // Supporting text
-                  Text(
-                    'Predict risks, prioritize critical issues, and make\nconfident software project decisions.',
-                    style: GoogleFonts.plusJakartaSans(
-                      color: AppColors.slateText,
-                      fontSize: isCompact ? 12 : 13.5,
-                      fontWeight: FontWeight.w500,
-                      height: 1.55,
-                    ),
-                  ),
-
-                  SizedBox(height: isCompact ? 20 : 28),
-
-                  TweenAnimationBuilder<double>(
-                    tween: Tween<double>(begin: 0.96, end: 1),
-                    duration: const Duration(milliseconds: 700),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, scale, child) {
-                      return Transform.scale(scale: scale, child: child);
-                    },
-                    child: SizedBox(
-                      height: isCompact ? 180 : 240,
-                      width: double.infinity,
-                      child: const AuthDotSurface(),
-                    ),
-                  ),
-                ],
-              ),
+              child: widget.isCompact ? _buildBranding() : _buildFullPanel(),
             ),
           ],
         ),
@@ -140,61 +105,116 @@ class AuthBrandPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildBranding(BuildContext context) {
-    return Row(
+  Widget _buildFullPanel() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Logo container with blue glow
-        Container(
-          width: 38,
-          height: 38,
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(11),
-            border: Border.all(color: const Color(0xFFBFDBFE), width: 1.3),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primaryBlue.withValues(alpha: 0.25),
-                blurRadius: 16,
-                spreadRadius: 1,
-                offset: const Offset(0, 4),
-              ),
-            ],
+        _buildBranding(),
+        const SizedBox(height: 44),
+        FadeTransition(
+          opacity: CurvedAnimation(
+            parent: _entranceController,
+            curve: const Interval(0, 0.46, curve: Curves.easeOut),
           ),
-          child: Image.asset(
-            AppAssets.devInsightLogo,
-            fit: BoxFit.contain,
-            filterQuality: FilterQuality.high,
-            errorBuilder: (context, error, _) => const Icon(
-              Icons.auto_awesome_rounded,
-              color: AppColors.primaryBlue,
-              size: 18,
+          child: SlideTransition(
+            position:
+                Tween<Offset>(
+                  begin: const Offset(0, 0.08),
+                  end: Offset.zero,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _entranceController,
+                    curve: const Interval(0, 0.46, curve: Curves.easeOutCubic),
+                  ),
+                ),
+            child: _buildHeading(),
+          ),
+        ),
+        const SizedBox(height: 14),
+        FadeTransition(
+          opacity: CurvedAnimation(
+            parent: _entranceController,
+            curve: const Interval(0.13, 0.56, curve: Curves.easeOut),
+          ),
+          child: Text(
+            'Predict risks, prioritize critical issues, and make confident software project decisions.',
+            style: GoogleFonts.plusJakartaSans(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontSize: 16,
+              fontWeight: FontWeight.w400,
+              height: 1.55,
             ),
           ),
         ),
+        const SizedBox(height: 8),
+        const SizedBox(
+          height: 178,
+          width: double.infinity,
+          child: AuthDotSurface(),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            _featureCard(
+              index: 0,
+              icon: Icons.insights_rounded,
+              title: 'Track Project Health',
+              description: 'Get a clear view of project progress.',
+            ),
+            const SizedBox(width: 10),
+            _featureCard(
+              index: 1,
+              icon: Icons.shield_outlined,
+              title: 'Predict Delivery Risks',
+              description: 'Identify potential delays early.',
+            ),
+            const SizedBox(width: 10),
+            _featureCard(
+              index: 2,
+              icon: Icons.checklist_rounded,
+              title: 'Prioritize Issues',
+              description: 'Focus on what matters most.',
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBranding() {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 44,
+          height: 44,
+          child: Image.asset(
+            AppAssets.devInsightBrandingLogo,
+            fit: BoxFit.contain,
+            filterQuality: FilterQuality.high,
+          ),
+        ),
         const SizedBox(width: 12),
-        // Wordmark: Dev (black) + Insight (blue)
         RichText(
           text: TextSpan(
             children: [
               TextSpan(
                 text: 'Dev',
                 style: GoogleFonts.plusJakartaSans(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 19,
+                  color: Colors.white,
+                  fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: -0.6,
+                  letterSpacing: -0.8,
                 ),
               ),
               TextSpan(
                 text: 'Insight',
                 style: GoogleFonts.plusJakartaSans(
-                  color: AppColors.primaryBlue,
-                  fontSize: 19,
+                  color: AppColors.authCyan,
+                  fontSize: 24,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: -0.6,
+                  letterSpacing: -0.8,
                 ),
               ),
             ],
@@ -204,41 +224,151 @@ class AuthBrandPanel extends StatelessWidget {
     );
   }
 
-  Widget _buildHeading(BuildContext context, bool compact) {
+  Widget _buildHeading() {
+    final style = GoogleFonts.plusJakartaSans(
+      color: Colors.white,
+      fontSize: 44,
+      fontWeight: FontWeight.w800,
+      letterSpacing: -1.6,
+      height: 1.1,
+    );
     return RichText(
       text: TextSpan(
+        style: style,
         children: [
-          TextSpan(
-            text: 'Engineering\n',
-            style: GoogleFonts.plusJakartaSans(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: compact ? 22 : 28,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.8,
-              height: 1.2,
-            ),
-          ),
+          const TextSpan(text: 'Engineering\n'),
           TextSpan(
             text: 'Intelligence',
-            style: GoogleFonts.plusJakartaSans(
-              color: AppColors.primaryBlue,
-              fontSize: compact ? 22 : 28,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.8,
-              height: 1.2,
-            ),
+            style: style.copyWith(color: AppColors.authCyan),
           ),
-          TextSpan(
-            text: ', Made Smarter.',
-            style: GoogleFonts.plusJakartaSans(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: compact ? 22 : 28,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.8,
-              height: 1.2,
-            ),
-          ),
+          const TextSpan(text: ', Made Smarter.'),
         ],
+      ),
+    );
+  }
+
+  Widget _featureCard({
+    required int index,
+    required IconData icon,
+    required String title,
+    required String description,
+  }) {
+    return Expanded(
+      child: FadeTransition(
+        opacity: _cardFades[index],
+        child: SlideTransition(
+          position: _cardSlides[index],
+          child: _FeatureCard(
+            icon: icon,
+            title: title,
+            description: description,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FeatureCard extends StatefulWidget {
+  const _FeatureCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+
+  @override
+  State<_FeatureCard> createState() => _FeatureCardState();
+}
+
+class _FeatureCardState extends State<_FeatureCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        height: 106,
+        padding: const EdgeInsets.all(12),
+        transform: Matrix4.translationValues(0, _hovered ? -3 : 0, 0),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: _hovered ? 0.19 : 0.13),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+          boxShadow: _hovered
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF071E78).withValues(alpha: 0.2),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : const [],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(widget.icon, size: 19, color: AppColors.authCyan),
+            const SizedBox(height: 7),
+            Text(
+              widget.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.plusJakartaSans(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              widget.description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.plusJakartaSans(
+                color: Colors.white.withValues(alpha: 0.82),
+                fontSize: 10,
+                height: 1.3,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AmbientGlow extends StatelessWidget {
+  const _AmbientGlow({required this.size, required this.opacity});
+
+  final double size;
+  final double opacity;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                AppColors.authCyan.withValues(alpha: opacity),
+                AppColors.authAzureBlue.withValues(alpha: opacity * 0.25),
+                Colors.transparent,
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -3,10 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/auth/auth_brand_panel.dart';
-import '../../../../shared/auth/auth_mode_switcher.dart';
 import '../../../../shared/auth/auth_primary_button.dart';
 import '../../../../shared/auth/auth_text_field.dart';
-import '../../../../shared/widgets/liquid_glass_card.dart';
 
 // Re-export enum so Login.dart and signup_page.dart don't need changes.
 enum AuthMode { signUp, logIn }
@@ -14,13 +12,13 @@ enum AuthMode { signUp, logIn }
 /// The main authentication card widget.
 ///
 /// Renders a split two-column layout on desktop (≥960px) and a single-column
-/// stacked layout on mobile. Uses [AuthBrandPanel], [AuthModeSwitcher],
-/// [AuthTextField], and [AuthPrimaryButton] from the shared auth library.
+/// stacked layout on mobile. Uses the shared auth branding and form widgets.
 ///
 /// All animation controllers are disposed in [State.dispose].
 class ModernAuthCard extends StatefulWidget {
   final AuthMode initialMode;
   final ValueChanged<AuthMode>? onModeChanged;
+  final VoidCallback? onNavigateBack;
   final void Function(String, String, String, String)? onSignUp;
   final void Function(String, String)? onLogIn;
   final VoidCallback? onForgotPassword;
@@ -33,6 +31,7 @@ class ModernAuthCard extends StatefulWidget {
     super.key,
     this.initialMode = AuthMode.logIn,
     this.onModeChanged,
+    this.onNavigateBack,
     this.onSignUp,
     this.onLogIn,
     this.onForgotPassword,
@@ -203,17 +202,31 @@ class _ModernAuthCardState extends State<ModernAuthCard>
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 960;
-    final isTablet = screenWidth >= 600 && screenWidth < 960;
-
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1150),
-        child: LiquidGlassCard(
-          borderRadius: 26,
-          variant: LiquidGlassVariant.strong,
-          child: isDesktop
-              ? _buildDesktopLayout(isTablet)
-              : _buildMobileLayout(),
+        constraints: const BoxConstraints(maxWidth: 1320),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(34),
+            border: Border.all(color: const Color(0xFFDCE7F5)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF173B75).withValues(alpha: 0.13),
+                blurRadius: 56,
+                offset: const Offset(0, 24),
+              ),
+              BoxShadow(
+                color: const Color(0xFF173B75).withValues(alpha: 0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(34),
+            child: isDesktop ? _buildDesktopLayout() : _buildMobileLayout(),
+          ),
         ),
       ),
     );
@@ -222,15 +235,13 @@ class _ModernAuthCardState extends State<ModernAuthCard>
   // ---------------------------------------------------------------------------
   // Desktop: two columns
   // ---------------------------------------------------------------------------
-  Widget _buildDesktopLayout(bool isTablet) {
+  Widget _buildDesktopLayout() {
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Left: Form (58%)
-          Expanded(flex: 58, child: _buildFormPanel(isCompact: false)),
-          // Right: Brand (42%)
-          Expanded(flex: 42, child: AuthBrandPanel(isCompact: false)),
+          Expanded(flex: 52, child: AuthBrandPanel(isCompact: false)),
+          Expanded(flex: 48, child: _buildFormPanel(isCompact: false)),
         ],
       ),
     );
@@ -244,9 +255,8 @@ class _ModernAuthCardState extends State<ModernAuthCard>
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildFormPanel(isCompact: true),
-        // Keep the form first on narrow layouts; the visual is decorative.
         AuthBrandPanel(isCompact: true),
+        _buildFormPanel(isCompact: true),
       ],
     );
   }
@@ -255,8 +265,8 @@ class _ModernAuthCardState extends State<ModernAuthCard>
   // Form panel (right column or stacked below brand)
   // ---------------------------------------------------------------------------
   Widget _buildFormPanel({required bool isCompact}) {
-    final hPad = isCompact ? 22.0 : 44.0;
-    final vPad = isCompact ? 24.0 : 36.0;
+    final hPad = isCompact ? 22.0 : 52.0;
+    final vPad = isCompact ? 24.0 : 38.0;
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
@@ -264,25 +274,13 @@ class _ModernAuthCardState extends State<ModernAuthCard>
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 0. Mode Switcher
-          _staggerItem(
-            0,
-            Center(
-              child: SizedBox(
-                width: 260,
-                child: AuthModeSwitcher(
-                  isSignUp: _mode == AuthMode.signUp,
-                  onChanged: _switchMode,
-                ),
-              ),
-            ),
-          ),
+          Align(alignment: Alignment.centerLeft, child: _buildBackButton()),
 
-          const SizedBox(height: 24),
+          SizedBox(height: isCompact ? 24 : 34),
 
           // 1. Heading (animates on mode change)
           _staggerItem(
-            1,
+            0,
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 240),
               transitionBuilder: (child, anim) =>
@@ -297,8 +295,8 @@ class _ModernAuthCardState extends State<ModernAuthCard>
                         ? 'Create Your Account'
                         : 'Welcome Back',
                     style: GoogleFonts.plusJakartaSans(
-                      color: AppColors.darkText,
-                      fontSize: isCompact ? 22 : 26,
+                      color: AppColors.authText,
+                      fontSize: isCompact ? 28 : 38,
                       fontWeight: FontWeight.w800,
                       letterSpacing: -0.6,
                     ),
@@ -309,8 +307,8 @@ class _ModernAuthCardState extends State<ModernAuthCard>
                         ? 'Start making smarter software project decisions.'
                         : 'Sign in to continue your DevInsight experience.',
                     style: GoogleFonts.plusJakartaSans(
-                      color: AppColors.slateText,
-                      fontSize: 13.5,
+                      color: AppColors.authSecondaryText,
+                      fontSize: 15,
                       fontWeight: FontWeight.w500,
                       height: 1.45,
                     ),
@@ -324,7 +322,7 @@ class _ModernAuthCardState extends State<ModernAuthCard>
 
           // 2. Form fields (staggered, with AnimatedSwitcher for mode swap)
           _staggerItem(
-            2,
+            1,
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               switchInCurve: Curves.easeOutCubic,
@@ -355,28 +353,58 @@ class _ModernAuthCardState extends State<ModernAuthCard>
 
           // 3. Primary button
           _staggerItem(
-            3,
-            AuthPrimaryButton(
-              label: _mode == AuthMode.signUp ? 'Create Account' : 'Sign In',
-              isLoading: _isLoading,
-              onPressed: _isLoading
-                  ? null
-                  : (_mode == AuthMode.signUp ? _handleSignUp : _handleLogIn),
+            2,
+            Center(
+              child: SizedBox(
+                width: MediaQuery.sizeOf(context).width < 600
+                    ? double.infinity
+                    : 300,
+                child: AuthPrimaryButton(
+                  label: _mode == AuthMode.signUp ? 'Create Account' : 'Sign In',
+                  isLoading: _isLoading,
+                  onPressed: _isLoading
+                      ? null
+                      : (_mode == AuthMode.signUp
+                            ? _handleSignUp
+                            : _handleLogIn),
+                ),
+              ),
             ),
           ),
 
           const SizedBox(height: 18),
 
           // 4. Or divider + social buttons
-          _staggerItem(4, _buildDivider()),
+          _staggerItem(3, _buildDivider()),
           const SizedBox(height: 14),
-          _staggerItem(4, _buildSocialButtons()),
+          _staggerItem(3, _buildSocialButtons()),
 
           const SizedBox(height: 18),
 
           // 5. Switch prompt
-          _staggerItem(5, _buildSwitchPrompt()),
+          _staggerItem(4, _buildSwitchPrompt()),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBackButton() {
+    return OutlinedButton.icon(
+      onPressed: widget.onNavigateBack,
+      icon: const Icon(Icons.arrow_back_rounded, size: 17),
+      label: Text(
+        'Back',
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppColors.authSecondaryText,
+        side: const BorderSide(color: AppColors.authInputBorder),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        visualDensity: VisualDensity.compact,
       ),
     );
   }
@@ -520,6 +548,9 @@ class _ModernAuthCardState extends State<ModernAuthCard>
             textInputAction: TextInputAction.next,
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'Enter email address';
+              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v.trim())) {
+                return 'Enter a valid email address';
+              }
               return null;
             },
           ),
@@ -557,13 +588,13 @@ class _ModernAuthCardState extends State<ModernAuthCard>
                 child: Text(
                   'Forgot Password?',
                   style: GoogleFonts.plusJakartaSans(
-                    color: AppColors.primaryBlue,
+                    color: AppColors.authRoyalBlue,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     decoration: _isForgotHovered
                         ? TextDecoration.underline
                         : TextDecoration.none,
-                    decorationColor: AppColors.primaryBlue,
+                    decorationColor: AppColors.authRoyalBlue,
                   ),
                 ),
               ),
@@ -582,7 +613,7 @@ class _ModernAuthCardState extends State<ModernAuthCard>
       icon: Icon(
         obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
         size: 19,
-        color: AppColors.slateText,
+        color: AppColors.authSecondaryText,
       ),
       tooltip: obscure ? 'Show password' : 'Hide password',
       onPressed: onTap,
@@ -596,19 +627,23 @@ class _ModernAuthCardState extends State<ModernAuthCard>
   Widget _buildDivider() {
     return Row(
       children: [
-        Expanded(child: Divider(color: AppColors.inputBorder, thickness: 1)),
+        Expanded(
+          child: Divider(color: AppColors.authInputBorder, thickness: 1),
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 14),
           child: Text(
             'Or continue with',
             style: GoogleFonts.plusJakartaSans(
-              color: AppColors.slateText.withValues(alpha: 0.7),
+              color: AppColors.authSecondaryText.withValues(alpha: 0.7),
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
         ),
-        Expanded(child: Divider(color: AppColors.inputBorder, thickness: 1)),
+        Expanded(
+          child: Divider(color: AppColors.authInputBorder, thickness: 1),
+        ),
       ],
     );
   }
@@ -660,7 +695,7 @@ class _ModernAuthCardState extends State<ModernAuthCard>
                   ? 'Already have an account? '
                   : "Don't have an account? ",
               style: GoogleFonts.plusJakartaSans(
-                color: AppColors.slateText,
+                color: AppColors.authSecondaryText,
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
               ),
@@ -674,11 +709,11 @@ class _ModernAuthCardState extends State<ModernAuthCard>
                   child: Text(
                     isSignUp ? 'Sign In' : 'Create Account',
                     style: GoogleFonts.plusJakartaSans(
-                      color: AppColors.primaryBlue,
+                      color: AppColors.authRoyalBlue,
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       decoration: TextDecoration.underline,
-                      decorationColor: AppColors.primaryBlue,
+                      decorationColor: AppColors.authRoyalBlue,
                     ),
                   ),
                 ),
@@ -722,17 +757,19 @@ class _SocialBtnState extends State<_SocialBtn> {
           padding: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
             color: _hovered
-                ? AppColors.primaryBlue.withValues(alpha: 0.05)
-                : AppColors.inputBg,
+                ? AppColors.authRoyalBlue.withValues(alpha: 0.05)
+                : AppColors.authBackground,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: _hovered ? AppColors.primaryBlue : AppColors.inputBorder,
+              color: _hovered
+                  ? AppColors.authRoyalBlue
+                  : AppColors.authInputBorder,
               width: _hovered ? 1.5 : 1.0,
             ),
             boxShadow: _hovered
                 ? [
                     BoxShadow(
-                      color: AppColors.primaryBlue.withValues(alpha: 0.12),
+                      color: AppColors.authRoyalBlue.withValues(alpha: 0.12),
                       blurRadius: 10,
                       offset: const Offset(0, 3),
                     ),
@@ -749,7 +786,7 @@ class _SocialBtnState extends State<_SocialBtn> {
                   widget.label,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.plusJakartaSans(
-                    color: AppColors.darkText,
+                    color: AppColors.authText,
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
                   ),
@@ -881,7 +918,7 @@ class _ApplePainter extends CustomPainter {
       ..cubicTo(17.68, 7.98, 19.57, 8.23, 20.78, 10.0)
       ..cubicTo(20.68, 10.06, 18.69, 11.22, 18.71, 14.04)
       ..close();
-    canvas.drawPath(p, Paint()..color = AppColors.darkText);
+    canvas.drawPath(p, Paint()..color = AppColors.authText);
     canvas.restore();
   }
 

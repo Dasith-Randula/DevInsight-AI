@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../shared/widgets/theme_toggle_button.dart';
+import '../../../Login/Pages/Login.dart';
+import '../../../signup/presentation/pages/signup_page.dart';
 import '../sections/about_section.dart';
 import '../sections/cta_section.dart';
 import '../sections/features_section.dart';
@@ -81,7 +83,38 @@ class _LandingPageState extends State<LandingPage> {
     );
   }
 
-  void _openAuth() => Navigator.of(context).pushNamed('/login');
+  Route<void> _authRoute(Widget page, String routeName) => PageRouteBuilder<void>(
+    settings: RouteSettings(name: routeName),
+    pageBuilder: (context, animation, secondaryAnimation) => page,
+    transitionDuration: const Duration(milliseconds: 350),
+    reverseTransitionDuration: const Duration(milliseconds: 300),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        FadeTransition(
+          opacity: CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOutCubic,
+          ),
+          child: child,
+        ),
+  );
+
+  void _openSignIn() {
+    Navigator.of(context).push(
+      _authRoute(
+        LoginPage(themeController: widget.themeController),
+        '/login',
+      ),
+    );
+  }
+
+  void _openSignUp() {
+    Navigator.of(context).push(
+      _authRoute(
+        SignUpPage(themeController: widget.themeController),
+        '/signup',
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -106,8 +139,8 @@ class _LandingPageState extends State<LandingPage> {
                   child: LandingHero(
                     key: _heroKey,
                     height: viewportHeight < 720 ? 720 : viewportHeight,
-                    onGetStarted: _openAuth,
-                    onSignIn: _openAuth,
+                    onGetStarted: _openSignUp,
+                    onSignIn: _openSignIn,
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -138,8 +171,8 @@ class _LandingPageState extends State<LandingPage> {
                   child: CtaSection(
                     key: _ctaKey,
                     scrollController: _scrollController,
-                    onGetStarted: _openAuth,
-                    onSignIn: _openAuth,
+                    onGetStarted: _openSignUp,
+                    onSignIn: _openSignIn,
                   ),
                 ),
                 SliverToBoxAdapter(
@@ -148,7 +181,7 @@ class _LandingPageState extends State<LandingPage> {
                     onHowItWorks: () => _scrollTo(_howItWorksKey),
                     onResearch: () => _scrollTo(_researchKey),
                     onAbout: () => _scrollTo(_aboutKey),
-                    onSignIn: _openAuth,
+                    onSignIn: _openSignIn,
                   ),
                 ),
               ],
@@ -166,8 +199,8 @@ class _LandingPageState extends State<LandingPage> {
                 onHowItWorks: () => _scrollTo(_howItWorksKey),
                 onResearch: () => _scrollTo(_researchKey),
                 onAbout: () => _scrollTo(_aboutKey),
-                onSignIn: _openAuth,
-                onGetStarted: _openAuth,
+                onSignIn: _openSignIn,
+                onGetStarted: _openSignUp,
               ),
             ),
           ],

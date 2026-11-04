@@ -6,6 +6,7 @@ import '../../../../core/theme/theme_controller.dart';
 import '../../../../shared/auth/auth_page_shell.dart';
 import '../../../Login/Pages/Login.dart';
 import '../../../Login/Widgets/modern_auth_card.dart';
+import '../../../onboarding/presentation/pages/onboarding_flow_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key, this.themeController});
@@ -34,14 +35,13 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  void _navigateToLanding() {
-    Navigator.of(context).pushNamedAndRemoveUntil('/landing', (route) => false);
-  }
-
-  void _navigateToLogin() {
-    Navigator.of(context).pushReplacement(
-      _pageRoute(LoginPage(themeController: widget.themeController)),
-    );
+  void _navigateBackToLanding() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    } else {
+      navigator.pushNamedAndRemoveUntil('/landing', (route) => false);
+    }
   }
 
   void _showNotice(String message, {bool isError = false}) {
@@ -67,10 +67,9 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return AuthPageShell(
-      themeController: widget.themeController,
-      onNavigateHome: _navigateToLanding,
       child: ModernAuthCard(
         initialMode: AuthMode.signUp,
+        onNavigateBack: _navigateBackToLanding,
         onModeChanged: (mode) {
           if (mode == AuthMode.logIn) {
             Navigator.of(context).pushReplacement(
@@ -79,11 +78,20 @@ class _SignUpPageState extends State<SignUpPage> {
           }
         },
         onSignUp: (firstName, lastName, email, password) {
-          _showNotice('Welcome $firstName! Account created.');
-          Future.delayed(const Duration(milliseconds: 900), _navigateToLogin);
+          Navigator.of(context).pushReplacement(
+            _pageRoute(
+              OnboardingFlowPage(
+                initialName: '$firstName $lastName',
+                initialEmail: email,
+              ),
+            ),
+          );
         },
         onLogIn: (email, password) {
-          _showNotice('Signing in as $email…');
+          _showNotice(
+            'Authentication is not connected yet. No account was signed in.',
+            isError: true,
+          );
         },
         onForgotPassword: () {
           _showNotice('Password reset link sent to your email.');

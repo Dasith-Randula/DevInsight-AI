@@ -36,8 +36,13 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  void _navigateToLanding() {
-    Navigator.of(context).pushNamedAndRemoveUntil('/landing', (route) => false);
+  void _navigateBackToLanding() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    } else {
+      navigator.pushNamedAndRemoveUntil('/landing', (route) => false);
+    }
   }
 
   void _showNotice(String message, {bool isError = false}) {
@@ -63,10 +68,9 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return AuthPageShell(
-      themeController: widget.themeController,
-      onNavigateHome: _navigateToLanding,
       child: ModernAuthCard(
         initialMode: AuthMode.logIn,
+        onNavigateBack: _navigateBackToLanding,
         onModeChanged: (mode) {
           if (mode == AuthMode.signUp) {
             Navigator.of(context).pushReplacement(
@@ -75,12 +79,13 @@ class _LoginPageState extends State<LoginPage> {
           }
         },
         onLogIn: (email, password) {
-          _showNotice('Signing in as $email…');
+          _showNotice(
+            'Authentication is not connected yet. No account was signed in.',
+            isError: true,
+          );
         },
         onSignUp: (firstName, lastName, email, password) {
-          _showNotice(
-            'Account created for $firstName $lastName! Please sign in.',
-          );
+          _showNotice('Account creation is not connected yet.', isError: true);
         },
         onForgotPassword: () {
           _showNotice('Password reset link sent to your email.');
