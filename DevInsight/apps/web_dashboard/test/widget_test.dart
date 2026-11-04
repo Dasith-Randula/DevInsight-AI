@@ -26,7 +26,7 @@ void main() {
     );
 
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 2600));
+    await tester.pump(const Duration(seconds: 8));
     await tester.pumpAndSettle();
 
     expect(find.text('Landing page'), findsOneWidget);

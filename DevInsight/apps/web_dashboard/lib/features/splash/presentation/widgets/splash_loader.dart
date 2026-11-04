@@ -2,12 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
 
-/// Premium progress bar for the splash connection check.
+/// Minimal, elegant loading bar for the DevInsight Midnight Aurora splash screen.
+///
+/// Responsive dimensions:
+/// - Desktop: ~290px width, 7px height
+/// - Tablet: ~250px width, 6px height
+/// - Mobile: ~220px width, 6px height
+///
+/// Features:
+/// - Fully rounded corners
+/// - Dark translucent blue track (#304570)
+/// - Vibrant Royal Blue to Azure Blue gradient fill with subtle leading highlight
 class SplashLoader extends StatelessWidget {
   const SplashLoader({
     super.key,
     required this.progress,
-    this.width = 220,
+    this.width = 290,
     this.height = 7,
   });
 
@@ -18,11 +28,11 @@ class SplashLoader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final clampedProgress = progress.clamp(0.0, 1.0);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return RepaintBoundary(
       child: SizedBox(
         width: width,
-        height: height + 8,
+        height: height + 6,
         child: Align(
           alignment: Alignment.center,
           child: ClipRRect(
@@ -32,14 +42,13 @@ class SplashLoader extends StatelessWidget {
               height: height,
               child: Stack(
                 children: [
+                  // 1. Dark translucent blue track
                   ColoredBox(
-                    color:
-                        (isDark
-                                ? const Color(0xFF15243B)
-                                : AppColors.loaderTrack)
-                            .withValues(alpha: 0.75),
+                    color: AppColors.splashLoaderTrack.withValues(alpha: 0.65),
                     child: const SizedBox.expand(),
                   ),
+
+                  // 2. Gradient fill with soft leading glow
                   Align(
                     alignment: Alignment.centerLeft,
                     child: FractionallySizedBox(
@@ -47,13 +56,20 @@ class SplashLoader extends StatelessWidget {
                       heightFactor: 1,
                       child: DecoratedBox(
                         decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(height),
                           gradient: const LinearGradient(
-                            colors: [Color(0xFF0077B6), Color(0xFF00B4D8)],
+                            colors: [
+                              AppColors.royalBlue,
+                              AppColors.azureBlue,
+                              AppColors.softBlueHighlight,
+                            ],
+                            stops: [0.0, 0.85, 1.0],
                           ),
-                          boxShadow: const [
+                          boxShadow: [
                             BoxShadow(
-                              color: AppColors.secondaryBlue,
-                              blurRadius: 8,
+                              color: AppColors.azureBlue.withValues(alpha: 0.55),
+                              blurRadius: 6,
+                              offset: const Offset(0, 0),
                             ),
                           ],
                         ),

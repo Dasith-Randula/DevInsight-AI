@@ -29,4 +29,14 @@ class AppColors {
   // Misc
   static const Color softCyan = Color(0xFF0EA5E9);
   static const Color mutedBlue = Color(0xFF93C5FD);
+
+  // Midnight Aurora Splash Palette
+  static const Color royalBlue = Color(0xFF0056FF);
+  static const Color azureBlue = Color(0xFF2277FF);
+  static const Color softLavender = Color(0xFFE3E7FC);
+  static const Color midnightBlack = Color(0xFF050916);
+  static const Color midnightNavy = Color(0xFF08132E);
+  static const Color darkBlueNavy = Color(0xFF0D235B);
+  static const Color softBlueHighlight = Color(0xFF79B8FF);
+  static const Color splashLoaderTrack = Color(0xFF304570);
 }
