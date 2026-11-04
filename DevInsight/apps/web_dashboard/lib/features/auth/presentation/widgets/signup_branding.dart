@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:web_dashboard/core/constants/app_assets.dart';
+import 'package:web_dashboard/core/constants/app_colors.dart';
 
-import '../../../../core/constants/app_assets.dart';
-import '../../../../core/constants/app_colors.dart';
 
 class SignUpBranding extends StatelessWidget {
   final bool isCompact;
@@ -150,7 +150,7 @@ class SignUpBranding extends StatelessWidget {
               fit: BoxFit.contain,
               filterQuality: FilterQuality.high,
               errorBuilder: (context, error, stackTrace) => Image.asset(
-                'lib/features/signup/presentation/widgets/SIGNUP.png',
+                AppAssets.signupIllustration,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) =>
                     const SizedBox.shrink(),

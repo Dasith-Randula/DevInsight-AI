@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../../../core/constants/app_colors.dart';
-import '../../../../shared/auth/auth_brand_panel.dart';
-import '../../../../shared/auth/auth_mode_switcher.dart';
-import '../../../../shared/auth/auth_primary_button.dart';
-import '../../../../shared/auth/auth_text_field.dart';
-import '../../../../shared/widgets/liquid_glass_card.dart';
+import 'package:web_dashboard/core/constants/app_colors.dart';
+import 'package:web_dashboard/features/auth/presentation/widgets/auth_brand_panel.dart';
+import 'package:web_dashboard/features/auth/presentation/widgets/auth_mode_switcher.dart';
+import 'package:web_dashboard/features/auth/presentation/widgets/auth_primary_button.dart';
+import 'package:web_dashboard/features/auth/presentation/widgets/auth_text_field.dart';
+import 'package:web_dashboard/shared/widgets/liquid_glass_card.dart';
 
 // Re-export enum so Login.dart and signup_page.dart don't need changes.
 enum AuthMode { signUp, logIn }

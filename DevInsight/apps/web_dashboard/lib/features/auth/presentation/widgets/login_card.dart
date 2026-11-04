@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:web_dashboard/core/constants/app_colors.dart';
 
-import '../../../../core/constants/app_colors.dart';
 import 'social_auth_buttons.dart';
 
 class LoginCard extends StatefulWidget {

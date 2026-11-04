@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:web_dashboard/core/constants/app_assets.dart';
+import 'package:web_dashboard/core/constants/app_colors.dart';
 
-import '../../../../core/constants/app_assets.dart';
-import '../../../../core/constants/app_colors.dart';
 
 class LoginBranding extends StatelessWidget {
   final bool isCompact;
@@ -257,7 +257,7 @@ class LoginBranding extends StatelessWidget {
                   fit: BoxFit.contain,
                   filterQuality: FilterQuality.high,
                   errorBuilder: (context, error, stackTrace) => Image.asset(
-                    'lib/features/Login/Widgets/Login.png',
+                    AppAssets.loginIllustration,
                     width: imageWidth,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) =>

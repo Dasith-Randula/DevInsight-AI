@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../../../core/constants/app_colors.dart';
-import '../../../Login/Widgets/social_auth_buttons.dart';
+import 'package:web_dashboard/core/constants/app_colors.dart';
+import 'package:web_dashboard/features/auth/presentation/widgets/social_auth_buttons.dart';
 
 class SignUpCard extends StatefulWidget {
   final bool isCompact;
