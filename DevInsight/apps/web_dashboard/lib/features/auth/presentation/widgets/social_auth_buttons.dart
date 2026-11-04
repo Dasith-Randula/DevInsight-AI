@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../../../shared/widgets/liquid_glass_card.dart';
+import 'package:web_dashboard/shared/widgets/liquid_glass_card.dart';
 
 class SocialAuthButtons extends StatelessWidget {
   final VoidCallback? onGithub;

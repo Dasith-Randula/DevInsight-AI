@@ -1,22 +1,23 @@
+// ignore_for_file: file_names
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:web_dashboard/core/constants/app_colors.dart';
+import 'package:web_dashboard/core/theme/theme_controller.dart';
+import 'package:web_dashboard/features/auth/presentation/pages/signup_page.dart';
+import 'package:web_dashboard/features/auth/presentation/widgets/auth_page_shell.dart';
+import 'package:web_dashboard/features/auth/presentation/widgets/modern_auth_card.dart';
 
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/theme/theme_controller.dart';
-import '../../../../shared/auth/auth_page_shell.dart';
-import '../../../Login/Pages/Login.dart';
-import '../../../Login/Widgets/modern_auth_card.dart';
-
-class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key, this.themeController});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key, this.themeController});
 
   final ThemeController? themeController;
 
   @override
-  State<SignUpPage> createState() => _SignUpPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class _LoginPageState extends State<LoginPage> {
   Route<dynamic> _pageRoute(Widget page) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -36,12 +37,6 @@ class _SignUpPageState extends State<SignUpPage> {
 
   void _navigateToLanding() {
     Navigator.of(context).pushNamedAndRemoveUntil('/landing', (route) => false);
-  }
-
-  void _navigateToLogin() {
-    Navigator.of(context).pushReplacement(
-      _pageRoute(LoginPage(themeController: widget.themeController)),
-    );
   }
 
   void _showNotice(String message, {bool isError = false}) {
@@ -70,29 +65,33 @@ class _SignUpPageState extends State<SignUpPage> {
       themeController: widget.themeController,
       onNavigateHome: _navigateToLanding,
       child: ModernAuthCard(
-        initialMode: AuthMode.signUp,
+        initialMode: AuthMode.logIn,
         onModeChanged: (mode) {
-          if (mode == AuthMode.logIn) {
+          if (mode == AuthMode.signUp) {
             Navigator.of(context).pushReplacement(
-              _pageRoute(LoginPage(themeController: widget.themeController)),
+              _pageRoute(SignUpPage(themeController: widget.themeController)),
             );
           }
-        },
-        onSignUp: (firstName, lastName, email, password) {
-          _showNotice('Welcome $firstName! Account created.');
-          Future.delayed(const Duration(milliseconds: 900), _navigateToLogin);
         },
         onLogIn: (email, password) {
           _showNotice('Signing in as $email…');
         },
+        onSignUp: (firstName, lastName, email, password) {
+          _showNotice(
+            'Account created for $firstName $lastName! Please sign in.',
+          );
+        },
         onForgotPassword: () {
           _showNotice('Password reset link sent to your email.');
         },
-        onGoogleAuth: () => _showNotice('Google sign-in not yet configured.'),
+        onGoogleAuth: () =>
+            _showNotice('Google sign-in not yet configured.', isError: false),
         onFacebookAuth: () =>
-            _showNotice('Facebook sign-in not yet configured.'),
-        onAppleAuth: () => _showNotice('Apple sign-in not yet configured.'),
-        onGithubAuth: () => _showNotice('GitHub sign-in not yet configured.'),
+            _showNotice('Facebook sign-in not yet configured.', isError: false),
+        onAppleAuth: () =>
+            _showNotice('Apple sign-in not yet configured.', isError: false),
+        onGithubAuth: () =>
+            _showNotice('GitHub sign-in not yet configured.', isError: false),
       ),
     );
   }

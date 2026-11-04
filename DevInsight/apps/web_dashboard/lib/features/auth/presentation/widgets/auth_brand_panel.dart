@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../core/constants/app_assets.dart';
-import '../../core/constants/app_colors.dart';
-import 'auth_dot_surface.dart';
+import 'package:web_dashboard/core/constants/app_assets.dart';
+import 'package:web_dashboard/core/constants/app_colors.dart';
+import 'package:web_dashboard/features/auth/presentation/widgets/auth_dot_surface.dart';
 
 /// Right brand panel for the auth split-layout.
 ///

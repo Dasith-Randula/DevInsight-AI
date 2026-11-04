@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../core/theme/theme_controller.dart';
-import '../backgrounds/animated_aura_background.dart';
-import '../widgets/theme_toggle_button.dart';
+import 'package:web_dashboard/core/theme/theme_controller.dart';
+import 'package:web_dashboard/shared/backgrounds/animated_aura_background.dart';
+import 'package:web_dashboard/shared/widgets/theme_toggle_button.dart';
 
 /// Full-page shell for authentication screens.
 ///
