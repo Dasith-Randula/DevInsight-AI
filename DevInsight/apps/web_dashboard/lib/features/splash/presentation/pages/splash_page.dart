@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../shared/widgets/liquid_glass_card.dart';
-import '../widgets/charming_splash_background.dart';
+import '../widgets/splash_background.dart';
 import '../widgets/logo_reveal_view.dart';
 import '../widgets/splash_loader.dart';
 

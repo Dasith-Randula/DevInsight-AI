@@ -11,7 +11,12 @@ import '../../../../shared/widgets/theme_toggle_button.dart';
 // CHANGED: removed animated_aura_background import, added AppBackground
 import '../widgets/app_background.dart';
 import '../widgets/dashboard_preview.dart';
-import '../widgets/landing_sections.dart';
+import '../sections/about_section.dart';
+import '../sections/cta_section.dart';
+import '../sections/features_section.dart';
+import '../sections/how_it_works_section.dart';
+import '../sections/landing_footer.dart';
+import '../sections/research_section.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key, this.themeController});

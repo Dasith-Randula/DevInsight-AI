@@ -335,7 +335,7 @@ class _CharmingAuraPainter extends CustomPainter {
     final paint = Paint()
       ..shader = RadialGradient(
         colors: colors,
-        stops: const [0.0, 0.55, 1.0],
+        stops: colors.length == 2 ? const [0.0, 1.0] : const [0.0, 0.55, 1.0],
       ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..imageFilter = ui.ImageFilter.blur(sigmaX: blur, sigmaY: blur);
 
