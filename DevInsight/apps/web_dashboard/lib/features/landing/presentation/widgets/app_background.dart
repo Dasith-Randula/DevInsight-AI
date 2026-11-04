@@ -2,12 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../../core/constants/app_colors.dart';
-
 class AppBackground extends StatefulWidget {
-  final Widget child;
-
   const AppBackground({super.key, required this.child});
+
+  final Widget child;
 
   @override
   State<AppBackground> createState() => _AppBackgroundState();
@@ -22,7 +20,7 @@ class _AppBackgroundState extends State<AppBackground>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 18),
+      duration: const Duration(seconds: 28),
     )..repeat();
   }
 
@@ -34,7 +32,7 @@ class _AppBackgroundState extends State<AppBackground>
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -43,17 +41,13 @@ class _AppBackgroundState extends State<AppBackground>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: isDark
+              colors: dark
                   ? const [
                       Color(0xFF080F20),
-                      Color(0xFF101C32),
-                      Color(0xFF14243F),
+                      Color(0xFF0D1930),
+                      Color(0xFF080F20),
                     ]
-                  : const [
-                      Color(0xFFF8FBFF),
-                      Color(0xFFEDF5FF),
-                      Color(0xFFE6F1FC),
-                    ],
+                  : const [Colors.white, Color(0xFFF5F8FF), Color(0xFFEAF2FF)],
             ),
           ),
         ),
@@ -62,9 +56,9 @@ class _AppBackgroundState extends State<AppBackground>
             child: AnimatedBuilder(
               animation: _controller,
               builder: (context, _) => CustomPaint(
-                painter: _AmbientBackgroundPainter(
+                painter: _SectionAmbientPainter(
                   progress: _controller.value,
-                  isDark: isDark,
+                  dark: dark,
                 ),
               ),
             ),
@@ -76,69 +70,50 @@ class _AppBackgroundState extends State<AppBackground>
   }
 }
 
-class _AmbientBackgroundPainter extends CustomPainter {
-  const _AmbientBackgroundPainter({
-    required this.progress,
-    required this.isDark,
-  });
+class _SectionAmbientPainter extends CustomPainter {
+  const _SectionAmbientPainter({required this.progress, required this.dark});
 
   final double progress;
-  final bool isDark;
+  final bool dark;
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
     final phase = progress * math.pi * 2;
-    final gridPaint = Paint()
-      ..color = (isDark ? const Color(0x223B82F6) : const Color(0x1414B8A6))
-      ..strokeWidth = 1;
-    for (var x = 0.0; x <= size.width; x += 48) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
-    }
-    for (var y = 0.0; y <= size.height; y += 48) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-    }
+    final radius = size.shortestSide * 0.85;
     final glows = [
       (
         Offset(
-          size.width * 0.18 + math.sin(phase) * 32,
-          size.height * 0.18 + math.cos(phase) * 20,
+          size.width * (0.03 + math.sin(phase) * 0.015),
+          size.height * 0.38,
         ),
-        size.width * 0.38,
-        AppColors.secondaryBlue,
+        const Color(0xFF2277FF),
       ),
       (
         Offset(
-          size.width * 0.52 + math.sin(phase * 0.72) * 24,
-          size.height * 0.30 + math.cos(phase * 0.72) * 18,
+          size.width * (0.96 + math.cos(phase) * 0.012),
+          size.height * 0.72,
         ),
-        size.width * 0.30,
-        const Color(0xFF7DD3FC),
-      ),
-      (
-        Offset(
-          size.width * 0.82 + math.cos(phase * 0.82) * 42,
-          size.height * 0.76 + math.sin(phase * 0.82) * 28,
-        ),
-        size.width * 0.42,
-        AppColors.primaryBlue,
+        const Color(0xFF79B8FF),
       ),
     ];
 
     for (final glow in glows) {
+      final alpha = dark ? 0.055 : 0.045;
       final paint = Paint()
         ..shader = RadialGradient(
           colors: [
-            glow.$3.withValues(alpha: isDark ? 0.12 : 0.075),
-            glow.$3.withValues(alpha: isDark ? 0.035 : 0.02),
+            glow.$2.withValues(alpha: alpha),
+            glow.$2.withValues(alpha: alpha * 0.35),
             Colors.transparent,
           ],
-          stops: const [0, 0.52, 1],
-        ).createShader(Rect.fromCircle(center: glow.$1, radius: glow.$2));
-      canvas.drawCircle(glow.$1, glow.$2, paint);
+          stops: const [0, 0.42, 1],
+        ).createShader(Rect.fromCircle(center: glow.$1, radius: radius));
+      canvas.drawRect(Offset.zero & size, paint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant _AmbientBackgroundPainter oldDelegate) =>
-      oldDelegate.progress != progress;
+  bool shouldRepaint(covariant _SectionAmbientPainter oldDelegate) =>
+      oldDelegate.progress != progress || oldDelegate.dark != dark;
 }

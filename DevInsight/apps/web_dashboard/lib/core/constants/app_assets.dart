@@ -2,6 +2,8 @@ class AppAssets {
   const AppAssets._();
 
   static const String devInsightLogo = 'assets/branding/devinsight_logo.png';
+  static const String devInsightBrandingLogo =
+      'assets/branding/devinsight_logo.png';
   static const String loginIllustration =
       'assets/images/login_illustration.png';
   static const String signupIllustration =

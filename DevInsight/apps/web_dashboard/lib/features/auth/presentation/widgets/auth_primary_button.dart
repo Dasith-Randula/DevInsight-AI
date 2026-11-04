@@ -24,6 +24,7 @@ class AuthPrimaryButton extends StatefulWidget {
 
 class _AuthPrimaryButtonState extends State<AuthPrimaryButton> {
   bool _isHovered = false;
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -34,41 +35,58 @@ class _AuthPrimaryButtonState extends State<AuthPrimaryButton> {
       onEnter: (_) {
         if (enabled) setState(() => _isHovered = true);
       },
-      onExit: (_) => setState(() => _isHovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+      onExit: (_) => setState(() {
+        _isHovered = false;
+        _isPressed = false;
+      }),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.985 : 1,
+        duration: const Duration(milliseconds: 130),
         curve: Curves.easeOut,
-        width: double.infinity,
-        height: 54,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
-          gradient: LinearGradient(
-            colors: _isHovered
-                ? [const Color(0xFF0557D9), AppColors.secondaryBlue]
-                : [AppColors.primaryBlue, AppColors.secondaryBlue],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryBlue.withValues(
-                alpha: _isHovered ? 0.45 : 0.28,
-              ),
-              blurRadius: _isHovered ? 22 : 12,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
-          child: InkWell(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          width: double.infinity,
+          height: 54,
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
-            onTap: enabled ? widget.onPressed : null,
-            splashColor: Colors.white.withValues(alpha: 0.1),
-            highlightColor: Colors.white.withValues(alpha: 0.05),
-            child: Center(
-              child: widget.isLoading ? _buildLoading() : _buildLabel(),
+            gradient: LinearGradient(
+              colors: _isHovered
+                  ? [AppColors.authAzureBlue, AppColors.authCyan]
+                  : [AppColors.authRoyalBlue, AppColors.authCyan],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.authRoyalBlue.withValues(
+                  alpha: _isHovered ? 0.45 : 0.28,
+                ),
+                blurRadius: _isHovered ? 22 : 12,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: enabled ? widget.onPressed : null,
+              onTapDown: enabled
+                  ? (_) => setState(() => _isPressed = true)
+                  : null,
+              onTapUp: enabled
+                  ? (_) => setState(() => _isPressed = false)
+                  : null,
+              onTapCancel: enabled
+                  ? () => setState(() => _isPressed = false)
+                  : null,
+              splashColor: Colors.white.withValues(alpha: 0.1),
+              highlightColor: Colors.white.withValues(alpha: 0.05),
+              child: Center(
+                child: widget.isLoading ? _buildLoading() : _buildLabel(),
+              ),
             ),
           ),
         ),

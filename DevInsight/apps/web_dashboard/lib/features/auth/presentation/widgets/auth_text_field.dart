@@ -69,7 +69,6 @@ class _AuthTextFieldState extends State<AuthTextField> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
@@ -78,7 +77,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
         boxShadow: _isFocused
             ? [
                 BoxShadow(
-                  color: AppColors.primaryBlue.withValues(alpha: 0.14),
+                  color: AppColors.authRoyalBlue.withValues(alpha: 0.14),
                   blurRadius: 12,
                   spreadRadius: 1,
                   offset: const Offset(0, 2),
@@ -103,7 +102,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
         cursorColor: theme.colorScheme.primary,
         decoration: InputDecoration(
           filled: true,
-          fillColor: isDark ? const Color(0xFF15243B) : AppColors.inputBg,
+          fillColor: AppColors.authBackground,
           hintText: widget.hintText,
           hintStyle: GoogleFonts.plusJakartaSans(
             color: theme.colorScheme.onSurface.withValues(alpha: 0.58),
@@ -126,14 +125,8 @@ class _AuthTextFieldState extends State<AuthTextField> {
             vertical: 16,
             horizontal: 16,
           ),
-          border: _border(
-            isDark ? const Color(0xFF31435E) : AppColors.inputBorder,
-            1.2,
-          ),
-          enabledBorder: _border(
-            isDark ? const Color(0xFF31435E) : AppColors.inputBorder,
-            1.2,
-          ),
+          border: _border(AppColors.authInputBorder, 1.2),
+          enabledBorder: _border(AppColors.authInputBorder, 1.2),
           focusedBorder: _border(theme.colorScheme.primary, 1.8),
           errorBorder: _border(AppColors.error, 1.2),
           focusedErrorBorder: _border(AppColors.error, 1.8),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'package:web_dashboard/core/constants/app_colors.dart';
 import 'package:web_dashboard/core/theme/theme_controller.dart';
 import 'package:web_dashboard/features/auth/presentation/pages/login_page.dart';
 import 'package:web_dashboard/features/auth/presentation/widgets/auth_page_shell.dart';
 import 'package:web_dashboard/features/auth/presentation/widgets/modern_auth_card.dart';
+import 'package:web_dashboard/features/onboarding/presentation/pages/onboarding_flow_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key, this.themeController});
@@ -33,14 +35,13 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  void _navigateToLanding() {
-    Navigator.of(context).pushNamedAndRemoveUntil('/landing', (route) => false);
-  }
-
-  void _navigateToLogin() {
-    Navigator.of(context).pushReplacement(
-      _pageRoute(LoginPage(themeController: widget.themeController)),
-    );
+  void _navigateBackToLanding() {
+    final navigator = Navigator.of(context);
+    if (navigator.canPop()) {
+      navigator.pop();
+    } else {
+      navigator.pushNamedAndRemoveUntil('/landing', (route) => false);
+    }
   }
 
   void _showNotice(String message, {bool isError = false}) {
@@ -66,10 +67,9 @@ class _SignUpPageState extends State<SignUpPage> {
   @override
   Widget build(BuildContext context) {
     return AuthPageShell(
-      themeController: widget.themeController,
-      onNavigateHome: _navigateToLanding,
       child: ModernAuthCard(
         initialMode: AuthMode.signUp,
+        onNavigateBack: _navigateBackToLanding,
         onModeChanged: (mode) {
           if (mode == AuthMode.logIn) {
             Navigator.of(context).pushReplacement(
@@ -78,11 +78,20 @@ class _SignUpPageState extends State<SignUpPage> {
           }
         },
         onSignUp: (firstName, lastName, email, password) {
-          _showNotice('Welcome $firstName! Account created.');
-          Future.delayed(const Duration(milliseconds: 900), _navigateToLogin);
+          Navigator.of(context).pushReplacement(
+            _pageRoute(
+              OnboardingFlowPage(
+                initialName: '$firstName $lastName',
+                initialEmail: email,
+              ),
+            ),
+          );
         },
         onLogIn: (email, password) {
-          _showNotice('Signing in as $email…');
+          _showNotice(
+            'Authentication is not connected yet. No account was signed in.',
+            isError: true,
+          );
         },
         onForgotPassword: () {
           _showNotice('Password reset link sent to your email.');
