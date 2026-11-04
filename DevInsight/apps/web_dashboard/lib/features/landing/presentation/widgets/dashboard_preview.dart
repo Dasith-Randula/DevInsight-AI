@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../shared/widgets/liquid_glass_card.dart';
 import 'animated_project_graph.dart';
 
 /// Right-side dashboard preview on the landing page hero.
@@ -68,47 +69,62 @@ class _DashboardPreviewState extends State<DashboardPreview>
 // Dashboard window shell
 // ---------------------------------------------------------------------------
 
-class _DashboardWindow extends StatelessWidget {
+class _DashboardWindow extends StatefulWidget {
   const _DashboardWindow();
 
   @override
+  State<_DashboardWindow> createState() => _DashboardWindowState();
+}
+
+class _DashboardWindowState extends State<_DashboardWindow>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _floatController;
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 7),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return RepaintBoundary(
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9FBFF),
-          border: Border.all(color: const Color(0xFFDDE7F6), width: 1.5),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryBlue.withValues(alpha: 0.10),
-              blurRadius: 48,
-              offset: const Offset(0, 20),
-            ),
-            BoxShadow(
-              color: const Color(0xFF000000).withValues(alpha: 0.06),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
+    return AnimatedBuilder(
+      animation: _floatController,
+      builder: (context, child) => Transform.translate(
+        offset: Offset(
+          0,
+          -5 * Curves.easeInOutSine.transform(_floatController.value),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Top browser-style bar
-            _TopBar(),
-            // Sidebar + main content
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const _Sidebar(),
-                  Expanded(child: _MainContent()),
-                ],
+        child: child,
+      ),
+      child: RepaintBoundary(
+        child: LiquidGlassCard(
+          borderRadius: 20,
+          variant: LiquidGlassVariant.standard,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _TopBar(),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const _Sidebar(),
+                    Expanded(child: _MainContent()),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -122,11 +138,16 @@ class _DashboardWindow extends StatelessWidget {
 class _TopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       height: 36,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE4EDF8))),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF172B49) : Colors.white,
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? const Color(0xFF304562) : const Color(0xFFE4EDF8),
+          ),
+        ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14),
       child: Row(
@@ -142,15 +163,21 @@ class _TopBar extends StatelessWidget {
             child: Container(
               height: 20,
               decoration: BoxDecoration(
-                color: const Color(0xFFF0F4FC),
+                color: isDark
+                    ? const Color(0xFF15243B)
+                    : const Color(0xFFF0F4FC),
                 borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: const Color(0xFFDDE7F6)),
+                border: Border.all(
+                  color: isDark
+                      ? const Color(0xFF31435E)
+                      : const Color(0xFFDDE7F6),
+                ),
               ),
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: const Text(
+              child: Text(
                 'devinsight.app/dashboard',
-                style: TextStyle(color: Color(0xFF8EA8CC), fontSize: 9.5),
+                style: TextStyle(color: Color(0xFFA6B7D1), fontSize: 9.5),
               ),
             ),
           ),
@@ -166,9 +193,9 @@ class _WindowDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DecoratedBox(
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        child: const SizedBox(width: 9, height: 9),
-      );
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+    child: const SizedBox(width: 9, height: 9),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -180,11 +207,16 @@ class _Sidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: 52,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(right: BorderSide(color: Color(0xFFE4EDF8))),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF101C32) : Colors.white,
+        border: Border(
+          right: BorderSide(
+            color: isDark ? const Color(0xFF304562) : const Color(0xFFE4EDF8),
+          ),
+        ),
       ),
       child: const Column(
         children: [
@@ -239,10 +271,7 @@ class _MainContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Chart card takes ~70% of available height via flex
-          Expanded(
-            flex: 7,
-            child: _ChartCard(),
-          ),
+          Expanded(flex: 7, child: _ChartCard()),
           const SizedBox(height: 8),
           // Metric cards take ~30% of available height
           Expanded(
@@ -271,29 +300,36 @@ class _MainContent extends StatelessWidget {
 class _ChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF172B49) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE4EDF8)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF304562) : const Color(0xFFE4EDF8),
+        ),
       ),
-      child: const Padding(
+      child: Padding(
         padding: EdgeInsets.fromLTRB(14, 12, 14, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              Text(
-                'Project Overview',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF152846),
+            Row(
+              children: [
+                Text(
+                  'Project Overview',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: isDark
+                        ? const Color(0xFFF8FAFC)
+                        : const Color(0xFF152846),
+                  ),
                 ),
-              ),
-              Spacer(),
-              _TrendBadge(),
-            ]),
+                Spacer(),
+                _TrendBadge(),
+              ],
+            ),
             SizedBox(height: 5),
             // Expanded fills whatever height remains inside the 210px SizedBox
             Expanded(child: AnimatedProjectGraph()),
@@ -309,22 +345,28 @@ class _TrendBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-        decoration: BoxDecoration(
-          color: const Color(0xFFECFDF5),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFFBBF7D0)),
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+    decoration: BoxDecoration(
+      color: const Color(0xFFECFDF5),
+      borderRadius: BorderRadius.circular(6),
+      border: Border.all(color: const Color(0xFFBBF7D0)),
+    ),
+    child: const Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.trending_up_rounded, color: Color(0xFF059669), size: 11),
+        SizedBox(width: 3),
+        Text(
+          '+12.4%',
+          style: TextStyle(
+            color: Color(0xFF059669),
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        child: const Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.trending_up_rounded, color: Color(0xFF059669), size: 11),
-          SizedBox(width: 3),
-          Text('+12.4%',
-              style: TextStyle(
-                  color: Color(0xFF059669),
-                  fontSize: 9,
-                  fontWeight: FontWeight.w700)),
-        ]),
-      );
+      ],
+    ),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -336,27 +378,27 @@ class _RiskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _MetricCard(
-        label: 'Risk Score',
-        value: 72,
-        suffix: '',
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFE9D9),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: const Color(0xFFFDC29A)),
-          ),
-          child: const Text(
-            'High',
-            style: TextStyle(
-              color: Color(0xFFFF7416),
-              fontSize: 9,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+    label: 'Risk Score',
+    value: 72,
+    suffix: '',
+    trailing: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFE9D9),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFFDC29A)),
+      ),
+      child: const Text(
+        'High',
+        style: TextStyle(
+          color: Color(0xFFFF7416),
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
         ),
-        animationDuration: const Duration(milliseconds: 1200),
-      );
+      ),
+    ),
+    animationDuration: const Duration(milliseconds: 1200),
+  );
 }
 
 class _CompletionCard extends StatelessWidget {
@@ -364,21 +406,24 @@ class _CompletionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF172B49) : Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE4EDF8)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF304562) : const Color(0xFFE4EDF8),
+        ),
       ),
       padding: const EdgeInsets.all(10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             'Completion',
             style: TextStyle(
-              color: AppColors.slateText,
+              color: isDark ? const Color(0xFFA6B7D1) : AppColors.slateText,
               fontSize: 9.5,
               fontWeight: FontWeight.w600,
             ),
@@ -389,8 +434,10 @@ class _CompletionCard extends StatelessWidget {
             duration: const Duration(milliseconds: 1200),
             builder: (context, v, _) => Text(
               '$v%',
-              style: const TextStyle(
-                color: Color(0xFF10233E),
+              style: TextStyle(
+                color: isDark
+                    ? const Color(0xFFF8FAFC)
+                    : const Color(0xFF10233E),
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
               ),
@@ -405,9 +452,12 @@ class _CompletionCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: v,
                 minHeight: 4,
-                backgroundColor: const Color(0xFFDEE9F8),
+                backgroundColor: isDark
+                    ? const Color(0xFF31435E)
+                    : const Color(0xFFDEE9F8),
                 valueColor: const AlwaysStoppedAnimation<Color>(
-                    AppColors.primaryBlue),
+                  AppColors.primaryBlue,
+                ),
               ),
             ),
           ),
@@ -422,24 +472,24 @@ class _IssuesCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => _MetricCard(
-        label: 'Open Issues',
-        value: 134,
-        suffix: '',
-        trailing: Container(
-          padding: const EdgeInsets.all(5),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF3EA),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: const Color(0xFFFDC29A)),
-          ),
-          child: const Icon(
-            Icons.warning_amber_rounded,
-            color: Color(0xFFFF7416),
-            size: 14,
-          ),
-        ),
-        animationDuration: const Duration(milliseconds: 1400),
-      );
+    label: 'Open Issues',
+    value: 134,
+    suffix: '',
+    trailing: Container(
+      padding: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3EA),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0xFFFDC29A)),
+      ),
+      child: const Icon(
+        Icons.warning_amber_rounded,
+        color: Color(0xFFFF7416),
+        size: 14,
+      ),
+    ),
+    animationDuration: const Duration(milliseconds: 1400),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -463,11 +513,14 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? const Color(0xFF172B49) : Colors.white,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE4EDF8)),
+        border: Border.all(
+          color: isDark ? const Color(0xFF304562) : const Color(0xFFE4EDF8),
+        ),
       ),
       padding: const EdgeInsets.all(10),
       child: Column(
@@ -476,8 +529,8 @@ class _MetricCard extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.slateText,
+            style: TextStyle(
+              color: isDark ? const Color(0xFFA6B7D1) : AppColors.slateText,
               fontSize: 9.5,
               fontWeight: FontWeight.w600,
             ),
@@ -495,8 +548,10 @@ class _MetricCard extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       '$v$suffix',
-                      style: const TextStyle(
-                        color: Color(0xFF10233E),
+                      style: TextStyle(
+                        color: isDark
+                            ? const Color(0xFFF8FAFC)
+                            : const Color(0xFF10233E),
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
                       ),

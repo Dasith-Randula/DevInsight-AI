@@ -110,8 +110,8 @@ class _ProjectGraphPainter extends CustomPainter {
   });
 
   final List<double> values;
-  final double progress;   // 0.0 → 1.0 (line draw)
-  final double pulse;      // 1.0 → 1.15 (halo scale)
+  final double progress; // 0.0 → 1.0 (line draw)
+  final double pulse; // 1.0 → 1.15 (halo scale)
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -158,15 +158,17 @@ class _ProjectGraphPainter extends CustomPainter {
 
       final gradientPaint = Paint()
         ..style = PaintingStyle.fill
-        ..shader = LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.primaryBlue.withValues(alpha: 0.10 * progress),
-            AppColors.primaryBlue.withValues(alpha: 0.01 * progress),
-          ],
-        ).createShader(Rect.fromLTWH(
-            chart.left, chart.top, chart.width, chart.height));
+        ..shader =
+            LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.primaryBlue.withValues(alpha: 0.10 * progress),
+                AppColors.primaryBlue.withValues(alpha: 0.01 * progress),
+              ],
+            ).createShader(
+              Rect.fromLTWH(chart.left, chart.top, chart.width, chart.height),
+            );
 
       canvas.drawPath(areaPath, gradientPaint);
     }
@@ -189,17 +191,16 @@ class _ProjectGraphPainter extends CustomPainter {
     if (progress >= 0.05) {
       // Fixed highlight at ~70% of the x-axis (index 7 of 10)
       const highlightIndexFraction = 0.7;
-      final highlightIndex =
-          (highlightIndexFraction * (values.length - 1)).round();
+      final highlightIndex = (highlightIndexFraction * (values.length - 1))
+          .round();
       final highlightX =
           chart.left + chart.width * highlightIndex / (values.length - 1);
-      final highlightY =
-          chart.bottom - chart.height * values[highlightIndex];
+      final highlightY = chart.bottom - chart.height * values[highlightIndex];
 
       // Fade the guide in as the line progresses past that point
-      final guideOpacity = ((progress - highlightIndexFraction) /
-              (1.0 - highlightIndexFraction))
-          .clamp(0.0, 1.0);
+      final guideOpacity =
+          ((progress - highlightIndexFraction) / (1.0 - highlightIndexFraction))
+              .clamp(0.0, 1.0);
 
       if (guideOpacity > 0) {
         // Dashed vertical guide
@@ -208,8 +209,9 @@ class _ProjectGraphPainter extends CustomPainter {
           from: Offset(highlightX, chart.top),
           to: Offset(highlightX, chart.bottom),
           paint: Paint()
-            ..color =
-                AppColors.primaryBlue.withValues(alpha: 0.25 * guideOpacity)
+            ..color = AppColors.primaryBlue.withValues(
+              alpha: 0.25 * guideOpacity,
+            )
             ..strokeWidth = 1
             ..style = PaintingStyle.stroke,
           dashLength: 4,
@@ -221,8 +223,9 @@ class _ProjectGraphPainter extends CustomPainter {
           Offset(highlightX, highlightY),
           14.0 * pulse * guideOpacity,
           Paint()
-            ..color = AppColors.primaryBlue
-                .withValues(alpha: 0.12 * guideOpacity),
+            ..color = AppColors.primaryBlue.withValues(
+              alpha: 0.12 * guideOpacity,
+            ),
         );
 
         // Mid halo
@@ -230,8 +233,9 @@ class _ProjectGraphPainter extends CustomPainter {
           Offset(highlightX, highlightY),
           9.0 * guideOpacity,
           Paint()
-            ..color = AppColors.primaryBlue
-                .withValues(alpha: 0.20 * guideOpacity),
+            ..color = AppColors.primaryBlue.withValues(
+              alpha: 0.20 * guideOpacity,
+            ),
         );
 
         // White ring
@@ -249,8 +253,7 @@ class _ProjectGraphPainter extends CustomPainter {
           Offset(highlightX, highlightY),
           3.5,
           Paint()
-            ..color = AppColors.primaryBlue
-                .withValues(alpha: guideOpacity),
+            ..color = AppColors.primaryBlue.withValues(alpha: guideOpacity),
         );
       }
     }
@@ -288,11 +291,7 @@ class _ProjectGraphPainter extends CustomPainter {
       final segLen = drawing ? dashLength : gapLength;
       final end = math.min(traveled + segLen, total);
       if (drawing) {
-        canvas.drawLine(
-          from + dir * traveled,
-          from + dir * end,
-          paint,
-        );
+        canvas.drawLine(from + dir * traveled, from + dir * end, paint);
       }
       traveled = end;
       drawing = !drawing;

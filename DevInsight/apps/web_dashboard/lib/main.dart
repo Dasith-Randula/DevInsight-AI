@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'app/app.dart';
+import 'core/theme/theme_controller.dart';
 
-void main() {
-  runApp(const App());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final themeController = await ThemeController.load();
+  runApp(App(themeController: themeController));
 }

@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -41,7 +40,8 @@ class LogoRevealView extends StatelessWidget {
 
         // 2. Logo Scale & Opacity: 0.08 -> 0.56
         final logoEnterVal = ((val - 0.08) / 0.48).clamp(0.0, 1.0);
-        final logoScale = 0.35 + 0.65 * Curves.easeOutBack.transform(logoEnterVal);
+        final logoScale =
+            0.35 + 0.65 * Curves.easeOutBack.transform(logoEnterVal);
         final logoOpacity = Curves.easeOutCubic.transform(logoEnterVal);
 
         // 3. Logo Glow Intensity: 0.15 -> 0.70
@@ -50,17 +50,21 @@ class LogoRevealView extends StatelessWidget {
 
         // 4. Specular Shimmer Sheen on Logo: 0.42 -> 0.85
         final shimmerVal = ((val - 0.42) / 0.43).clamp(0.0, 1.0);
-        final shimmerProgress = -1.0 + 3.0 * Curves.easeInOutCubic.transform(shimmerVal);
+        final shimmerProgress =
+            -1.0 + 3.0 * Curves.easeInOutCubic.transform(shimmerVal);
 
         // 5. Text Reveal: 0.36 -> 0.78
         final textEnterVal = ((val - 0.36) / 0.42).clamp(0.0, 1.0);
         final textOpacity = Curves.easeOutQuad.transform(textEnterVal);
-        final textSlide = (1.0 - Curves.easeOutCubic.transform(textEnterVal)) * 26.0;
-        final letterSpacing = 2.4 - (3.8 * Curves.easeOutCubic.transform(textEnterVal));
+        final textSlide =
+            (1.0 - Curves.easeOutCubic.transform(textEnterVal)) * 26.0;
+        final letterSpacing =
+            2.4 - (3.8 * Curves.easeOutCubic.transform(textEnterVal));
 
         // 6. Text Shimmer: 0.62 -> 0.95
         final textShimmerVal = ((val - 0.62) / 0.33).clamp(0.0, 1.0);
-        final textShimmerProgress = -0.5 + 2.0 * Curves.easeInOut.transform(textShimmerVal);
+        final textShimmerProgress =
+            -0.5 + 2.0 * Curves.easeInOut.transform(textShimmerVal);
 
         // 7. Tagline & AI Chip: 0.58 -> 0.90
         final tagVal = ((val - 0.58) / 0.32).clamp(0.0, 1.0);
@@ -100,12 +104,16 @@ class LogoRevealView extends StatelessWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0664F2).withValues(alpha: 0.28),
+                              color: const Color(
+                                0xFF0664F2,
+                              ).withValues(alpha: 0.28),
                               blurRadius: 40,
                               spreadRadius: 8,
                             ),
                             BoxShadow(
-                              color: const Color(0xFF38BDF8).withValues(alpha: 0.32),
+                              color: const Color(
+                                0xFF38BDF8,
+                              ).withValues(alpha: 0.32),
                               blurRadius: 60,
                               spreadRadius: 18,
                             ),
@@ -141,7 +149,9 @@ class LogoRevealView extends StatelessWidget {
                                   width: logoSize,
                                   height: logoSize,
                                   child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(logoSize / 2),
+                                    borderRadius: BorderRadius.circular(
+                                      logoSize / 2,
+                                    ),
                                     child: CustomPaint(
                                       painter: _LightSweepPainter(
                                         progress: shimmerProgress,
@@ -175,7 +185,7 @@ class LogoRevealView extends StatelessWidget {
                             TextSpan(
                               text: 'Dev',
                               style: GoogleFonts.plusJakartaSans(
-                                color: const Color(0xFF0F172A),
+                                color: Theme.of(context).colorScheme.onSurface,
                                 fontSize: titleSize,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: letterSpacing,
@@ -202,7 +212,8 @@ class LogoRevealView extends StatelessWidget {
                           child: ShaderMask(
                             shaderCallback: (bounds) {
                               final sweepWidth = bounds.width * 0.35;
-                              final startX = (bounds.width + sweepWidth * 2) *
+                              final startX =
+                                  (bounds.width + sweepWidth * 2) *
                                       textShimmerProgress -
                                   sweepWidth;
                               return LinearGradient(
@@ -211,13 +222,20 @@ class LogoRevealView extends StatelessWidget {
                                 colors: [
                                   Colors.white.withValues(alpha: 0.0),
                                   Colors.white.withValues(alpha: 0.8),
-                                  const Color(0xFF38BDF8).withValues(alpha: 0.9),
+                                  const Color(
+                                    0xFF38BDF8,
+                                  ).withValues(alpha: 0.9),
                                   Colors.white.withValues(alpha: 0.8),
                                   Colors.white.withValues(alpha: 0.0),
                                 ],
                                 stops: const [0.0, 0.35, 0.50, 0.65, 1.0],
                               ).createShader(
-                                Rect.fromLTWH(startX, 0, sweepWidth, bounds.height),
+                                Rect.fromLTWH(
+                                  startX,
+                                  0,
+                                  sweepWidth,
+                                  bounds.height,
+                                ),
                               );
                             },
                             blendMode: BlendMode.srcATop,
@@ -274,12 +292,16 @@ class LogoRevealView extends StatelessWidget {
                           color: Colors.white.withValues(alpha: 0.88),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: const Color(0xFF38BDF8).withValues(alpha: 0.40),
+                            color: const Color(
+                              0xFF38BDF8,
+                            ).withValues(alpha: 0.40),
                             width: 1.2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0664F2).withValues(alpha: 0.08),
+                              color: const Color(
+                                0xFF0664F2,
+                              ).withValues(alpha: 0.08),
                               blurRadius: 18,
                               offset: const Offset(0, 4),
                             ),
@@ -313,7 +335,9 @@ class LogoRevealView extends StatelessWidget {
                           'AI-Powered intelligence for Smarter Software Projects',
                           textAlign: TextAlign.center,
                           style: GoogleFonts.plusJakartaSans(
-                            color: AppColors.slateText,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.70),
                             fontSize: subtitleSize,
                             fontWeight: FontWeight.w500,
                             height: 1.35,
@@ -328,10 +352,7 @@ class LogoRevealView extends StatelessWidget {
               const SizedBox(height: 48),
 
               // ==================== LOADER & ACTION AREA ====================
-              Opacity(
-                opacity: loaderOpacity,
-                child: loadingArea,
-              ),
+              Opacity(opacity: loaderOpacity, child: loadingArea),
             ],
           ),
         );
@@ -413,4 +434,3 @@ class _LightSweepPainter extends CustomPainter {
   bool shouldRepaint(covariant _LightSweepPainter oldDelegate) =>
       oldDelegate.progress != progress;
 }
-

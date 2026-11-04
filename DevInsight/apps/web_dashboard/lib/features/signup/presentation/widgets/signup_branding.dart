@@ -8,17 +8,14 @@ class SignUpBranding extends StatelessWidget {
   final bool isCompact;
   final VoidCallback? onLogoTap;
 
-  const SignUpBranding({
-    super.key,
-    this.isCompact = false,
-    this.onLogoTap,
-  });
+  const SignUpBranding({super.key, this.isCompact = false, this.onLogoTap});
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment:
-          isCompact ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+      crossAxisAlignment: isCompact
+          ? CrossAxisAlignment.center
+          : CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         // Brand Header (Logo + DevInsight Text)
@@ -181,11 +178,7 @@ class SignUpBranding extends StatelessWidget {
             color: const Color(0xFFDCEBFE),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon,
-            size: 20,
-            color: AppColors.primaryBlue,
-          ),
+          child: Icon(icon, size: 20, color: AppColors.primaryBlue),
         ),
         const SizedBox(width: 14),
         Expanded(
