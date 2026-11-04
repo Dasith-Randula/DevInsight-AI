@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:web_dashboard/features/auth/presentation/pages/login_page.dart';
+import 'package:web_dashboard/features/auth/presentation/pages/signup_page.dart';
 
 import '../core/theme/app_theme.dart';
 import '../core/theme/theme_controller.dart';
-import '../features/Login/Pages/Login.dart';
 import '../features/landing/presentation/pages/landing_page.dart';
-import '../features/signup/presentation/pages/signup_page.dart';
 import '../features/splash/presentation/pages/splash_page.dart';
 
 class App extends StatelessWidget {

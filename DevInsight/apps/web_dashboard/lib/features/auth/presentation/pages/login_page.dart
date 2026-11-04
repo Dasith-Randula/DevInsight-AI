@@ -2,12 +2,11 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/theme/theme_controller.dart';
-import '../../../../shared/auth/auth_page_shell.dart';
-import '../../signup/presentation/pages/signup_page.dart';
-import '../Widgets/modern_auth_card.dart';
+import 'package:web_dashboard/core/constants/app_colors.dart';
+import 'package:web_dashboard/core/theme/theme_controller.dart';
+import 'package:web_dashboard/features/auth/presentation/pages/signup_page.dart';
+import 'package:web_dashboard/features/auth/presentation/widgets/auth_page_shell.dart';
+import 'package:web_dashboard/features/auth/presentation/widgets/modern_auth_card.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key, this.themeController});

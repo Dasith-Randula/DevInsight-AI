@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/theme/theme_controller.dart';
-import '../../../../shared/auth/auth_page_shell.dart';
-import '../../../Login/Pages/Login.dart';
-import '../../../Login/Widgets/modern_auth_card.dart';
-import '../../../onboarding/presentation/pages/onboarding_flow_page.dart';
+import 'package:web_dashboard/core/constants/app_colors.dart';
+import 'package:web_dashboard/core/theme/theme_controller.dart';
+import 'package:web_dashboard/features/auth/presentation/pages/login_page.dart';
+import 'package:web_dashboard/features/auth/presentation/widgets/auth_page_shell.dart';
+import 'package:web_dashboard/features/auth/presentation/widgets/modern_auth_card.dart';
+import 'package:web_dashboard/features/onboarding/presentation/pages/onboarding_flow_page.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key, this.themeController});

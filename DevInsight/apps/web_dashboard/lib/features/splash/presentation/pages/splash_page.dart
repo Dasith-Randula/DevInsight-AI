@@ -11,7 +11,7 @@ enum _SplashConnectionState { checking, offline }
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key, ConnectivityService? connectivityService})
-      : _connectivityService = connectivityService ?? const ConnectivityService();
+    : _connectivityService = connectivityService ?? const ConnectivityService();
 
   final ConnectivityService _connectivityService;
 
@@ -144,10 +144,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     _startStartupFlow();
   }
 
-  Widget _buildLoadingArea({
-    required bool isMobile,
-    required bool isTablet,
-  }) {
+  Widget _buildLoadingArea({required bool isMobile, required bool isTablet}) {
     if (_connectionState == _SplashConnectionState.offline) {
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
@@ -205,7 +202,10 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                 backgroundColor: AppColors.royalBlue,
                 foregroundColor: AppColors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 26,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -223,8 +223,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     final loaderWidth = isMobile
         ? 220.0
         : isTablet
-            ? 250.0
-            : 290.0;
+        ? 250.0
+        : 290.0;
 
     final loaderHeight = isMobile ? 6.0 : 7.0;
 
@@ -239,8 +239,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
           final dots = dotCycle == 0
               ? '.'
               : dotCycle == 1
-                  ? '..'
-                  : '...';
+              ? '..'
+              : '...';
 
           return Column(
             key: const ValueKey('checking_view'),
@@ -310,7 +310,10 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
             child: Center(
               child: SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 24,
+                  horizontal: 16,
+                ),
                 child: LogoRevealView(
                   revealController: _revealController,
                   isCompact: isMobile,

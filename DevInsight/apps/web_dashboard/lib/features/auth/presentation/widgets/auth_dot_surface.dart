@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../core/constants/app_colors.dart';
+import 'package:web_dashboard/core/constants/app_colors.dart';
 
 class AuthDotSurface extends StatefulWidget {
   const AuthDotSurface({super.key});

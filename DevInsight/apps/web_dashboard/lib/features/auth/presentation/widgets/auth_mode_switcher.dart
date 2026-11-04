@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../core/constants/app_colors.dart';
-import '../widgets/liquid_glass_card.dart';
+import 'package:web_dashboard/core/constants/app_colors.dart';
+import 'package:web_dashboard/shared/widgets/liquid_glass_card.dart';
 
 class AuthModeSwitcher extends StatelessWidget {
   final bool isSignUp;

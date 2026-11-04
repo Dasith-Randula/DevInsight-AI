@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-
-import '../../core/constants/app_colors.dart';
-import '../../core/theme/app_theme.dart';
+import 'package:web_dashboard/core/constants/app_colors.dart';
+import 'package:web_dashboard/core/theme/app_theme.dart';
 
 class AuthPageShell extends StatefulWidget {
   const AuthPageShell({super.key, required this.child});
