@@ -1,6 +1,32 @@
 # web_dashboard
 
-A new Flutter project.
+Flutter Web dashboard for DevInsight.
+
+## Local authentication setup
+
+Run the API from `DevInsight/backend` with its existing server-side `.env`.
+Run the web app with the Supabase project URL and **publishable** key (never a
+secret/service-role key):
+
+```powershell
+flutter run -d chrome `
+  --dart-define=SUPABASE_URL=https://YOUR_PROJECT.supabase.co `
+  --dart-define=SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY `
+  --dart-define=API_BASE_URL=http://127.0.0.1:8000
+```
+
+`API_BASE_URL` defaults to `http://127.0.0.1:8000`. Configure Supabase Auth's
+site URL and redirect allow list to include the web app origin used for local
+development and deployment; an optional `AUTH_REDIRECT_URL` build define can
+select a specific confirmation/reset redirect.
+
+For production, set `CORS_ALLOWED_ORIGINS` in the backend environment to a
+comma-separated list of exact frontend origins. The backend separately permits
+loopback (`localhost` and `127.0.0.1`) development origins on any port.
+
+Onboarding screens are still the existing prototype UI and do not yet persist
+their form data through the onboarding endpoints. Home destinations are
+explicitly labeled temporary placeholders.
 
 ## Getting Started
 

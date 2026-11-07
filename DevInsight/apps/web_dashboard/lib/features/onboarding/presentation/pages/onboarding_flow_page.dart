@@ -10,10 +10,12 @@ class OnboardingFlowPage extends StatefulWidget {
     super.key,
     this.initialName = '',
     this.initialEmail = '',
+    this.initialStep = 0,
   });
 
   final String initialName;
   final String initialEmail;
+  final int initialStep;
 
   @override
   State<OnboardingFlowPage> createState() => _OnboardingFlowPageState();
@@ -81,6 +83,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
   @override
   void initState() {
     super.initState();
+    _step = widget.initialStep.clamp(0, 2);
     _nameController = TextEditingController(text: widget.initialName);
     _usernameController = TextEditingController();
     _emailController = TextEditingController(text: widget.initialEmail);

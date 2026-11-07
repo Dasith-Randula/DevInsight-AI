@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     supabase_url: str | None = None
     supabase_secret_key: str | None = Field(default=None, repr=False)
     supabase_publishable_key: str | None = Field(default=None, repr=False)
+    cors_allowed_origins: str = ""
 
 
 @lru_cache

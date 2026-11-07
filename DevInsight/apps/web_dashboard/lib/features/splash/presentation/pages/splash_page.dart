@@ -1,19 +1,28 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/connectivity_service.dart';
+import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/devinsight_api.dart';
 import '../widgets/logo_reveal_view.dart';
 import '../widgets/splash_background.dart';
 import '../widgets/splash_loader.dart';
 
-enum _SplashConnectionState { checking, offline }
+enum _SplashConnectionState { checking, offline, startupError }
 
 class SplashPage extends StatefulWidget {
-  const SplashPage({super.key, ConnectivityService? connectivityService})
-    : _connectivityService = connectivityService ?? const ConnectivityService();
+  const SplashPage({
+    super.key,
+    ConnectivityService? connectivityService,
+    this.onStartupComplete,
+  }) : _connectivityService =
+           connectivityService ?? const ConnectivityService();
 
   final ConnectivityService _connectivityService;
+  final Future<bool> Function(BuildContext context)? onStartupComplete;
 
   @override
   State<SplashPage> createState() => _SplashPageState();
@@ -75,10 +84,14 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
     // 1. Kick off 6-second linear progress and connectivity check concurrently
     final progressFuture = _progressController.forward();
+    final minimumStartupComplete = Completer<void>();
+    final minimumStartupTimer = Timer(
+      const Duration(seconds: 7),
+      minimumStartupComplete.complete,
+    );
     final connectivityFuture = _connectivityService.hasConnection();
 
     final isOnline = await connectivityFuture;
-
     if (!mounted || attempt != _attempt) {
       return;
     }
@@ -86,6 +99,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     // 2. Handle offline condition
     if (!isOnline) {
       _progressController.stop();
+      minimumStartupTimer.cancel();
       _checkInProgress = false;
       setState(() {
         _connectionState = _SplashConnectionState.offline;
@@ -93,23 +107,34 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       return;
     }
 
-    // 3. Await progress bar filling completely to 100% (6.0 seconds)
-    await progressFuture;
-
-    if (!mounted || attempt != _attempt) {
-      return;
-    }
-
-    // 4. Exact 1.0-second completion hold (Total successful splash = 7.0 seconds)
-    await Future<void>.delayed(const Duration(seconds: 1));
+    await Future.wait([progressFuture, minimumStartupComplete.future]);
 
     if (!mounted || attempt != _attempt || _hasNavigated) {
       return;
     }
 
+    try {
+      final startupHandler = widget.onStartupComplete;
+      final didRestoreSession = startupHandler == null
+          ? false
+          : await startupHandler(context);
+      if (!mounted || attempt != _attempt || _hasNavigated) return;
+      _checkInProgress = false;
+      _hasNavigated = true;
+      if (!didRestoreSession) _navigateToLanding();
+    } on AuthIntegrationException {
+      _showStartupError(attempt);
+    } on DevInsightApiException {
+      _showStartupError(attempt);
+    }
+  }
+
+  void _showStartupError(int attempt) {
+    if (!mounted || attempt != _attempt) return;
     _checkInProgress = false;
-    _hasNavigated = true;
-    _navigateToLanding();
+    setState(() {
+      _connectionState = _SplashConnectionState.startupError;
+    });
   }
 
   void _navigateToLanding() {
@@ -145,11 +170,13 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   }
 
   Widget _buildLoadingArea({required bool isMobile, required bool isTablet}) {
-    if (_connectionState == _SplashConnectionState.offline) {
+    if (_connectionState != _SplashConnectionState.checking) {
+      final startupError =
+          _connectionState == _SplashConnectionState.startupError;
       return AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         child: Column(
-          key: const ValueKey('offline_view'),
+          key: ValueKey(startupError ? 'startup_error_view' : 'offline_view'),
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
@@ -163,15 +190,17 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
                   width: 1.2,
                 ),
               ),
-              child: const Icon(
-                Icons.wifi_off_rounded,
+              child: Icon(
+                startupError ? Icons.cloud_off_rounded : Icons.wifi_off_rounded,
                 color: AppColors.softBlueHighlight,
                 size: 22,
               ),
             ),
             const SizedBox(height: 14),
             Text(
-              'Check your internet connection',
+              startupError
+                  ? 'Could not restore your session'
+                  : 'Check your internet connection',
               textAlign: TextAlign.center,
               style: GoogleFonts.plusJakartaSans(
                 color: AppColors.softLavender,
@@ -184,7 +213,9 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 320),
               child: Text(
-                'No connection detected. Please verify your network and try again.',
+                startupError
+                    ? 'DevInsight could not load your account. Check your connection and retry.'
+                    : 'No connection detected. Please verify your network and try again.',
                 textAlign: TextAlign.center,
                 style: GoogleFonts.plusJakartaSans(
                   color: AppColors.softLavender.withValues(alpha: 0.65),

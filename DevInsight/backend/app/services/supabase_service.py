@@ -22,6 +22,7 @@ class SupabaseConfigurationError(RuntimeError):
 class SupabaseService:
     def __init__(self) -> None:
         self._client: Client | None = None
+        self._auth_client: Client | None = None
 
     @property
     def is_configured(self) -> bool:
@@ -36,17 +37,31 @@ class SupabaseService:
         )
         if not url or not secret_key:
             self._client = None
+            self._auth_client = None
             raise SupabaseConfigurationError(
                 "SUPABASE_URL and SUPABASE_SECRET_KEY must be set in backend/.env."
             )
 
         try:
-            self._client = create_client(url, secret_key)
+            publishable_key = (
+                settings.supabase_publishable_key.strip()
+                if settings.supabase_publishable_key
+                else ""
+            )
+            client = create_client(url, secret_key)
+            auth_client = create_client(
+                url,
+                publishable_key or secret_key,
+            )
         except (SupabaseException, ValueError) as error:
             self._client = None
+            self._auth_client = None
             raise SupabaseConfigurationError(
                 "Supabase client configuration is invalid."
             ) from error
+
+        self._client = client
+        self._auth_client = auth_client
 
     def get_client(self) -> Client:
         if self._client is None:
@@ -54,6 +69,13 @@ class SupabaseService:
                 "Supabase is not configured. Set backend/.env first."
             )
         return self._client
+
+    def get_auth_client(self) -> Client:
+        if self._auth_client is None:
+            raise SupabaseConfigurationError(
+                "Supabase is not configured. Set backend/.env first."
+            )
+        return self._auth_client
 
     def verify_required_tables(self) -> dict[str, bool]:
         client = self.get_client()
