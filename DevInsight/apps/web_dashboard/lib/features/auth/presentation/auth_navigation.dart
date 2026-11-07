@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:web_dashboard/core/config/app_config.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
 import 'package:web_dashboard/features/auth/presentation/pages/auth_destination_page.dart';
 import 'package:web_dashboard/features/onboarding/presentation/pages/onboarding_flow_page.dart';
 
 class AuthNavigation {
   const AuthNavigation._();
+
+  static const authenticatedRoute = '/auth';
 
   static Future<void> replaceFromProfile(
     BuildContext context,
@@ -56,6 +59,7 @@ class AuthNavigation {
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil<void>(
       PageRouteBuilder<void>(
+        settings: const RouteSettings(name: authenticatedRoute),
         pageBuilder: (context, animation, secondaryAnimation) => destination,
         transitionDuration: const Duration(milliseconds: 350),
         transitionsBuilder: (context, animation, secondaryAnimation, child) =>
@@ -76,7 +80,9 @@ class AuthNavigation {
     String? email,
     int step,
   ) {
-    final user = Supabase.instance.client.auth.currentUser;
+    final user = AppConfig.hasSupabaseConfig
+        ? Supabase.instance.client.auth.currentUser
+        : null;
     final metadata = user?.userMetadata ?? const <String, dynamic>{};
     final metadataName = [
       metadata['first_name'],
