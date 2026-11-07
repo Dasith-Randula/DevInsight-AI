@@ -11,20 +11,30 @@ class AuthNavigation {
     BuildContext context,
     CurrentUserProfile profile,
   ) async {
+    await replaceFromDestination(
+      context,
+      profile.nextStep,
+      fullName: profile.fullName,
+      email: profile.email,
+    );
+  }
+
+  static Future<void> replaceFromDestination(
+    BuildContext context,
+    String nextStep, {
+    String? fullName,
+    String? email,
+  }) async {
     final Widget destination;
-    switch (profile.nextStep) {
+    switch (nextStep) {
       case 'profile':
-        destination = _onboardingPage(profile, 0);
+        destination = _onboardingPage(fullName, email, 0);
       case 'preferences':
-        destination = _onboardingPage(profile, 1);
+        destination = _onboardingPage(fullName, email, 1);
       case 'notifications':
-        destination = _onboardingPage(profile, 2);
+        destination = _onboardingPage(fullName, email, 2);
       case 'complete':
-        destination = const AuthDestinationPage(
-          title: 'Onboarding ready to complete',
-          description:
-              'Your saved setup is ready. Final onboarding completion will be connected when the onboarding form is integrated with the API.',
-        );
+        destination = _onboardingPage(fullName, email, 2);
       case 'developer_home':
         destination = const AuthDestinationPage(
           title: 'Developer Home',
@@ -62,7 +72,8 @@ class AuthNavigation {
   }
 
   static OnboardingFlowPage _onboardingPage(
-    CurrentUserProfile profile,
+    String? fullName,
+    String? email,
     int step,
   ) {
     final user = Supabase.instance.client.auth.currentUser;
@@ -72,8 +83,8 @@ class AuthNavigation {
       metadata['last_name'],
     ].whereType<String>().where((part) => part.isNotEmpty).join(' ');
     return OnboardingFlowPage(
-      initialName: profile.fullName ?? metadataName,
-      initialEmail: profile.email ?? user?.email ?? '',
+      initialName: fullName ?? metadataName,
+      initialEmail: email ?? user?.email ?? '',
       initialStep: step,
     );
   }

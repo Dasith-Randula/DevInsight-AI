@@ -166,6 +166,48 @@ class OnboardingEndpointTests(unittest.TestCase):
             "http://localhost:5173",
         )
 
+    def test_onboarding_state_returns_only_authenticated_users_saved_values(self) -> None:
+        self.database.tables["profiles"].extend(
+            [
+                self._profile(),
+                self._profile(id="other-user", username="other"),
+            ]
+        )
+        self.database.tables["user_preferences"].extend(
+            [
+                {
+                    "user_id": self.user_id,
+                    "interests": ["AI Recommendations"],
+                },
+                {
+                    "user_id": "other-user",
+                    "interests": ["Root Cause Analysis"],
+                },
+            ]
+        )
+        self.database.tables["notification_settings"].append(
+            {
+                "user_id": self.user_id,
+                "email_enabled": True,
+                "push_enabled": False,
+                "topics": ["Project Updates"],
+            }
+        )
+
+        response = self.client.get("/api/v1/onboarding/state")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["profile"]["id"], self.user_id)
+        self.assertEqual(
+            response.json()["preferences"]["interests"],
+            ["AI Recommendations"],
+        )
+        self.assertEqual(
+            response.json()["notifications"]["topics"],
+            ["Project Updates"],
+        )
+        self.assertEqual(response.json()["next_step"], "complete")
+
     def test_profile_creation_uses_authenticated_id_and_normalizes_username(self) -> None:
         response = self.client.put(
             "/api/v1/onboarding/profile",

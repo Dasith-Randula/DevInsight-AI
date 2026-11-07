@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 from starlette.concurrency import run_in_threadpool
 
 from app.api.dependencies import AuthenticatedUser, get_current_user
+from app.api.me import get_next_step
 from app.services.onboarding_service import (
     DuplicateUsernameError,
     OnboardingIncompleteError,
@@ -108,6 +109,34 @@ class OnboardingCompleteResponse(BaseModel):
     next_step: Literal["developer_home", "manager_home"]
 
 
+class OnboardingProfileResponse(BaseModel):
+    id: str
+    full_name: str | None = None
+    username: str | None = None
+    organization: str | None = None
+    job_title: str | None = None
+    role: Literal["developer", "project_manager"] | None = None
+    onboarding_step: int = 1
+    onboarding_completed: bool = False
+
+
+class OnboardingPreferencesResponse(BaseModel):
+    interests: list[str]
+
+
+class OnboardingNotificationsResponse(BaseModel):
+    email_enabled: bool
+    push_enabled: bool
+    topics: list[str]
+
+
+class OnboardingStateResponse(BaseModel):
+    profile: OnboardingProfileResponse
+    preferences: OnboardingPreferencesResponse | None = None
+    notifications: OnboardingNotificationsResponse | None = None
+    next_step: str
+
+
 def _raise_service_error(error: OnboardingServiceError) -> None:
     if isinstance(error, DuplicateUsernameError):
         raise HTTPException(
@@ -124,6 +153,33 @@ def _raise_service_error(error: OnboardingServiceError) -> None:
         status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
         detail="Onboarding service is unavailable.",
     ) from error
+
+
+@router.get("/state", response_model=OnboardingStateResponse)
+async def get_onboarding_state(
+    user: Annotated[AuthenticatedUser, Depends(get_current_user)],
+) -> OnboardingStateResponse:
+    try:
+        state = await run_in_threadpool(
+            onboarding_service.get_onboarding_state,
+            user.id,
+        )
+    except OnboardingServiceError as error:
+        _raise_service_error(error)
+
+    profile = state["profile"]
+    preferences = state["preferences"]
+    notifications = state["notifications"]
+    return OnboardingStateResponse(
+        profile=profile,
+        preferences=preferences,
+        notifications=notifications,
+        next_step=get_next_step(
+            profile,
+            preferences is not None,
+            notifications is not None,
+        ),
+    )
 
 
 @router.put("/profile", response_model=StepSavedResponse)

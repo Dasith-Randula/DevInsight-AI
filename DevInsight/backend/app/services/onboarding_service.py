@@ -34,6 +34,38 @@ class OnboardingIncompleteError(OnboardingServiceError):
 
 
 class OnboardingService:
+    def get_onboarding_state(self, user_id: str) -> dict[str, object]:
+        try:
+            client = supabase_service.get_client()
+            profile = self._find_one(client, "profiles", "id", user_id)
+            if profile is None:
+                raise OnboardingServiceError("Profile could not be retrieved.")
+
+            preferences = self._find_one(
+                client,
+                "user_preferences",
+                "user_id",
+                user_id,
+            )
+            notifications = self._find_one(
+                client,
+                "notification_settings",
+                "user_id",
+                user_id,
+            )
+        except OnboardingServiceError:
+            raise
+        except PROFILE_DATABASE_ERRORS as error:
+            raise OnboardingServiceError(
+                "Onboarding state could not be retrieved."
+            ) from error
+
+        return {
+            "profile": profile,
+            "preferences": preferences,
+            "notifications": notifications,
+        }
+
     def save_profile(self, user_id: str, values: dict[str, object]) -> dict[str, object]:
         try:
             client = supabase_service.get_client()

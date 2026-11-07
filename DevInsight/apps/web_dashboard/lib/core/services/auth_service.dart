@@ -92,8 +92,60 @@ class AuthService {
   }
 
   Future<CurrentUserProfile> fetchCurrentProfile() async {
+    return withSession(_api.getCurrentUser);
+  }
+
+  Future<OnboardingState> fetchOnboardingState() async {
+    return withSession(_api.getOnboardingState);
+  }
+
+  Future<void> saveOnboardingProfile({
+    required String fullName,
+    required String username,
+    required String? organization,
+    required String? jobTitle,
+    required String role,
+  }) {
+    return withSession(
+      (token) => _api.saveProfile(
+        token,
+        fullName: fullName,
+        username: username,
+        organization: organization,
+        jobTitle: jobTitle,
+        role: role,
+      ),
+    );
+  }
+
+  Future<void> saveOnboardingPreferences(List<String> interests) {
+    return withSession((token) => _api.savePreferences(token, interests));
+  }
+
+  Future<void> saveOnboardingNotifications({
+    required bool emailEnabled,
+    required bool pushEnabled,
+    required List<String> topics,
+  }) {
+    return withSession(
+      (token) => _api.saveNotifications(
+        token,
+        emailEnabled: emailEnabled,
+        pushEnabled: pushEnabled,
+        topics: topics,
+      ),
+    );
+  }
+
+  Future<OnboardingCompletion> completeOnboarding() {
+    return withSession(_api.completeOnboarding);
+  }
+
+  Future<T> withSession<T>(
+    Future<T> Function(String accessToken) request,
+  ) async {
     final auth = _supabase.auth;
-    var session = auth.currentSession;
+    final session = auth.currentSession;
     if (session == null) {
       throw const AuthIntegrationException(
         'Your session has expired. Please sign in again.',
@@ -101,17 +153,18 @@ class AuthService {
     }
 
     try {
-      return await _api.getCurrentUser(session.accessToken);
+      return await request(session.accessToken);
     } on DevInsightApiException catch (error) {
       if (error.message != 'Your session has expired.') rethrow;
     }
 
+    Session? refreshedSession;
     try {
-      session = (await auth.refreshSession()).session;
+      refreshedSession = (await auth.refreshSession()).session;
     } on AuthException {
-      session = null;
+      refreshedSession = null;
     }
-    if (session == null) {
+    if (refreshedSession == null) {
       await auth.signOut(scope: SignOutScope.local);
       throw const AuthIntegrationException(
         'Your session has expired. Please sign in again.',
@@ -119,7 +172,7 @@ class AuthService {
     }
 
     try {
-      return await _api.getCurrentUser(session.accessToken);
+      return await request(refreshedSession.accessToken);
     } on DevInsightApiException catch (error) {
       if (error.message == 'Your session has expired.') {
         await auth.signOut(scope: SignOutScope.local);
