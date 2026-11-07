@@ -3,17 +3,24 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_assets.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/devinsight_api.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../auth/presentation/auth_navigation.dart';
 
 class OnboardingFlowPage extends StatefulWidget {
   const OnboardingFlowPage({
     super.key,
     this.initialName = '',
     this.initialEmail = '',
+    this.initialStep = 0,
+    this.authService,
   });
 
   final String initialName;
   final String initialEmail;
+  final int initialStep;
+  final AuthService? authService;
 
   @override
   State<OnboardingFlowPage> createState() => _OnboardingFlowPageState();
@@ -32,6 +39,12 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
   String? _roleError;
   final Set<String> _interests = {};
   bool _emailNotifications = true;
+  bool _pushNotifications = false;
+  bool _isLoadingState = true;
+  bool _stateLoadFailed = false;
+  bool _isSaving = false;
+  String? _operationError;
+  late final AuthService _authService;
   final Map<String, bool> _notificationCategories = {
     'Critical Risk Alerts': true,
     'Project Updates': true,
@@ -81,9 +94,12 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
   @override
   void initState() {
     super.initState();
+    _authService = widget.authService ?? AuthService();
+    _step = widget.initialStep.clamp(0, 2);
     _nameController = TextEditingController(text: widget.initialName);
     _usernameController = TextEditingController();
     _emailController = TextEditingController(text: widget.initialEmail);
+    _loadSavedState();
   }
 
   @override
@@ -97,14 +113,87 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
   }
 
   void _goBack() {
+    if (_isSaving || _isLoadingState) return;
     if (_step > 0) {
-      setState(() => _step -= 1);
+      setState(() {
+        _operationError = null;
+        _step -= 1;
+      });
       return;
     }
     Navigator.of(context).maybePop();
   }
 
-  void _goNext() {
+  Future<void> _loadSavedState() async {
+    if (_stateLoadFailed && mounted) {
+      setState(() {
+        _isLoadingState = true;
+        _stateLoadFailed = false;
+        _operationError = null;
+      });
+    }
+    try {
+      final saved = await _authService.fetchOnboardingState();
+      if (!mounted) return;
+      if (saved.nextStep == 'developer_home' ||
+          saved.nextStep == 'manager_home') {
+        await AuthNavigation.replaceFromDestination(
+          context,
+          saved.nextStep,
+          fullName: saved.profile.fullName ?? widget.initialName,
+          email: widget.initialEmail,
+        );
+        return;
+      }
+
+      setState(() {
+        _nameController.text = saved.profile.fullName ?? widget.initialName;
+        _usernameController.text = saved.profile.username ?? '';
+        _companyController.text = saved.profile.organization ?? '';
+        _jobTitleController.text = saved.profile.jobTitle ?? '';
+        _role = switch (saved.profile.role) {
+          'developer' => 'Developer',
+          'project_manager' => 'Project Manager',
+          _ => null,
+        };
+        _interests
+          ..clear()
+          ..addAll(saved.interests);
+        _emailNotifications = saved.emailEnabled ?? true;
+        _pushNotifications = saved.pushEnabled ?? false;
+        for (final topic in _notificationCategories.keys) {
+          _notificationCategories[topic] = saved.notificationTopics.contains(
+            topic,
+          );
+        }
+        _step = switch (saved.nextStep) {
+          'profile' => 0,
+          'preferences' => 1,
+          'notifications' || 'complete' => 2,
+          _ => widget.initialStep.clamp(0, 2),
+        };
+        _isLoadingState = false;
+        _stateLoadFailed = false;
+        _operationError = null;
+      });
+    } on AuthIntegrationException catch (error) {
+      _setStateLoadError(error.message);
+    } on DevInsightApiException catch (error) {
+      _setStateLoadError(error.message);
+    }
+  }
+
+  void _setStateLoadError(String message) {
+    if (!mounted) return;
+    setState(() {
+      _isLoadingState = false;
+      _stateLoadFailed = true;
+      _operationError = message;
+    });
+  }
+
+  Future<void> _goNext() async {
+    if (_isSaving || _isLoadingState) return;
     if (_step == 0) {
       final valid = _profileFormKey.currentState?.validate() ?? false;
       if (_role == null) {
@@ -112,36 +201,82 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
       }
       if (!valid || _role == null) return;
     }
+
     setState(() {
+      _isSaving = true;
+      _operationError = null;
       _roleError = null;
-      _step = (_step + 1).clamp(0, 2);
     });
+    try {
+      if (_step == 0) {
+        await _authService.saveOnboardingProfile(
+          fullName: _nameController.text.trim(),
+          username: _usernameController.text.trim(),
+          organization: _companyController.text.trim().isEmpty
+              ? null
+              : _companyController.text.trim(),
+          jobTitle: _jobTitleController.text.trim().isEmpty
+              ? null
+              : _jobTitleController.text.trim(),
+          role: _role == 'Developer' ? 'developer' : 'project_manager',
+        );
+      } else {
+        await _authService.saveOnboardingPreferences(
+          _interestOptions
+              .map((option) => option.title)
+              .where(_interests.contains)
+              .toList(),
+        );
+      }
+      if (!mounted) return;
+      setState(() => _step = (_step + 1).clamp(0, 2));
+    } on AuthIntegrationException catch (error) {
+      _setOperationError(error.message);
+    } on DevInsightApiException catch (error) {
+      _setOperationError(error.message);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
-  void _completePreview() {
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder<void>(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            _RoleDashboardPreview(
-              role: _role!,
-              name: _nameController.text.trim(),
-              username: _usernameController.text.trim(),
-              email: _emailController.text.trim(),
-              company: _companyController.text.trim(),
-              jobTitle: _jobTitleController.text.trim(),
-              interests: List.unmodifiable(_interests),
-            ),
-        transitionDuration: const Duration(milliseconds: 350),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            FadeTransition(
-              opacity: CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOutCubic,
-              ),
-              child: child,
-            ),
-      ),
-    );
+  Future<void> _completeOnboarding() async {
+    if (_isSaving || _isLoadingState) return;
+    setState(() {
+      _isSaving = true;
+      _operationError = null;
+    });
+    try {
+      await _authService.saveOnboardingNotifications(
+        emailEnabled: _emailNotifications,
+        pushEnabled: _pushNotifications,
+        topics: _notificationCategories.entries
+            .where((entry) => entry.value)
+            .map((entry) => entry.key)
+            .toList(),
+      );
+      final result = await _authService.completeOnboarding();
+      if (!mounted) return;
+      await AuthNavigation.replaceFromDestination(
+        context,
+        result.nextStep,
+        fullName: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+      );
+    } on AuthIntegrationException catch (error) {
+      _setOperationError(error.message);
+    } on DevInsightApiException catch (error) {
+      _setOperationError(error.message);
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  void _setOperationError(String message) {
+    if (!mounted) return;
+    setState(() {
+      _stateLoadFailed = false;
+      _operationError = message;
+    });
   }
 
   @override
@@ -235,10 +370,62 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
               child: _buildStepContent(compact: compact),
             ),
           ),
+          if (_isLoadingState) ...[
+            const SizedBox(height: 18),
+            const Center(child: CircularProgressIndicator()),
+            const SizedBox(height: 8),
+            Text(
+              'Loading your saved onboarding details…',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.plusJakartaSans(
+                color: AppColors.authSecondaryText,
+                fontSize: 12,
+              ),
+            ),
+          ],
+          if (_operationError != null) ...[
+            const SizedBox(height: 18),
+            _buildOperationMessage(),
+          ],
           SizedBox(height: compact ? 26 : 34),
           _buildActions(compact: compact),
           const SizedBox(height: 22),
           _buildPrototypeNotice(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOperationMessage() {
+    final loadFailed = _stateLoadFailed;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF3F1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: AppColors.error),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _operationError!,
+              style: GoogleFonts.plusJakartaSans(
+                color: AppColors.authText,
+                fontSize: 12,
+                height: 1.4,
+              ),
+            ),
+          ),
+          if (loadFailed) ...[
+            const SizedBox(width: 8),
+            TextButton(
+              onPressed: _isSaving ? null : _loadSavedState,
+              child: const Text('Retry'),
+            ),
+          ],
         ],
       ),
     );
@@ -626,7 +813,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
           onChanged: (value) => setState(() => _emailNotifications = value),
         ),
         const SizedBox(height: 10),
-        _disabledChannelTile(),
+        _pushChannelTile(),
         const SizedBox(height: 26),
         _sectionLabel('What you hear about', 'Manage alert categories'),
         const SizedBox(height: 12),
@@ -1032,7 +1219,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
     );
   }
 
-  Widget _disabledChannelTile() {
+  Widget _pushChannelTile() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -1070,7 +1257,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Unavailable · browser push is not configured',
+                  'Preference only · push delivery is not configured',
                   style: GoogleFonts.plusJakartaSans(
                     color: AppColors.authSecondaryText,
                     fontSize: 10.5,
@@ -1080,10 +1267,12 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
             ),
           ),
           const SizedBox(width: 10),
-          const Icon(
-            Icons.lock_outline_rounded,
-            size: 17,
-            color: Color(0xFF9AA8BE),
+          Switch.adaptive(
+            value: _pushNotifications,
+            onChanged: _isSaving
+                ? null
+                : (value) => setState(() => _pushNotifications = value),
+            activeThumbColor: AppColors.royalBlue,
           ),
         ],
       ),
@@ -1113,7 +1302,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
       children: [
         if (!firstStep)
           OutlinedButton.icon(
-            onPressed: _goBack,
+            onPressed: _isSaving || _isLoadingState ? null : _goBack,
             icon: const Icon(Icons.arrow_back_rounded, size: 17),
             label: const Text('Back'),
             style: OutlinedButton.styleFrom(
@@ -1136,7 +1325,11 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
           width: compact ? 190 : 220,
           height: 50,
           child: FilledButton(
-            onPressed: lastStep ? _completePreview : _goNext,
+            onPressed: _isSaving || _isLoadingState
+                ? null
+                : lastStep
+                ? _completeOnboarding
+                : _goNext,
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.royalBlue,
               foregroundColor: Colors.white,
@@ -1152,14 +1345,39 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(lastStep ? 'Complete Setup' : 'Next'),
-                const SizedBox(width: 8),
-                Icon(
-                  lastStep ? Icons.check_rounded : Icons.arrow_forward_rounded,
-                  size: 17,
-                ),
-              ],
+              children: _isSaving
+                  ? [
+                      const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(lastStep ? 'Saving setup…' : 'Saving…'),
+                        ),
+                      ),
+                    ]
+                  : [
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(lastStep ? 'Complete Setup' : 'Next'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        lastStep
+                            ? Icons.check_rounded
+                            : Icons.arrow_forward_rounded,
+                        size: 17,
+                      ),
+                    ],
             ),
           ),
         ),
@@ -1186,7 +1404,7 @@ class _OnboardingFlowPageState extends State<OnboardingFlowPage> {
           const SizedBox(width: 9),
           Expanded(
             child: Text(
-              'Prototype preview: onboarding data is held only during this session. It is not saved to an account, and completion will not persist across devices.',
+              'Your onboarding choices are saved to your account. Email and push delivery are not configured by this setup.',
               style: GoogleFonts.plusJakartaSans(
                 color: AppColors.authSecondaryText,
                 fontSize: 10.5,
@@ -1206,191 +1424,4 @@ class _SelectionOption {
   final String title;
   final String description;
   final IconData icon;
-}
-
-class _RoleDashboardPreview extends StatelessWidget {
-  const _RoleDashboardPreview({
-    required this.role,
-    required this.name,
-    required this.username,
-    required this.email,
-    required this.company,
-    required this.jobTitle,
-    required this.interests,
-  });
-
-  final String role;
-  final String name;
-  final String username;
-  final String email;
-  final String company;
-  final String jobTitle;
-  final List<String> interests;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDeveloper = role == 'Developer';
-    final title = isDeveloper
-        ? 'Developer Workspace'
-        : 'Project Manager Workspace';
-    final icon = isDeveloper ? Icons.code_rounded : Icons.view_kanban_outlined;
-
-    return Theme(
-      data: AppTheme.light,
-      child: Scaffold(
-        backgroundColor: AppColors.authBackground,
-        body: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 700),
-                child: Container(
-                  padding: const EdgeInsets.all(32),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(26),
-                    border: Border.all(color: const Color(0xFFDCE7FF)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.royalBlue.withValues(alpha: 0.1),
-                        blurRadius: 38,
-                        offset: const Offset(0, 16),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Image.asset(
-                            AppAssets.devInsightBrandingLogo,
-                            width: 36,
-                            height: 36,
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'DevInsight',
-                            style: GoogleFonts.plusJakartaSans(
-                              color: AppColors.authText,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 34),
-                      Container(
-                        width: 54,
-                        height: 54,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEAF1FF),
-                          borderRadius: BorderRadius.circular(17),
-                        ),
-                        child: Icon(icon, color: AppColors.royalBlue, size: 27),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Welcome${name.isEmpty ? '' : ', $name'}',
-                        style: GoogleFonts.plusJakartaSans(
-                          color: AppColors.authText,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.8,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        title,
-                        style: GoogleFonts.plusJakartaSans(
-                          color: AppColors.royalBlue,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      Text(
-                        'This role-specific dashboard is a placeholder for the upcoming workspace. Your onboarding choices are available for this preview only.',
-                        style: GoogleFonts.plusJakartaSans(
-                          color: AppColors.authSecondaryText,
-                          fontSize: 13,
-                          height: 1.6,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      _summaryLine('Role', role),
-                      if (username.isNotEmpty)
-                        _summaryLine('Username', username),
-                      if (email.isNotEmpty) _summaryLine('Email', email),
-                      if (company.isNotEmpty)
-                        _summaryLine('Organization', company),
-                      if (jobTitle.isNotEmpty)
-                        _summaryLine('Job title', jobTitle),
-                      _summaryLine(
-                        'Interests',
-                        interests.isEmpty
-                            ? 'None selected'
-                            : interests.join(', '),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(13),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF8E8),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFF4E4BD)),
-                        ),
-                        child: Text(
-                          'Prototype only — no onboarding completion or account data has been saved.',
-                          style: GoogleFonts.plusJakartaSans(
-                            color: const Color(0xFF765A19),
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _summaryLine(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 105,
-            child: Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                color: AppColors.authSecondaryText,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: GoogleFonts.plusJakartaSans(
-                color: AppColors.authText,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

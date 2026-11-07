@@ -36,9 +36,8 @@ void main() {
       MaterialApp(
         navigatorObservers: [navigatorObserver],
         routes: {
-          '/landing': (_) => const Scaffold(
-            body: Text('AI-Powered Project Intelligence'),
-          ),
+          '/landing': (_) =>
+              const Scaffold(body: Text('AI-Powered Project Intelligence')),
         },
         home: const SplashPage(
           connectivityService: FakeConnectivityService(true),
@@ -57,6 +56,10 @@ void main() {
   testWidgets('Landing page displays its current hero heading', (
     WidgetTester tester,
   ) async {
+    tester.view.physicalSize = const Size(1600, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -77,26 +80,28 @@ void main() {
     expect(find.text('AI-Powered Project Intelligence'), findsOneWidget);
   });
 
-  testWidgets('Splash page shows an offline state when there is no connection',
-      (WidgetTester tester) async {
-    await tester.pumpWidget(
-      MaterialApp(
-        routes: {
-          '/landing': (_) => const Scaffold(body: Text('Landing page')),
-        },
-        home: const SplashPage(
-          connectivityService: FakeConnectivityService(false),
+  testWidgets(
+    'Splash page shows an offline state when there is no connection',
+    (WidgetTester tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          routes: {
+            '/landing': (_) => const Scaffold(body: Text('Landing page')),
+          },
+          home: const SplashPage(
+            connectivityService: FakeConnectivityService(false),
+          ),
         ),
-      ),
-    );
+      );
 
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 2600));
-    await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 2600));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Check your internet connection'), findsOneWidget);
-    expect(find.text('Retry'), findsOneWidget);
-  });
+      expect(find.text('Check your internet connection'), findsOneWidget);
+      expect(find.text('Retry'), findsOneWidget);
+    },
+  );
 }
 
 void _noop() {}

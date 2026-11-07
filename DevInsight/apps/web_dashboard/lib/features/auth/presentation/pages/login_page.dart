@@ -3,7 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:web_dashboard/core/constants/app_colors.dart';
+import 'package:web_dashboard/core/services/auth_service.dart';
+import 'package:web_dashboard/core/services/devinsight_api.dart';
 import 'package:web_dashboard/core/theme/theme_controller.dart';
+import 'package:web_dashboard/features/auth/presentation/auth_navigation.dart';
 import 'package:web_dashboard/features/auth/presentation/pages/signup_page.dart';
 import 'package:web_dashboard/features/auth/presentation/widgets/auth_page_shell.dart';
 import 'package:web_dashboard/features/auth/presentation/widgets/modern_auth_card.dart';
@@ -44,7 +47,11 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void _showNotice(String message, {bool isError = false}) {
+  void _showNotice(
+    String message, {
+    bool isError = false,
+    VoidCallback? onRetry,
+  }) {
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -56,12 +63,55 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         backgroundColor: isError ? AppColors.error : AppColors.primaryBlue,
+        action: onRetry == null
+            ? null
+            : SnackBarAction(
+                label: 'Retry',
+                textColor: Colors.white,
+                onPressed: onRetry,
+              ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(20),
         duration: const Duration(seconds: 3),
       ),
     );
+  }
+
+  Future<void> _routeCurrentUser() async {
+    try {
+      final profile = await AuthService().fetchCurrentProfile();
+      if (mounted) {
+        await AuthNavigation.replaceFromProfile(context, profile);
+      }
+    } on AuthIntegrationException catch (error) {
+      _showNotice(error.message, isError: true, onRetry: _routeCurrentUser);
+    } on DevInsightApiException catch (error) {
+      _showNotice(error.message, isError: true, onRetry: _routeCurrentUser);
+    }
+  }
+
+  Future<void> _signIn(String email, String password) async {
+    try {
+      final authService = AuthService();
+      await authService.signIn(email: email, password: password);
+      await _routeCurrentUser();
+    } on AuthIntegrationException catch (error) {
+      _showNotice(error.message, isError: true);
+    }
+  }
+
+  Future<void> _sendPasswordReset(String email) async {
+    if (email.isEmpty) {
+      _showNotice('Enter your email address first.', isError: true);
+      return;
+    }
+    try {
+      await AuthService().sendPasswordReset(email);
+      _showNotice('If the account exists, a password reset email was sent.');
+    } on AuthIntegrationException catch (error) {
+      _showNotice(error.message, isError: true);
+    }
   }
 
   @override
@@ -77,18 +127,8 @@ class _LoginPageState extends State<LoginPage> {
             );
           }
         },
-        onLogIn: (email, password) {
-          _showNotice(
-            'Authentication is not connected yet. No account was signed in.',
-            isError: true,
-          );
-        },
-        onSignUp: (firstName, lastName, email, password) {
-          _showNotice('Account creation is not connected yet.', isError: true);
-        },
-        onForgotPassword: () {
-          _showNotice('Password reset link sent to your email.');
-        },
+        onLogIn: _signIn,
+        onForgotPassword: _sendPasswordReset,
         onGoogleAuth: () =>
             _showNotice('Google sign-in not yet configured.', isError: false),
         onFacebookAuth: () =>

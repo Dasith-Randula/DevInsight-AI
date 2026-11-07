@@ -18,9 +18,9 @@ class ModernAuthCard extends StatefulWidget {
   final AuthMode initialMode;
   final ValueChanged<AuthMode>? onModeChanged;
   final VoidCallback? onNavigateBack;
-  final void Function(String, String, String, String)? onSignUp;
-  final void Function(String, String)? onLogIn;
-  final VoidCallback? onForgotPassword;
+  final Future<void> Function(String, String, String, String)? onSignUp;
+  final Future<void> Function(String, String)? onLogIn;
+  final Future<void> Function(String)? onForgotPassword;
   final VoidCallback? onGoogleAuth;
   final VoidCallback? onFacebookAuth;
   final VoidCallback? onAppleAuth;
@@ -167,25 +167,35 @@ class _ModernAuthCardState extends State<ModernAuthCard>
   }
 
   Future<void> _handleSignUp() async {
-    if (_signUpKey.currentState?.validate() ?? false) {
+    if (_isLoading || !(_signUpKey.currentState?.validate() ?? false)) {
+      return;
+    }
+    if (widget.onSignUp != null) {
       setState(() => _isLoading = true);
-      widget.onSignUp?.call(
-        _firstNameCtrl.text.trim(),
-        _lastNameCtrl.text.trim(),
-        _signUpEmailCtrl.text.trim(),
-        _signUpPassCtrl.text,
-      );
-      await Future<void>.delayed(const Duration(milliseconds: 600));
-      if (mounted) setState(() => _isLoading = false);
+      try {
+        await widget.onSignUp!(
+          _firstNameCtrl.text.trim(),
+          _lastNameCtrl.text.trim(),
+          _signUpEmailCtrl.text.trim(),
+          _signUpPassCtrl.text,
+        );
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
     }
   }
 
   Future<void> _handleLogIn() async {
-    if (_logInKey.currentState?.validate() ?? false) {
+    if (_isLoading || !(_logInKey.currentState?.validate() ?? false)) {
+      return;
+    }
+    if (widget.onLogIn != null) {
       setState(() => _isLoading = true);
-      widget.onLogIn?.call(_logInEmailCtrl.text.trim(), _logInPassCtrl.text);
-      await Future<void>.delayed(const Duration(milliseconds: 600));
-      if (mounted) setState(() => _isLoading = false);
+      try {
+        await widget.onLogIn!(_logInEmailCtrl.text.trim(), _logInPassCtrl.text);
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -585,7 +595,10 @@ class _ModernAuthCardState extends State<ModernAuthCard>
               onEnter: (_) => setState(() => _isForgotHovered = true),
               onExit: (_) => setState(() => _isForgotHovered = false),
               child: GestureDetector(
-                onTap: widget.onForgotPassword,
+                onTap: widget.onForgotPassword == null || _isLoading
+                    ? null
+                    : () =>
+                          widget.onForgotPassword!(_logInEmailCtrl.text.trim()),
                 child: Text(
                   'Forgot Password?',
                   style: GoogleFonts.plusJakartaSans(
