@@ -17,6 +17,7 @@ class AuthNavigation {
     await replaceFromDestination(
       context,
       profile.nextStep,
+      profile: profile,
       fullName: profile.fullName,
       email: profile.email,
     );
@@ -25,6 +26,7 @@ class AuthNavigation {
   static Future<void> replaceFromDestination(
     BuildContext context,
     String nextStep, {
+    CurrentUserProfile? profile,
     String? fullName,
     String? email,
   }) async {
@@ -39,16 +41,34 @@ class AuthNavigation {
       case 'complete':
         destination = _onboardingPage(fullName, email, 2);
       case 'developer_home':
-        destination = const AuthDestinationPage(
+        destination = AuthDestinationPage(
           title: 'Developer Home',
           description:
-              'Your account is signed in. The Developer workspace is a temporary placeholder and will be added in a later step.',
+              'Your account is signed in. Your personalized DevInsight workspace is ready.',
+          profile:
+              profile ??
+              CurrentUserProfile(
+                id: '',
+                nextStep: 'developer_home',
+                fullName: fullName ?? 'Developer',
+                email: email,
+                role: 'Developer',
+              ),
         );
       case 'manager_home':
-        destination = const AuthDestinationPage(
+        destination = AuthDestinationPage(
           title: 'Project Manager Home',
           description:
-              'Your account is signed in. The Project Manager workspace is a temporary placeholder and will be added in a later step.',
+              'Your account is signed in. Your project workspace is ready for review and delivery planning.',
+          profile:
+              profile ??
+              CurrentUserProfile(
+                id: '',
+                nextStep: 'manager_home',
+                fullName: fullName ?? 'Project Manager',
+                email: email,
+                role: 'Project Manager',
+              ),
         );
       default:
         throw const DevInsightApiException(
@@ -57,19 +77,37 @@ class AuthNavigation {
     }
 
     if (!context.mounted) return;
+    final reducedMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     Navigator.of(context).pushAndRemoveUntil<void>(
       PageRouteBuilder<void>(
         settings: const RouteSettings(name: authenticatedRoute),
         pageBuilder: (context, animation, secondaryAnimation) => destination,
-        transitionDuration: const Duration(milliseconds: 350),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            FadeTransition(
-              opacity: CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOutCubic,
-              ),
-              child: child,
-            ),
+        transitionDuration: Duration(milliseconds: reducedMotion ? 180 : 550),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final progress = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOutCubic,
+          );
+          return FadeTransition(
+            opacity: progress,
+            child: reducedMotion
+                ? child
+                : SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.012),
+                      end: Offset.zero,
+                    ).animate(progress),
+                    child: ScaleTransition(
+                      scale: Tween<double>(
+                        begin: 0.992,
+                        end: 1,
+                      ).animate(progress),
+                      child: child,
+                    ),
+                  ),
+          );
+        },
       ),
       (route) => false,
     );

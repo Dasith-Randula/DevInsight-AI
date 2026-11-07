@@ -25,8 +25,11 @@ comma-separated list of exact frontend origins. The backend separately permits
 loopback (`localhost` and `127.0.0.1`) development origins on any port.
 
 Onboarding screens are still the existing prototype UI and do not yet persist
-their form data through the onboarding endpoints. Home destinations are
-explicitly labeled temporary placeholders.
+their form data through the onboarding endpoints. The authenticated Developer
+Home follows the approved analytics dashboard layout and uses the saved
+authenticated profile for user identity. Repository-dependent metrics, charts,
+AI insights, activity, and reminders display clear empty states until real
+project data is connected. The Project Manager route remains separate.
 
 ## Getting Started
 

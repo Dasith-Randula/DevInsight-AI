@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:web_dashboard/core/services/connectivity_service.dart';
@@ -95,13 +97,91 @@ void main() {
       );
 
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 2600));
+      await tester.pump(const Duration(milliseconds: 6700));
       await tester.pumpAndSettle();
 
       expect(find.text('Check your internet connection'), findsOneWidget);
       expect(find.text('Retry'), findsOneWidget);
     },
   );
+
+  testWidgets('splash holds the logo until startup restoration completes', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1440, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final restoration = Completer<bool>();
+    var restorationStarted = false;
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {'/landing': (_) => const Scaffold(body: Text('Landing page'))},
+        home: SplashPage(
+          connectivityService: const FakeConnectivityService(true),
+          onStartupComplete: (_) {
+            restorationStarted = true;
+            return restoration.future;
+          },
+        ),
+      ),
+    );
+
+    await tester.pump();
+    expect(find.byKey(const ValueKey('splash-orbit-scene')), findsOneWidget);
+    expect(find.text('Loading'), findsNothing);
+    expect(find.byKey(const ValueKey('checking_view')), findsNothing);
+
+    await tester.pump(const Duration(milliseconds: 6700));
+    await tester.pump();
+    expect(find.text('Landing page'), findsNothing);
+    expect(find.byKey(const ValueKey('splash-orbit-scene')), findsOneWidget);
+    expect(find.text('DevInsight'), findsNothing);
+    expect(restorationStarted, isTrue);
+    final finalLogoSize = tester.getSize(
+      find.byKey(const ValueKey('splash-final-logo')),
+    );
+    expect(finalLogoSize.width, closeTo(58 * 1.7, 0.1));
+    expect(finalLogoSize.height, closeTo(finalLogoSize.width, 0.01));
+
+    await tester.pump(const Duration(seconds: 2));
+    expect(
+      tester.getSize(find.byKey(const ValueKey('splash-final-logo'))).width,
+      closeTo(finalLogoSize.width, 0.1),
+      reason: 'enlarged logo remains steady while restoration is pending',
+    );
+
+    restoration.complete(false);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.pumpAndSettle();
+    expect(find.text('Landing page'), findsOneWidget);
+  });
+
+  testWidgets('splash uses a logo-only state with reduced motion', (
+    tester,
+  ) async {
+    final restoration = Completer<bool>();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: SplashPage(
+            connectivityService: const FakeConnectivityService(true),
+            onStartupComplete: (_) => restoration.future,
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    expect(find.byType(Image), findsOneWidget);
+    expect(find.byKey(const ValueKey('splash-orbit-scene')), findsNothing);
+    expect(tester.takeException(), isNull);
+    restoration.complete(true);
+    await tester.pump();
+  });
 }
 
 void _noop() {}

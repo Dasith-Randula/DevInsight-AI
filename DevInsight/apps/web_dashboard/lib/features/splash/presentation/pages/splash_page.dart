@@ -1,15 +1,13 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/devinsight_api.dart';
-import '../widgets/logo_reveal_view.dart';
-import '../widgets/splash_background.dart';
-import '../widgets/splash_loader.dart';
+import '../widgets/splash_ecosystem_view.dart';
 
 enum _SplashConnectionState { checking, offline, startupError }
 
@@ -29,9 +27,10 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
-  late final AnimationController _revealController;
-  late final AnimationController _progressController;
+  late final AnimationController _timelineController;
+  late final Animation<double> _visualTimeline;
   _SplashConnectionState _connectionState = _SplashConnectionState.checking;
+  bool? _motionDisabled;
   bool _checkInProgress = false;
   bool _hasNavigated = false;
   int _attempt = 0;
@@ -41,23 +40,53 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    // 3.2s reveal timeline:
-    // - 0.0-1.5s: Logo radial reveal & light sweep
-    // - 1.2-3.0s: DevInsight character typing
-    // - 2.4-3.0s: Subtitle entrance
-    _revealController = AnimationController(
+    _timelineController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3200),
+      duration: const Duration(milliseconds: 6600),
     );
-
-    // Exact 6-second progress controller for the loading bar
-    _progressController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 6),
-    );
-
-    _revealController.forward();
+    _visualTimeline = Tween<double>(
+      begin: 0,
+      end: 6600 / 5600,
+    ).animate(_timelineController);
+    _timelineController.forward();
     _startStartupFlow();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final motionDisabled =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (_motionDisabled == motionDisabled) return;
+    _motionDisabled = motionDisabled;
+    if (motionDisabled) {
+      _timelineController
+        ..stop()
+        ..value = 1;
+    } else if (_timelineController.isCompleted) {
+      _timelineController
+        ..value = 0
+        ..forward();
+    }
+  }
+
+  Future<void> _waitForTimeline() {
+    if (_motionDisabled == true || _timelineController.isCompleted) {
+      return Future<void>.value();
+    }
+
+    final completed = Completer<void>();
+    late final AnimationStatusListener listener;
+    listener = (status) {
+      if (status != AnimationStatus.completed) return;
+      _timelineController.removeStatusListener(listener);
+      completed.complete();
+    };
+    _timelineController.addStatusListener(listener);
+    if (!_timelineController.isAnimating) {
+      _timelineController.forward();
+    }
+    return completed.future;
   }
 
   Future<void> _startStartupFlow() async {
@@ -74,21 +103,11 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       });
     }
 
-    _progressController
-      ..stop()
-      ..value = 0.0;
-
-    if (!_revealController.isAnimating && _revealController.value < 1.0) {
-      _revealController.forward();
+    if (_timelineController.isCompleted && _motionDisabled != true) {
+      _timelineController
+        ..value = 0
+        ..forward();
     }
-
-    // 1. Kick off 6-second linear progress and connectivity check concurrently
-    final progressFuture = _progressController.forward();
-    final minimumStartupComplete = Completer<void>();
-    final minimumStartupTimer = Timer(
-      const Duration(seconds: 7),
-      minimumStartupComplete.complete,
-    );
     final connectivityFuture = _connectivityService.hasConnection();
 
     final isOnline = await connectivityFuture;
@@ -98,8 +117,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
     // 2. Handle offline condition
     if (!isOnline) {
-      _progressController.stop();
-      minimumStartupTimer.cancel();
+      await _waitForTimeline();
+      if (!mounted || attempt != _attempt || _hasNavigated) return;
       _checkInProgress = false;
       setState(() {
         _connectionState = _SplashConnectionState.offline;
@@ -107,11 +126,8 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       return;
     }
 
-    await Future.wait([progressFuture, minimumStartupComplete.future]);
-
-    if (!mounted || attempt != _attempt || _hasNavigated) {
-      return;
-    }
+    await _waitForTimeline();
+    if (!mounted || attempt != _attempt || _hasNavigated) return;
 
     try {
       final startupHandler = widget.onStartupComplete;
@@ -138,11 +154,11 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
   }
 
   void _navigateToLanding() {
-    // Smooth fade navigation to the existing Landing Page
+    final reducedMotion = _motionDisabled ?? false;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         settings: const RouteSettings(name: '/landing'),
-        transitionDuration: const Duration(milliseconds: 550),
+        transitionDuration: Duration(milliseconds: reducedMotion ? 180 : 550),
         pageBuilder: (context, animation, secondaryAnimation) {
           final app = context.findAncestorWidgetOfExactType<MaterialApp>();
           final builder = app?.routes?['/landing'];
@@ -152,12 +168,27 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
           return const SizedBox.shrink();
         },
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final progress = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeInOutCubic,
+          );
           return FadeTransition(
-            opacity: CurvedAnimation(
-              parent: animation,
-              curve: Curves.easeInOut,
-            ),
-            child: child,
+            opacity: progress,
+            child: reducedMotion
+                ? child
+                : SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, 0.012),
+                      end: Offset.zero,
+                    ).animate(progress),
+                    child: ScaleTransition(
+                      scale: Tween<double>(
+                        begin: 0.992,
+                        end: 1,
+                      ).animate(progress),
+                      child: child,
+                    ),
+                  ),
           );
         },
       ),
@@ -169,195 +200,112 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
     _startStartupFlow();
   }
 
-  Widget _buildLoadingArea({required bool isMobile, required bool isTablet}) {
-    if (_connectionState != _SplashConnectionState.checking) {
-      final startupError =
-          _connectionState == _SplashConnectionState.startupError;
-      return AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: Column(
-          key: ValueKey(startupError ? 'startup_error_view' : 'offline_view'),
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.darkBlueNavy.withValues(alpha: 0.5),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppColors.azureBlue.withValues(alpha: 0.35),
-                  width: 1.2,
-                ),
-              ),
-              child: Icon(
-                startupError ? Icons.cloud_off_rounded : Icons.wifi_off_rounded,
-                color: AppColors.softBlueHighlight,
-                size: 22,
-              ),
+  Widget _buildErrorView() {
+    final startupError =
+        _connectionState == _SplashConnectionState.startupError;
+    return Semantics(
+      liveRegion: true,
+      child: Column(
+        key: ValueKey(startupError ? 'startup_error_view' : 'offline_view'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            startupError
+                ? 'Could not restore your session'
+                : 'Check your internet connection',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.plusJakartaSans(
+              color: const Color(0xFF14243D),
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(height: 14),
-            Text(
+          ),
+          const SizedBox(height: 6),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320),
+            child: Text(
               startupError
-                  ? 'Could not restore your session'
-                  : 'Check your internet connection',
+                  ? 'DevInsight could not load your account. Check your connection and retry.'
+                  : 'No connection detected. Please verify your network and try again.',
               textAlign: TextAlign.center,
               style: GoogleFonts.plusJakartaSans(
-                color: AppColors.softLavender,
-                fontSize: isMobile ? 15.0 : 16.5,
+                color: const Color(0xFF65758E),
+                fontSize: 12,
+                height: 1.4,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          ElevatedButton.icon(
+            onPressed: _checkInProgress ? null : _retryConnection,
+            icon: const Icon(Icons.refresh_rounded, size: 16),
+            label: const Text('Retry'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF0056FF),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 11),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              textStyle: GoogleFonts.plusJakartaSans(
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
-                letterSpacing: -0.2,
               ),
             ),
-            const SizedBox(height: 6),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 320),
-              child: Text(
-                startupError
-                    ? 'DevInsight could not load your account. Check your connection and retry.'
-                    : 'No connection detected. Please verify your network and try again.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                  color: AppColors.softLavender.withValues(alpha: 0.65),
-                  fontSize: 12.5,
-                  height: 1.4,
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            ElevatedButton.icon(
-              onPressed: _checkInProgress ? null : _retryConnection,
-              icon: const Icon(Icons.refresh_rounded, size: 16),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.royalBlue,
-                foregroundColor: AppColors.white,
-                elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 26,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                textStyle: GoogleFonts.plusJakartaSans(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final loaderWidth = isMobile
-        ? 220.0
-        : isTablet
-        ? 250.0
-        : 290.0;
-
-    final loaderHeight = isMobile ? 6.0 : 7.0;
-
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      child: AnimatedBuilder(
-        animation: _progressController,
-        builder: (context, _) {
-          final progress = _progressController.value;
-          // Animated ellipsis: . -> .. -> ...
-          final dotCycle = (progress * 12).floor() % 3;
-          final dots = dotCycle == 0
-              ? '.'
-              : dotCycle == 1
-              ? '..'
-              : '...';
-
-          return Column(
-            key: const ValueKey('checking_view'),
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SplashLoader(
-                progress: progress,
-                width: loaderWidth,
-                height: loaderHeight,
-              ),
-              const SizedBox(height: 18),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    'Loading',
-                    style: GoogleFonts.plusJakartaSans(
-                      color: AppColors.softLavender.withValues(alpha: 0.88),
-                      fontSize: isMobile ? 13.0 : 14.0,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                  SizedBox(
-                    width: 20,
-                    child: Text(
-                      dots,
-                      style: GoogleFonts.plusJakartaSans(
-                        color: AppColors.softLavender.withValues(alpha: 0.88),
-                        fontSize: isMobile ? 13.0 : 14.0,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
+          ),
+        ],
       ),
     );
   }
 
   @override
   void dispose() {
-    _revealController.dispose();
-    _progressController.dispose();
+    _timelineController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.midnightBlack,
+    final secondaryAnimation = ModalRoute.of(context)?.secondaryAnimation;
+    final splashPage = Scaffold(
+      backgroundColor: Colors.white,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final isMobile = width < 600;
-          final isTablet = width >= 600 && width < 1024;
-
-          return SplashBackground(
-            isAnimating: _connectionState == _SplashConnectionState.checking,
-            child: Center(
-              child: SingleChildScrollView(
-                physics: const ClampingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(
-                  vertical: 24,
-                  horizontal: 16,
-                ),
-                child: LogoRevealView(
-                  revealController: _revealController,
-                  isCompact: isMobile,
-                  loadingArea: _buildLoadingArea(
-                    isMobile: isMobile,
-                    isTablet: isTablet,
+          return SizedBox.expand(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: SplashEcosystemView(
+                    key: const ValueKey('splash-ecosystem'),
+                    animation: _visualTimeline,
+                    reducedMotion: _motionDisabled ?? false,
                   ),
                 ),
-              ),
+                if (_connectionState != _SplashConnectionState.checking)
+                  Positioned(
+                    left: 20,
+                    right: 20,
+                    bottom: math.max(24, constraints.maxHeight * 0.06),
+                    child: Center(child: _buildErrorView()),
+                  ),
+              ],
             ),
           );
         },
       ),
+    );
+    if (secondaryAnimation == null) return splashPage;
+
+    return FadeTransition(
+      opacity: Tween<double>(begin: 1, end: 0).animate(
+        CurvedAnimation(
+          parent: secondaryAnimation,
+          curve: Curves.easeInOutCubic,
+        ),
+      ),
+      child: splashPage,
     );
   }
 }
