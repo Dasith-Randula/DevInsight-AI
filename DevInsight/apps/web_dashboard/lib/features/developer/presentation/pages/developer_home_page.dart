@@ -3206,7 +3206,7 @@ class _MetricCard extends StatelessWidget {
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: _textStyle(fontSize: 10, fontWeight: FontWeight.w800),
+              style: _textStyle(fontSize: 13, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 5),
             Row(
@@ -3218,7 +3218,7 @@ class _MetricCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: _textStyle(
                       color: const Color(0xFF72819A),
-                      fontSize: 11,
+                      fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -3230,7 +3230,7 @@ class _MetricCard extends StatelessWidget {
               detail,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: _textStyle(color: const Color(0xFF8A96AA), fontSize: 8),
+              style: _textStyle(color: const Color(0xFF8A96AA), fontSize: 11),
             ),
           ],
         ),
@@ -3295,7 +3295,7 @@ class _ChartPanel extends StatelessWidget {
           _SectionHeading(title: title, subtitle: subtitle, icon: icon),
           const SizedBox(height: 14),
           Container(
-            height: title == 'Weekly Productivity' ? 204 : 176,
+            height: 204,
             width: double.infinity,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
@@ -3601,7 +3601,7 @@ class _WeeklyActivityPainter extends CustomPainter {
         text: maximum.toString(),
         style: const TextStyle(
           color: Color(0xFF8393AA),
-          fontSize: 8,
+          fontSize: 12,
           fontWeight: FontWeight.w600,
         ),
       ),
@@ -3745,7 +3745,7 @@ class _ContributionPanel extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           SizedBox(
-            height: 194,
+            height: 154,
             child: LayoutBuilder(
               builder: (context, constraints) {
                 final languages =
@@ -3762,7 +3762,7 @@ class _ContributionPanel extends StatelessWidget {
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: _textStyle(
-                                  fontSize: 10,
+                                  fontSize: 13,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -3771,7 +3771,7 @@ class _ContributionPanel extends StatelessWidget {
                               '${language.percentage.toStringAsFixed(1)}%',
                               style: _textStyle(
                                 color: const Color(0xFF687A96),
-                                fontSize: 9,
+                                fontSize: 12,
                               ),
                             ),
                           ],
@@ -3923,32 +3923,36 @@ class _InsightsSection extends StatelessWidget {
       'Risk prediction unavailable',
       'Machine-learning risk predictions are not implemented.',
       Icons.warning_amber_rounded,
-      Color(0xFFCC5656),
-      Color(0xFFFFF1F1),
+      Color(0xFFEF4444),
+      Color(0xFFFEE2E2),
+      Color(0xFFB91C1C),
       'Review Changes',
     ),
     (
       'Issue prioritization unavailable',
       'Validated AI issue-priority recommendations are not implemented.',
       Icons.lightbulb_outline_rounded,
-      Color(0xFF2876D8),
-      Color(0xFFEEF6FF),
+      Color(0xFF0056FF),
+      Color(0xFFDBEAFE),
+      Color(0xFF1D4ED8),
       'Update Priority',
     ),
     (
       'Root-cause analysis unavailable',
       'AI root-cause analysis is not implemented.',
       Icons.account_tree_outlined,
-      Color(0xFF755BDD),
-      Color(0xFFF3F0FF),
+      Color(0xFF7C3AED),
+      Color(0xFFEDE9FE),
+      Color(0xFF6D28D9),
       'View Analysis',
     ),
     (
       'Workload recommendations unavailable',
       'Validated team workload recommendations are not implemented.',
       Icons.auto_awesome_rounded,
-      Color(0xFF148EAD),
-      Color(0xFFEBFAFC),
+      Color(0xFF06B6D4),
+      Color(0xFFCFFAFE),
+      Color(0xFF0E7490),
       'Rebalance Workload',
     ),
   ];
@@ -3993,7 +3997,8 @@ class _InsightsSection extends StatelessWidget {
                         icon: item.$3,
                         accent: item.$4,
                         tint: item.$5,
-                        action: item.$6,
+                        darkAccent: item.$6,
+                        action: item.$7,
                         onPressed: () => onAction(
                           '${item.$1} is unavailable until project data is connected.',
                         ),
@@ -4016,6 +4021,7 @@ class _InsightCard extends StatelessWidget {
     required this.icon,
     required this.accent,
     required this.tint,
+    required this.darkAccent,
     required this.action,
     required this.onPressed,
   });
@@ -4025,6 +4031,7 @@ class _InsightCard extends StatelessWidget {
   final IconData icon;
   final Color accent;
   final Color tint;
+  final Color darkAccent;
   final String action;
   final VoidCallback onPressed;
 
@@ -4035,9 +4042,16 @@ class _InsightCard extends StatelessWidget {
         constraints: const BoxConstraints.tightFor(height: 150),
         padding: const EdgeInsets.all(13),
         decoration: BoxDecoration(
-          color: tint.withValues(alpha: 0.48),
-          border: Border.all(color: accent.withValues(alpha: 0.12)),
+          color: tint,
+          border: Border.all(color: accent.withValues(alpha: 0.48)),
           borderRadius: BorderRadius.circular(13),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.10),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -4052,7 +4066,8 @@ class _InsightCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: _textStyle(
-                      fontSize: 10,
+                      color: darkAccent,
+                      fontSize: 13,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -4066,7 +4081,7 @@ class _InsightCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: _textStyle(
                 color: const Color(0xFF64748A),
-                fontSize: 9,
+                fontSize: 12,
                 height: 1.45,
               ),
             ),
@@ -4078,7 +4093,10 @@ class _InsightCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 9),
                 minimumSize: const Size(0, 29),
                 backgroundColor: Colors.white.withValues(alpha: 0.76),
-                textStyle: _textStyle(fontSize: 9, fontWeight: FontWeight.w800),
+                textStyle: _textStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               child: Text(action),
             ),
@@ -4882,7 +4900,7 @@ class _SectionHeading extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: _textStyle(
-                        fontSize: 14,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -4898,7 +4916,7 @@ class _SectionHeading extends StatelessWidget {
                 subtitle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: _textStyle(color: const Color(0xFF73829A), fontSize: 9),
+                style: _textStyle(color: const Color(0xFF73829A), fontSize: 13),
               ),
             ],
           ),
@@ -4911,7 +4929,7 @@ class _SectionHeading extends StatelessWidget {
               foregroundColor: AppColors.primaryBlue,
               padding: const EdgeInsets.symmetric(horizontal: 3),
               minimumSize: const Size(0, 26),
-              textStyle: _textStyle(fontSize: 9, fontWeight: FontWeight.w800),
+              textStyle: _textStyle(fontSize: 13, fontWeight: FontWeight.w800),
             ),
             child: Text(actionLabel!),
           ),
