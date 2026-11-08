@@ -4,15 +4,25 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_dashboard/core/constants/app_assets.dart';
 import 'package:web_dashboard/core/constants/app_colors.dart';
+import 'package:web_dashboard/core/config/app_config.dart';
 import 'package:web_dashboard/core/services/auth_service.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class DeveloperHomePage extends StatefulWidget {
-  const DeveloperHomePage({super.key, required this.profile});
+  const DeveloperHomePage({
+    super.key,
+    required this.profile,
+    this.api,
+    this.authService,
+  });
 
   final CurrentUserProfile profile;
+  final DevInsightApi? api;
+  final AuthService? authService;
 
   @override
   State<DeveloperHomePage> createState() => _DeveloperHomePageState();
@@ -20,6 +30,10 @@ class DeveloperHomePage extends StatefulWidget {
 
 class _DeveloperHomePageState extends State<DeveloperHomePage>
     with SingleTickerProviderStateMixin {
+  late final DevInsightApi _api =
+      widget.api ?? DevInsightApi(baseUrl: AppConfig.apiBaseUrl);
+  late final AuthService _authService =
+      widget.authService ?? AuthService(api: _api);
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _scrollController = ScrollController();
   final _nextSectionKey = GlobalKey();
@@ -28,6 +42,303 @@ class _DeveloperHomePageState extends State<DeveloperHomePage>
     duration: const Duration(seconds: 14),
   );
   bool? _motionDisabled;
+  List<GitHubRepositoryConnection> _repositories = [];
+  GitHubRepositoryConnection? _repository;
+  GitHubRepositoryOverview? _overview;
+  String? _repositoryError;
+  bool _loadingRepository = false;
+  bool _refreshingRepository = false;
+  int _selectionVersion = 0;
+
+  String get _activeRepositoryPreferenceKey =>
+      'devinsight.active_repository.${widget.profile.id}';
+
+  @override
+  void initState() {
+    super.initState();
+    if (_authService.hasSession) _loadRepositories();
+  }
+
+  Future<void> _loadRepositories() async {
+    setState(() {
+      _loadingRepository = true;
+      _repositoryError = null;
+    });
+    try {
+      final repositories = await _authService.withSession(
+        _api.getGitHubConnections,
+      );
+      if (!mounted) return;
+      if (repositories.isEmpty) {
+        final preferences = await SharedPreferences.getInstance();
+        await preferences.remove(_activeRepositoryPreferenceKey);
+        if (!mounted) return;
+        setState(() {
+          _repositories = [];
+          _repository = null;
+          _overview = null;
+          _loadingRepository = false;
+        });
+        return;
+      }
+      setState(() {
+        _repositories = repositories;
+      });
+      final preferences = await SharedPreferences.getInstance();
+      if (!mounted) return;
+      final savedId = preferences.getString(_activeRepositoryPreferenceKey);
+      final connection = repositories.firstWhere(
+        (repository) => repository.id == savedId,
+        orElse: () => repositories.first,
+      );
+      await _selectRepository(connection, persist: savedId != connection.id);
+    } on DevInsightApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _repositoryError = error.message;
+        _loadingRepository = false;
+      });
+    } on AuthIntegrationException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _repositoryError = error.message;
+        _loadingRepository = false;
+      });
+    }
+  }
+
+  Future<void> _connectRepository(String repositoryUrl) async {
+    setState(() {
+      _loadingRepository = true;
+      _repositoryError = null;
+    });
+    try {
+      final connection = await _authService.withSession(
+        (token) => _api.connectGitHubRepository(token, repositoryUrl),
+      );
+      if (!mounted) return;
+      setState(() {
+        _repositories = [
+          connection,
+          ..._repositories.where((item) => item.id != connection.id),
+        ];
+      });
+      await _selectRepository(connection);
+    } on DevInsightApiException catch (error) {
+      if (mounted) {
+        setState(() {
+          _repositoryError = error.message;
+          _loadingRepository = false;
+        });
+      }
+      rethrow;
+    } on AuthIntegrationException catch (error) {
+      if (mounted) {
+        setState(() {
+          _repositoryError = error.message;
+          _loadingRepository = false;
+        });
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> _selectRepository(
+    GitHubRepositoryConnection connection, {
+    bool persist = true,
+  }) async {
+    final requestVersion = ++_selectionVersion;
+    setState(() {
+      _repository = connection;
+      _overview = null;
+      _repositoryError = null;
+      _loadingRepository = true;
+      _refreshingRepository = false;
+    });
+    if (persist) {
+      final preferences = await SharedPreferences.getInstance();
+      await preferences.setString(
+        _activeRepositoryPreferenceKey,
+        connection.id,
+      );
+    }
+    if (!mounted || requestVersion != _selectionVersion) return;
+    try {
+      final overview = await _authService.withSession(
+        (token) => _api.getGitHubOverview(token, connection.id),
+      );
+      if (!mounted || requestVersion != _selectionVersion) return;
+      setState(() {
+        _repository = overview.connection;
+        _overview = overview;
+        _loadingRepository = false;
+      });
+    } on DevInsightApiException catch (error) {
+      if (!mounted || requestVersion != _selectionVersion) return;
+      setState(() {
+        _repositoryError = error.message;
+        _loadingRepository = false;
+      });
+    } on AuthIntegrationException catch (error) {
+      if (!mounted || requestVersion != _selectionVersion) return;
+      setState(() {
+        _repositoryError = error.message;
+        _loadingRepository = false;
+      });
+    }
+  }
+
+  Future<bool> _disconnectRepository(
+    GitHubRepositoryConnection connection,
+  ) async {
+    try {
+      await _authService.withSession(
+        (token) => _api.disconnectGitHubRepository(token, connection.id),
+      );
+      if (!mounted) return true;
+      final repositories = _repositories
+          .where((item) => item.id != connection.id)
+          .toList();
+      setState(() => _repositories = repositories);
+      if (_repository?.id == connection.id) {
+        final preferences = await SharedPreferences.getInstance();
+        if (!mounted) return true;
+        if (repositories.isEmpty) {
+          await preferences.remove(_activeRepositoryPreferenceKey);
+          if (!mounted) return true;
+          ++_selectionVersion;
+          setState(() {
+            _repository = null;
+            _overview = null;
+            _repositoryError = null;
+            _loadingRepository = false;
+          });
+        } else {
+          await _selectRepository(repositories.first);
+        }
+      }
+      return true;
+    } on DevInsightApiException catch (error) {
+      if (mounted) _showMessage(error.message);
+    } on AuthIntegrationException catch (error) {
+      if (mounted) _showMessage(error.message);
+    }
+    return false;
+  }
+
+  Future<void> _refreshRepository() async {
+    final repository = _repository;
+    if (repository == null || _refreshingRepository) return;
+    final requestVersion = _selectionVersion;
+    setState(() {
+      _refreshingRepository = true;
+      _repositoryError = null;
+    });
+    try {
+      final overview = await _authService.withSession(
+        (token) => _api.refreshGitHubRepository(token, repository.id),
+      );
+      if (!mounted || requestVersion != _selectionVersion) return;
+      setState(() {
+        _repository = overview.connection;
+        _overview = overview;
+        _repositories = [
+          overview.connection,
+          ..._repositories.where((item) => item.id != overview.connection.id),
+        ];
+        _refreshingRepository = false;
+        _repositoryError = overview.throttled
+            ? 'Repository was synced recently. Showing the latest available data.'
+            : null;
+      });
+    } on DevInsightApiException catch (error) {
+      if (!mounted || requestVersion != _selectionVersion) return;
+      setState(() {
+        _repositoryError = error.message;
+        _refreshingRepository = false;
+      });
+    } on AuthIntegrationException catch (error) {
+      if (!mounted || requestVersion != _selectionVersion) return;
+      setState(() {
+        _repositoryError = error.message;
+        _refreshingRepository = false;
+      });
+    }
+  }
+
+  Future<void> _showManageRepositories() async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => _ManageRepositoriesDialog(
+        repositories: _repositories,
+        activeRepositoryId: _repository?.id,
+        onSelect: (connection) async {
+          Navigator.of(dialogContext).pop();
+          await _selectRepository(connection);
+        },
+        onConnect: () {
+          Navigator.of(dialogContext).pop();
+          _showConnectRepository();
+        },
+        onDisconnect: _disconnectRepository,
+      ),
+    );
+  }
+
+  Future<void> _showConnectRepository() async {
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    await showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Close repository connection dialog',
+      barrierColor: Colors.transparent,
+      transitionDuration: reduceMotion
+          ? Duration.zero
+          : const Duration(milliseconds: 240),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) => Stack(
+        children: [
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(
+                sigmaX: reduceMotion ? 0 : 14,
+                sigmaY: reduceMotion ? 0 : 14,
+              ),
+              child: ColoredBox(
+                color: const Color(0xFF102345).withValues(alpha: 0.13),
+              ),
+            ),
+          ),
+          Center(
+            child: SafeArea(
+              child: _ConnectRepositoryDialog(onConnect: _connectRepository),
+            ),
+          ),
+        ],
+      ),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        if (reduceMotion) return child;
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.025),
+              end: Offset.zero,
+            ).animate(curved),
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.96, end: 1).animate(curved),
+              child: child,
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   String get _displayName {
     final name = widget.profile.fullName?.trim();
@@ -190,6 +501,7 @@ class _DeveloperHomePageState extends State<DeveloperHomePage>
   void dispose() {
     _ambientMotionController.dispose();
     _scrollController.dispose();
+    if (widget.api == null) _api.close();
     super.dispose();
   }
 
@@ -273,6 +585,17 @@ class _DeveloperHomePageState extends State<DeveloperHomePage>
                                       firstName: _firstName,
                                       role: _role,
                                       onAction: _showMessage,
+                                      repository: _repository,
+                                      overview: _overview,
+                                      repositories: _repositories,
+                                      repositoryError: _repositoryError,
+                                      loadingRepository: _loadingRepository,
+                                      refreshingRepository:
+                                          _refreshingRepository,
+                                      onConnect: _showConnectRepository,
+                                      onManage: _showManageRepositories,
+                                      onRetry: _loadRepositories,
+                                      onRefresh: _refreshRepository,
                                     ),
                                   ),
                                 ),
@@ -323,6 +646,457 @@ class _DeveloperHomePageState extends State<DeveloperHomePage>
         ),
       ),
     );
+  }
+}
+
+class _ConnectRepositoryDialog extends StatefulWidget {
+  const _ConnectRepositoryDialog({required this.onConnect});
+
+  final Future<void> Function(String repositoryUrl) onConnect;
+
+  @override
+  State<_ConnectRepositoryDialog> createState() =>
+      _ConnectRepositoryDialogState();
+}
+
+class _ConnectRepositoryDialogState extends State<_ConnectRepositoryDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _urlController = TextEditingController();
+  bool _connecting = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  String? _validateUrl(String? input) {
+    final value = input?.trim() ?? '';
+    final uri = Uri.tryParse(value);
+    if (uri == null ||
+        uri.scheme != 'https' ||
+        uri.host.toLowerCase() != 'github.com' ||
+        uri.hasPort ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasQuery ||
+        uri.hasFragment) {
+      return 'Enter a public GitHub repository URL.';
+    }
+    final parts = uri.pathSegments.where((part) => part.isNotEmpty).toList();
+    if (parts.length != 2) return 'Use the format github.com/owner/repository.';
+    final owner = parts[0];
+    final name = parts[1].endsWith('.git')
+        ? parts[1].substring(0, parts[1].length - 4)
+        : parts[1];
+    if (!RegExp(
+          r'^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$',
+        ).hasMatch(owner) ||
+        !RegExp(
+          r'^[A-Za-z0-9](?:[A-Za-z0-9._-]{0,98}[A-Za-z0-9])?$',
+        ).hasMatch(name) ||
+        name == '.' ||
+        name == '..') {
+      return 'Enter a valid GitHub owner and repository name.';
+    }
+    return null;
+  }
+
+  Future<void> _submit() async {
+    if (_connecting || !_formKey.currentState!.validate()) return;
+    setState(() {
+      _connecting = true;
+      _error = null;
+    });
+    try {
+      await widget.onConnect(_urlController.text.trim());
+      if (mounted) Navigator.of(context).pop();
+    } on DevInsightApiException catch (error) {
+      if (mounted) {
+        setState(() {
+          _error = error.message;
+          _connecting = false;
+        });
+      }
+    } on AuthIntegrationException catch (error) {
+      if (mounted) {
+        setState(() {
+          _error = error.message;
+          _connecting = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 520),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.92),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: const Color(0xFFDCEBFF).withValues(alpha: 0.9),
+            ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.white.withValues(alpha: 0.96),
+                const Color(0xFFEAF4FF).withValues(alpha: 0.91),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF1765DB).withValues(alpha: 0.16),
+                blurRadius: 32,
+                offset: const Offset(0, 18),
+              ),
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.78),
+                blurRadius: 1,
+                spreadRadius: 0.5,
+              ),
+            ],
+          ),
+          child: AlertDialog(
+            backgroundColor: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            title: Text(
+              'Connect GitHub Repository',
+              style: _textStyle(fontWeight: FontWeight.w800),
+            ),
+            content: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 440),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Connect a public repository to load its real GitHub metadata and activity.',
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      key: const ValueKey('github-repository-url'),
+                      controller: _urlController,
+                      enabled: !_connecting,
+                      keyboardType: TextInputType.url,
+                      decoration: const InputDecoration(
+                        labelText: 'Repository URL',
+                        hintText: 'https://github.com/username/repository',
+                        prefixIcon: Icon(Icons.link_rounded),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: _validateUrl,
+                      onFieldSubmitted: (_) => _submit(),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _error!,
+                        key: const ValueKey('repository-connect-error'),
+                        style: _textStyle(
+                          color: const Color(0xFFB42318),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                    if (_connecting) ...[
+                      const SizedBox(height: 16),
+                      const LinearProgressIndicator(),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: _connecting
+                    ? null
+                    : () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              FilledButton.icon(
+                onPressed: _connecting ? null : _submit,
+                icon: _connecting
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.add_link_rounded),
+                label: Text(_connecting ? 'Connecting...' : 'Connect'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ManageRepositoriesDialog extends StatefulWidget {
+  const _ManageRepositoriesDialog({
+    required this.repositories,
+    required this.activeRepositoryId,
+    required this.onSelect,
+    required this.onConnect,
+    required this.onDisconnect,
+  });
+
+  final List<GitHubRepositoryConnection> repositories;
+  final String? activeRepositoryId;
+  final Future<void> Function(GitHubRepositoryConnection) onSelect;
+  final VoidCallback onConnect;
+  final Future<bool> Function(GitHubRepositoryConnection) onDisconnect;
+
+  @override
+  State<_ManageRepositoriesDialog> createState() =>
+      _ManageRepositoriesDialogState();
+}
+
+class _ManageRepositoriesDialogState extends State<_ManageRepositoriesDialog> {
+  late final List<GitHubRepositoryConnection> _repositories = [
+    ...widget.repositories,
+  ];
+  late String? _activeRepositoryId = widget.activeRepositoryId;
+  String? _disconnectingId;
+
+  Future<void> _disconnect(GitHubRepositoryConnection repository) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Disconnect repository?'),
+        content: Text(
+          'Remove ${repository.fullName} from your connected repositories? This will not change anything on GitHub.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Disconnect'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _disconnectingId = repository.id);
+    final disconnected = await widget.onDisconnect(repository);
+    if (!mounted) return;
+    setState(() {
+      _disconnectingId = null;
+      if (disconnected) {
+        _repositories.removeWhere((item) => item.id == repository.id);
+        if (_activeRepositoryId == repository.id) {
+          _activeRepositoryId = _repositories.isEmpty
+              ? null
+              : _repositories.first.id;
+        }
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: Container(
+        width: 520,
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.82,
+        ),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.97),
+              const Color(0xFFEAF4FF).withValues(alpha: 0.94),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.85)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1765DB).withValues(alpha: 0.16),
+              blurRadius: 32,
+              offset: const Offset(0, 18),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Manage Repositories',
+                    style: _textStyle(
+                      color: const Color(0xFF172B4D),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Close',
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            ),
+            Text(
+              'Choose the active project or disconnect a repository.',
+              style: _textStyle(color: const Color(0xFF687A96), fontSize: 12),
+            ),
+            const SizedBox(height: 14),
+            Flexible(
+              child: _repositories.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 28),
+                      child: _EmptyState(
+                        icon: Icons.folder_open_rounded,
+                        title: 'No repositories connected',
+                        detail:
+                            'Connect a public GitHub repository to see its project data here.',
+                        compact: true,
+                      ),
+                    )
+                  : ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: _repositories.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final repository = _repositories[index];
+                        final active = repository.id == _activeRepositoryId;
+                        final disconnecting = repository.id == _disconnectingId;
+                        return ListTile(
+                          key: ValueKey('repository-${repository.id}'),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                          ),
+                          onTap: active || disconnecting
+                              ? null
+                              : () => widget.onSelect(repository),
+                          title: Text(
+                            repository.fullName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: _textStyle(
+                              color: const Color(0xFF172B4D),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          subtitle: Text(
+                            [
+                              'Branch: ${repository.defaultBranch ?? 'Unknown'}',
+                              if (repository.primaryLanguage != null)
+                                repository.primaryLanguage!,
+                            ].join(' · '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: _textStyle(
+                              color: const Color(0xFF687A96),
+                              fontSize: 11,
+                            ),
+                          ),
+                          leading: Icon(
+                            active
+                                ? Icons.radio_button_checked_rounded
+                                : Icons.radio_button_unchecked_rounded,
+                            color: active
+                                ? AppColors.primaryBlue
+                                : const Color(0xFF91A0B5),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (active)
+                                Text(
+                                  'Active',
+                                  style: _textStyle(
+                                    color: AppColors.primaryBlue,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              IconButton(
+                                tooltip: 'Disconnect ${repository.fullName}',
+                                onPressed: disconnecting
+                                    ? null
+                                    : () => _disconnect(repository),
+                                icon: disconnecting
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.link_off_rounded,
+                                        size: 19,
+                                      ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                key: const ValueKey('connect-new-repository'),
+                onPressed: widget.onConnect,
+                icon: const Icon(Icons.add_link_rounded),
+                label: const Text('Connect New Repository'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _formatSyncTime(DateTime? date) {
+  if (date == null) return 'not synchronized yet';
+  final local = date.toLocal();
+  return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')} ${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+}
+
+Future<void> _openRepositoryUrl(
+  String url,
+  ValueChanged<String> onError,
+) async {
+  try {
+    final launched = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!launched) onError('Could not open the GitHub repository link.');
+  } on PlatformException {
+    onError('Could not open the GitHub repository link.');
   }
 }
 
@@ -391,6 +1165,16 @@ class _DashboardContent extends StatelessWidget {
     required this.firstName,
     required this.role,
     required this.onAction,
+    required this.repository,
+    required this.overview,
+    required this.repositories,
+    required this.repositoryError,
+    required this.loadingRepository,
+    required this.refreshingRepository,
+    required this.onConnect,
+    required this.onManage,
+    required this.onRetry,
+    required this.onRefresh,
   });
 
   final ScrollController scrollController;
@@ -399,6 +1183,16 @@ class _DashboardContent extends StatelessWidget {
   final String firstName;
   final String role;
   final ValueChanged<String> onAction;
+  final GitHubRepositoryConnection? repository;
+  final GitHubRepositoryOverview? overview;
+  final List<GitHubRepositoryConnection> repositories;
+  final String? repositoryError;
+  final bool loadingRepository;
+  final bool refreshingRepository;
+  final VoidCallback onConnect;
+  final VoidCallback onManage;
+  final VoidCallback onRetry;
+  final VoidCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -447,6 +1241,16 @@ class _DashboardContent extends StatelessWidget {
                       compact: width < 850,
                       ambientMotion: ambientMotion,
                       onAction: onAction,
+                      repository: repository,
+                      repositoryCount: repositories.length,
+                      overview: overview,
+                      repositoryError: repositoryError,
+                      loadingRepository: loadingRepository,
+                      refreshingRepository: refreshingRepository,
+                      onConnect: onConnect,
+                      onManage: onManage,
+                      onRetry: onRetry,
+                      onRefresh: onRefresh,
                     ),
                   ),
                   if (!desktopHero) const SizedBox(height: 4),
@@ -471,23 +1275,31 @@ class _DashboardContent extends StatelessWidget {
             const SizedBox(height: 16),
             _Reveal(
               controller: scrollController,
-              child: _MetricGrid(key: nextSectionKey, width: width),
+              child: _MetricGrid(
+                key: nextSectionKey,
+                width: width,
+                overview: overview,
+                hasRepository: repository != null,
+                loading: loadingRepository,
+              ),
             ),
             const SizedBox(height: 16),
             _Reveal(
               controller: scrollController,
               child: _ResponsivePair(
                 breakpoint: 820,
-                children: const [
+                children: [
                   _ChartPanel(
                     title: 'Weekly Productivity',
-                    subtitle: 'Commits, merged PRs, and issue resolutions.',
+                    subtitle:
+                        'Weekly commit activity from the connected repository.',
                     icon: Icons.insights_rounded,
+                    overview: overview,
                   ),
                   _ChartPanel(
                     title: 'Project Risk Trend',
                     subtitle:
-                        'Overall project risk across code, issues, and delivery.',
+                        'Machine-learning risk predictions are not implemented.',
                     icon: Icons.trending_down_rounded,
                   ),
                 ],
@@ -500,7 +1312,7 @@ class _DashboardContent extends StatelessWidget {
                 breakpoint: 820,
                 children: [
                   _TasksPanel(onAction: onAction),
-                  const _ContributionPanel(),
+                  _ContributionPanel(overview: overview),
                 ],
               ),
             ),
@@ -514,7 +1326,10 @@ class _DashboardContent extends StatelessWidget {
               controller: scrollController,
               child: _ResponsivePair(
                 breakpoint: 820,
-                children: const [_ProjectHealthPanel(), _QualityMetricsPanel()],
+                children: [
+                  _ProjectHealthPanel(overview: overview, onAction: onAction),
+                  _QualityMetricsPanel(overview: overview, onAction: onAction),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -523,7 +1338,11 @@ class _DashboardContent extends StatelessWidget {
               child: _ResponsivePair(
                 breakpoint: 820,
                 children: [
-                  _ActivityPanel(onAction: onAction),
+                  _ActivityPanel(
+                    onAction: onAction,
+                    overview: overview,
+                    hasRepository: repository != null,
+                  ),
                   _RemindersPanel(onAction: onAction),
                 ],
               ),
@@ -1656,6 +2475,16 @@ class _WelcomeHero extends StatelessWidget {
     required this.compact,
     required this.ambientMotion,
     required this.onAction,
+    required this.repository,
+    required this.repositoryCount,
+    required this.overview,
+    required this.repositoryError,
+    required this.loadingRepository,
+    required this.refreshingRepository,
+    required this.onConnect,
+    required this.onManage,
+    required this.onRetry,
+    required this.onRefresh,
   });
 
   final String firstName;
@@ -1663,6 +2492,16 @@ class _WelcomeHero extends StatelessWidget {
   final bool compact;
   final Animation<double> ambientMotion;
   final ValueChanged<String> onAction;
+  final GitHubRepositoryConnection? repository;
+  final int repositoryCount;
+  final GitHubRepositoryOverview? overview;
+  final String? repositoryError;
+  final bool loadingRepository;
+  final bool refreshingRepository;
+  final VoidCallback onConnect;
+  final VoidCallback onManage;
+  final VoidCallback onRetry;
+  final VoidCallback onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -1700,53 +2539,220 @@ class _WelcomeHero extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
+              Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  const Icon(
-                    Icons.folder_open_rounded,
-                    size: 17,
-                    color: Color(0xFF1765DB),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.folder_open_rounded,
+                        size: 17,
+                        color: Color(0xFF1765DB),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Current Project',
+                        style: _textStyle(
+                          color: const Color(0xFF52617A),
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Current Project',
-                    style: _textStyle(
-                      color: const Color(0xFF52617A),
-                      fontSize: 10,
-                    ),
-                  ),
+                  if (repository != null) const _ConnectedStatusIndicator(),
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
-                'No project connected',
-                style: _textStyle(fontSize: 14, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 5),
-              Text(
-                'Connect a GitHub repository to start collecting project intelligence.',
-                style: _textStyle(
-                  color: const Color(0xFF687A96),
-                  fontSize: 10,
-                  height: 1.45,
+              if (repository == null) ...[
+                Text(
+                  loadingRepository
+                      ? 'Loading repository...'
+                      : 'No project connected',
+                  style: _textStyle(fontSize: 14, fontWeight: FontWeight.w800),
                 ),
-              ),
-              const SizedBox(height: 10),
-              TextButton.icon(
-                onPressed: () =>
-                    onAction('Repository connection is coming soon.'),
-                icon: const Icon(Icons.add_link_rounded, size: 15),
-                label: const Text('Connect repository'),
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primaryBlue,
-                  padding: EdgeInsets.zero,
-                  textStyle: _textStyle(
+                const SizedBox(height: 5),
+                Text(
+                  repositoryError ??
+                      'Connect a public GitHub repository to load real project data.',
+                  style: _textStyle(
+                    color: const Color(0xFF687A96),
                     fontSize: 10,
-                    fontWeight: FontWeight.w800,
+                    height: 1.45,
                   ),
-                  minimumSize: const Size(0, 28),
                 ),
-              ),
+                const SizedBox(height: 10),
+                if (loadingRepository)
+                  const LinearProgressIndicator(minHeight: 2)
+                else
+                  TextButton.icon(
+                    onPressed: onConnect,
+                    icon: const Icon(Icons.add_link_rounded, size: 15),
+                    label: const Text('Connect repository'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.primaryBlue,
+                      padding: EdgeInsets.zero,
+                      textStyle: _textStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      minimumSize: const Size(0, 28),
+                    ),
+                  ),
+                if (repositoryError != null && !loadingRepository)
+                  TextButton(onPressed: onRetry, child: const Text('Retry')),
+                TextButton.icon(
+                  onPressed: onManage,
+                  icon: const Icon(Icons.settings_rounded, size: 15),
+                  label: const Text('Manage Repositories'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primaryBlue,
+                    padding: EdgeInsets.zero,
+                    textStyle: _textStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    minimumSize: const Size(0, 28),
+                  ),
+                ),
+              ] else ...[
+                Text(
+                  repository!.fullName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _textStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  repository!.description?.trim().isNotEmpty == true
+                      ? repository!.description!
+                      : 'No repository description provided.',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: _textStyle(
+                    color: const Color(0xFF687A96),
+                    fontSize: 10,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Owner: ${repository!.owner}  ·  Branch: ${repository!.defaultBranch ?? 'Unknown'}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _textStyle(
+                    color: const Color(0xFF687A96),
+                    fontSize: 9,
+                  ),
+                ),
+                Text(
+                  'Stars: ${repository!.stars}  ·  Forks: ${repository!.forks}',
+                  style: _textStyle(
+                    color: const Color(0xFF687A96),
+                    fontSize: 9,
+                  ),
+                ),
+                Text(
+                  'Primary language: ${repository!.primaryLanguage ?? 'Not available'}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _textStyle(
+                    color: const Color(0xFF687A96),
+                    fontSize: 9,
+                  ),
+                ),
+                Text(
+                  '${repositoryError ?? 'Public repository'} · Last synced ${_formatSyncTime(repository!.lastSyncedAt)}${overview?.isStale == true || repositoryError != null ? ' · Cached data may be stale' : ''}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: _textStyle(
+                    color: const Color(0xFF687A96),
+                    fontSize: 9,
+                  ),
+                ),
+                const Divider(height: 18),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.account_tree_rounded,
+                      size: 14,
+                      color: Color(0xFF52617A),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '$repositoryCount ${repositoryCount == 1 ? 'repository' : 'repositories'} connected',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _textStyle(
+                          color: const Color(0xFF52617A),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    TextButton.icon(
+                      key: const ValueKey('manage-repositories'),
+                      onPressed: onManage,
+                      icon: const Icon(Icons.tune_rounded, size: 14),
+                      label: const Text('Manage'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primaryBlue,
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        textStyle: _textStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        minimumSize: const Size(0, 30),
+                      ),
+                    ),
+                  ],
+                ),
+                Wrap(
+                  spacing: 10,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () =>
+                          _openRepositoryUrl(repository!.url, onAction),
+                      icon: const Icon(Icons.open_in_new_rounded, size: 14),
+                      label: const Text('View on GitHub'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primaryBlue,
+                        padding: EdgeInsets.zero,
+                        textStyle: _textStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        minimumSize: const Size(0, 28),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: refreshingRepository ? null : onRefresh,
+                      icon: refreshingRepository
+                          ? const SizedBox(
+                              width: 13,
+                              height: 13,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.refresh_rounded, size: 14),
+                      label: Text(
+                        refreshingRepository ? 'Refreshing' : 'Refresh',
+                      ),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primaryBlue,
+                        padding: EdgeInsets.zero,
+                        textStyle: _textStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                        minimumSize: const Size(0, 28),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
@@ -1969,41 +2975,164 @@ class _HeroWavePainter extends CustomPainter {
       oldDelegate.animation != animation;
 }
 
+class _ConnectedStatusIndicator extends StatefulWidget {
+  const _ConnectedStatusIndicator();
+
+  @override
+  State<_ConnectedStatusIndicator> createState() =>
+      _ConnectedStatusIndicatorState();
+}
+
+class _ConnectedStatusIndicatorState extends State<_ConnectedStatusIndicator>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1250),
+    value: 0.5,
+  );
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      _pulse
+        ..stop()
+        ..value = 0.5;
+    } else if (!_pulse.isAnimating) {
+      _pulse.repeat(reverse: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Connected',
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AnimatedBuilder(
+            animation: _pulse,
+            builder: (context, child) => Transform.scale(
+              scale: 0.94 + _pulse.value * 0.12,
+              child: child,
+            ),
+            child: Container(
+              width: 9,
+              height: 9,
+              decoration: BoxDecoration(
+                color: const Color(0xFF22C55E),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF22C55E).withValues(alpha: 0.42),
+                    blurRadius: 9,
+                    spreadRadius: 1.2,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            'Connected',
+            style: _textStyle(
+              color: const Color(0xFF168A47),
+              fontSize: 8,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _MetricGrid extends StatelessWidget {
-  const _MetricGrid({super.key, required this.width});
+  const _MetricGrid({
+    super.key,
+    required this.width,
+    required this.overview,
+    required this.hasRepository,
+    required this.loading,
+  });
 
   final double width;
+  final GitHubRepositoryOverview? overview;
+  final bool hasRepository;
+  final bool loading;
 
-  static const _metrics = [
+  List<
+    ({
+      String title,
+      IconData icon,
+      Color accent,
+      Color tint,
+      String value,
+      String detail,
+    })
+  >
+  get _metrics => [
     (
-      'Assigned Issues',
-      Icons.code_rounded,
-      Color(0xFF2878F0),
-      Color(0xFFEAF2FF),
+      title: 'Assigned Issues',
+      icon: Icons.code_rounded,
+      accent: const Color(0xFF2878F0),
+      tint: const Color(0xFFEAF2FF),
+      value: 'Not linked',
+      detail: 'Personal GitHub identity is not linked',
     ),
     (
-      'Resolved Issues',
-      Icons.check_circle_outline_rounded,
-      Color(0xFF12A878),
-      Color(0xFFE7F8F1),
+      title: 'Resolved Issues',
+      icon: Icons.check_circle_outline_rounded,
+      accent: const Color(0xFF12A878),
+      tint: const Color(0xFFE7F8F1),
+      value: !hasRepository
+          ? 'No repository'
+          : loading
+          ? 'Loading'
+          : overview?.resolvedIssues30d?.toString() ?? 'Unavailable',
+      detail: 'Closed issues in the last 30 days',
     ),
     (
-      'Productivity Score',
-      Icons.bolt_rounded,
-      Color(0xFF1989E8),
-      Color(0xFFE8F5FF),
+      title: 'Productivity Score',
+      icon: Icons.bolt_rounded,
+      accent: const Color(0xFF1989E8),
+      tint: const Color(0xFFE8F5FF),
+      value: 'Unavailable',
+      detail: 'A validated score is not implemented',
     ),
     (
-      'Open Pull Requests',
-      Icons.merge_rounded,
-      Color(0xFF795BF5),
-      Color(0xFFF0ECFF),
+      title: 'Open Pull Requests',
+      icon: Icons.merge_rounded,
+      accent: const Color(0xFF795BF5),
+      tint: const Color(0xFFF0ECFF),
+      value: !hasRepository
+          ? 'No repository'
+          : loading
+          ? 'Loading'
+          : overview?.openPullRequests?.toString() ?? 'Unavailable',
+      detail: overview?.openPullRequests == 0
+          ? 'No open pull requests'
+          : 'Open GitHub pull requests',
     ),
     (
-      'Code Quality',
-      Icons.shield_outlined,
-      Color(0xFF2C72D5),
-      Color(0xFFEAF2FF),
+      title: 'Code Quality',
+      icon: Icons.shield_outlined,
+      accent: const Color(0xFF2C72D5),
+      tint: const Color(0xFFEAF2FF),
+      value: switch (overview?.qualitySignals?.ci.state) {
+        'success' => 'CI passing',
+        'failure' => 'CI failing',
+        'pending' => 'Checks pending',
+        'not_configured' => 'Not configured',
+        _ => 'Not measured',
+      },
+      detail: 'CI status only · not a quality score',
     ),
   ];
 
@@ -2024,10 +3153,12 @@ class _MetricGrid extends StatelessWidget {
           SizedBox(
             width: itemWidth,
             child: _MetricCard(
-              title: metric.$1,
-              icon: metric.$2,
-              accent: metric.$3,
-              tint: metric.$4,
+              title: metric.title,
+              icon: metric.icon,
+              accent: metric.accent,
+              tint: metric.tint,
+              value: metric.value,
+              detail: metric.detail,
             ),
           ),
       ],
@@ -2041,12 +3172,16 @@ class _MetricCard extends StatelessWidget {
     required this.icon,
     required this.accent,
     required this.tint,
+    required this.value,
+    required this.detail,
   });
 
   final String title;
   final IconData icon;
   final Color accent;
   final Color tint;
+  final String value;
+  final String detail;
 
   @override
   Widget build(BuildContext context) {
@@ -2078,7 +3213,7 @@ class _MetricCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'No data yet',
+                    value,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: _textStyle(
@@ -2092,7 +3227,7 @@ class _MetricCard extends StatelessWidget {
               ],
             ),
             Text(
-              'Connect a repository to view',
+              detail,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: _textStyle(color: const Color(0xFF8A96AA), fontSize: 8),
@@ -2143,11 +3278,13 @@ class _ChartPanel extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.icon,
+    this.overview,
   });
 
   final String title;
   final String subtitle;
   final IconData icon;
+  final GitHubRepositoryOverview? overview;
 
   @override
   Widget build(BuildContext context) {
@@ -2158,7 +3295,7 @@ class _ChartPanel extends StatelessWidget {
           _SectionHeading(title: title, subtitle: subtitle, icon: icon),
           const SizedBox(height: 14),
           Container(
-            height: 176,
+            height: title == 'Weekly Productivity' ? 204 : 176,
             width: double.infinity,
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
@@ -2166,26 +3303,334 @@ class _ChartPanel extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFFEAF0FA)),
             ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: CustomPaint(painter: _ChartGridPainter()),
-                ),
-                const Center(
-                  child: _EmptyState(
-                    icon: Icons.show_chart_rounded,
-                    title: 'Chart data will appear here',
-                    detail: 'Connect a repository to start tracking trends.',
-                    compact: true,
+            child: title == 'Weekly Productivity'
+                ? _WeeklyActivityChart(overview: overview)
+                : Stack(
+                    children: [
+                      Positioned.fill(
+                        child: CustomPaint(painter: _ChartGridPainter()),
+                      ),
+                      const Center(
+                        child: _EmptyState(
+                          icon: Icons.show_chart_rounded,
+                          title: 'Risk prediction unavailable',
+                          detail:
+                              'Machine-learning risk prediction is not implemented.',
+                          compact: true,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
           ),
         ],
       ),
     );
   }
+}
+
+class _WeeklyActivityChart extends StatefulWidget {
+  const _WeeklyActivityChart({required this.overview});
+
+  final GitHubRepositoryOverview? overview;
+
+  @override
+  State<_WeeklyActivityChart> createState() => _WeeklyActivityChartState();
+}
+
+class _WeeklyActivityChartState extends State<_WeeklyActivityChart>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _animationController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 720),
+  );
+  int? _hoveredWeek;
+
+  GitHubWeeklyActivity? get _activity => widget.overview?.weeklyActivity;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      _animationController
+        ..stop()
+        ..value = 1;
+    } else if (_animationController.status == AnimationStatus.dismissed) {
+      _animationController.forward();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant _WeeklyActivityChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.overview?.connection.id != widget.overview?.connection.id ||
+        oldWidget.overview?.connection.lastSyncedAt !=
+            widget.overview?.connection.lastSyncedAt) {
+      _hoveredWeek = null;
+      if (!(MediaQuery.maybeOf(context)?.disableAnimations ?? false)) {
+        _animationController
+          ..value = 0
+          ..forward();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final activity = _activity;
+    if (widget.overview == null) {
+      return const _WeeklyActivityEmpty(
+        title: 'Connect a repository',
+        detail: 'Weekly commit totals will appear after GitHub data is loaded.',
+      );
+    }
+    if (activity == null ||
+        activity.availability != 'available' ||
+        !activity.isComplete ||
+        activity.weeks.length != 8 ||
+        activity.weeks.any((week) => week.commits == null)) {
+      final status = activity?.availability;
+      final message = status == 'processing'
+          ? 'GitHub is preparing weekly statistics. Refresh later to retry.'
+          : status == 'incomplete'
+          ? 'GitHub has not returned a complete 8-week period. Totals are withheld.'
+          : 'Weekly activity is not measured by GitHub yet.';
+      return _WeeklyActivityEmpty(
+        title: status == 'processing'
+            ? 'Statistics processing'
+            : 'Activity unavailable',
+        detail: message,
+      );
+    }
+
+    final weeks = activity.weeks;
+    final total = activity.totalCommits;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(13, 9, 13, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${total ?? 0} commits · ${activity.branch ?? 'default branch'}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _textStyle(
+                    color: const Color(0xFF31527E),
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (_hoveredWeek case final index?)
+                Text(
+                  '${_weekLabel(weeks[index].weekStart)}: ${weeks[index].commits}',
+                  style: _textStyle(
+                    color: AppColors.primaryBlue,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return MouseRegion(
+                  onHover: (event) {
+                    if (constraints.maxWidth <= 0) return;
+                    final index =
+                        ((event.localPosition.dx / constraints.maxWidth) *
+                                weeks.length)
+                            .floor()
+                            .clamp(0, weeks.length - 1);
+                    if (_hoveredWeek != index) {
+                      setState(() => _hoveredWeek = index);
+                    }
+                  },
+                  onExit: (_) => setState(() => _hoveredWeek = null),
+                  child: AnimatedBuilder(
+                    animation: _animationController,
+                    builder: (context, _) => CustomPaint(
+                      size: Size.infinite,
+                      painter: _WeeklyActivityPainter(
+                        values: weeks.map((week) => week.commits!).toList(),
+                        progress: _animationController.value,
+                        hoveredIndex: _hoveredWeek,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 3),
+          Row(
+            children: [
+              for (final week in weeks)
+                Expanded(
+                  child: Text(
+                    _weekLabel(week.weekStart),
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    style: _textStyle(
+                      color: const Color(0xFF7588A5),
+                      fontSize: 7,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          Text(
+            '${_formatDate(activity.periodStart)} – ${_formatDate(activity.periodEnd)} UTC · weeks start ${activity.weekBoundary}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: _textStyle(color: const Color(0xFF8090A7), fontSize: 7),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WeeklyActivityEmpty extends StatelessWidget {
+  const _WeeklyActivityEmpty({required this.title, required this.detail});
+
+  final String title;
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned.fill(child: CustomPaint(painter: _ChartGridPainter())),
+        Center(
+          child: _EmptyState(
+            icon: Icons.insights_rounded,
+            title: title,
+            detail: detail,
+            compact: true,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _WeeklyActivityPainter extends CustomPainter {
+  const _WeeklyActivityPainter({
+    required this.values,
+    required this.progress,
+    required this.hoveredIndex,
+  });
+
+  final List<int> values;
+  final double progress;
+  final int? hoveredIndex;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const left = 20.0;
+    const right = 5.0;
+    const top = 7.0;
+    const bottom = 9.0;
+    final chartWidth = math.max(0.0, size.width - left - right);
+    final chartHeight = math.max(0.0, size.height - top - bottom);
+    if (chartWidth == 0 || chartHeight == 0 || values.isEmpty) return;
+
+    final maximum = math.max(1, values.reduce(math.max));
+    final gridPaint = Paint()
+      ..color = const Color(0xFFDCE8F7)
+      ..strokeWidth = 1;
+    for (var line = 0; line <= 3; line++) {
+      final y = top + chartHeight * line / 3;
+      canvas.drawLine(Offset(left, y), Offset(left + chartWidth, y), gridPaint);
+    }
+
+    final slotWidth = chartWidth / values.length;
+    final barWidth = math.min(20.0, slotWidth * 0.54);
+    for (var index = 0; index < values.length; index++) {
+      final barHeight =
+          chartHeight *
+          values[index] /
+          maximum *
+          Curves.easeOutCubic.transform(progress);
+      final x = left + slotWidth * index + (slotWidth - barWidth) / 2;
+      final rect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          x,
+          top + chartHeight - barHeight,
+          barWidth,
+          math.max(2, barHeight),
+        ),
+        const Radius.circular(4),
+      );
+      final paint = Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF58CAFF), Color(0xFF2277FF), Color(0xFF0056FF)],
+        ).createShader(rect.outerRect)
+        ..colorFilter = ColorFilter.mode(
+          hoveredIndex == index
+              ? Colors.white.withValues(alpha: 0.18)
+              : Colors.transparent,
+          BlendMode.srcATop,
+        );
+      canvas.drawRRect(rect, paint);
+      if (hoveredIndex == index) {
+        canvas.drawCircle(
+          Offset(x + barWidth / 2, top + chartHeight - barHeight),
+          3.5,
+          Paint()..color = const Color(0xFF0056FF),
+        );
+      }
+    }
+
+    final labelPainter = TextPainter(
+      text: TextSpan(
+        text: maximum.toString(),
+        style: const TextStyle(
+          color: Color(0xFF8393AA),
+          fontSize: 8,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    labelPainter.paint(canvas, Offset(0, top - 4));
+    final zeroPainter = TextPainter(
+      text: const TextSpan(
+        text: '0',
+        style: TextStyle(color: Color(0xFF8393AA), fontSize: 8),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    zeroPainter.paint(canvas, Offset(5, top + chartHeight - 4));
+  }
+
+  @override
+  bool shouldRepaint(covariant _WeeklyActivityPainter oldDelegate) =>
+      oldDelegate.values != values ||
+      oldDelegate.progress != progress ||
+      oldDelegate.hoveredIndex != hoveredIndex;
+}
+
+String _weekLabel(DateTime week) =>
+    '${week.month}/${week.day.toString().padLeft(2, '0')}';
+
+String _formatDate(DateTime? date) {
+  if (date == null) return '—';
+  return '${date.month}/${date.day}/${date.year}';
 }
 
 class _ChartGridPainter extends CustomPainter {
@@ -2284,7 +3729,9 @@ class _TaskHeaders extends StatelessWidget {
 }
 
 class _ContributionPanel extends StatelessWidget {
-  const _ContributionPanel();
+  const _ContributionPanel({required this.overview});
+
+  final GitHubRepositoryOverview? overview;
 
   @override
   Widget build(BuildContext context) {
@@ -2293,14 +3740,57 @@ class _ContributionPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _SectionHeading(
-            title: 'Code Contribution',
-            subtitle: 'Your activity across connected repositories.',
+            title: 'Repository Languages',
+            subtitle: 'Repository language composition from GitHub.',
           ),
           const SizedBox(height: 12),
           SizedBox(
             height: 194,
             child: LayoutBuilder(
               builder: (context, constraints) {
+                final languages =
+                    overview?.languages ?? const <GitHubLanguage>[];
+                if (languages.isNotEmpty) {
+                  return ListView(
+                    children: [
+                      for (final language in languages.take(5)) ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                language.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: _textStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${language.percentage.toStringAsFixed(1)}%',
+                              style: _textStyle(
+                                color: const Color(0xFF687A96),
+                                fontSize: 9,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: (language.percentage / 100).clamp(0, 1),
+                            minHeight: 6,
+                            backgroundColor: const Color(0xFFE2EAF6),
+                            color: AppColors.primaryBlue,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
+                    ],
+                  );
+                }
                 final compact = constraints.maxWidth < 450;
                 final chart = SizedBox(
                   width: compact ? 112 : 142,
@@ -2347,7 +3837,9 @@ class _ContributionPanel extends StatelessWidget {
                       chart,
                       const SizedBox(height: 10),
                       Text(
-                        'Connect a repository to view contribution data.',
+                        overview == null
+                            ? 'Connect a repository to view its language composition.'
+                            : 'No language data is available for this repository.',
                         textAlign: TextAlign.center,
                         style: _textStyle(
                           color: const Color(0xFF77869D),
@@ -2428,32 +3920,32 @@ class _InsightsSection extends StatelessWidget {
 
   static const _insights = [
     (
-      'Risk Alert',
-      'Risk indicators will appear when project data is available.',
+      'Risk prediction unavailable',
+      'Machine-learning risk predictions are not implemented.',
       Icons.warning_amber_rounded,
       Color(0xFFCC5656),
       Color(0xFFFFF1F1),
       'Review Changes',
     ),
     (
-      'Prioritize Issue',
-      'Issue priority recommendations need connected project issues.',
+      'Issue prioritization unavailable',
+      'Validated AI issue-priority recommendations are not implemented.',
       Icons.lightbulb_outline_rounded,
       Color(0xFF2876D8),
       Color(0xFFEEF6FF),
       'Update Priority',
     ),
     (
-      'Root Cause Hint',
-      'Root-cause analysis will be available after data sync.',
+      'Root-cause analysis unavailable',
+      'AI root-cause analysis is not implemented.',
       Icons.account_tree_outlined,
       Color(0xFF755BDD),
       Color(0xFFF3F0FF),
       'View Analysis',
     ),
     (
-      'Workload Balance',
-      'Workload recommendations need current team activity.',
+      'Workload recommendations unavailable',
+      'Validated team workload recommendations are not implemented.',
       Icons.auto_awesome_rounded,
       Color(0xFF148EAD),
       Color(0xFFEBFAFC),
@@ -2470,11 +3962,11 @@ class _InsightsSection extends StatelessWidget {
           _SectionHeading(
             title: 'AI Insights',
             subtitle:
-                'Recommendations to help you deliver faster and with lower risk.',
+                'Machine-learning predictions and recommendations are not available yet.',
             icon: Icons.auto_awesome_rounded,
             actionLabel: 'View all insights',
             onAction: () => onAction(
-              'AI insights are unavailable until project data is connected.',
+              'AI predictions and recommendations are not implemented.',
             ),
           ),
           const SizedBox(height: 13),
@@ -2598,17 +4090,22 @@ class _InsightCard extends StatelessWidget {
 }
 
 class _ProjectHealthPanel extends StatelessWidget {
-  const _ProjectHealthPanel();
+  const _ProjectHealthPanel({required this.overview, required this.onAction});
+
+  final GitHubRepositoryOverview? overview;
+  final ValueChanged<String> onAction;
 
   @override
   Widget build(BuildContext context) {
+    final health = overview?.repositoryHealth;
     return _DashboardCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _SectionHeading(
             title: 'Project Health',
-            subtitle: 'High-level project health for your active projects.',
+            subtitle:
+                'Repository Health — GitHub Signals · push within 14 days; open PRs over 14 days are aging. No ML risk score.',
             icon: Icons.favorite_border_rounded,
           ),
           const SizedBox(height: 12),
@@ -2620,15 +4117,159 @@ class _ProjectHealthPanel extends StatelessWidget {
               borderRadius: BorderRadius.circular(13),
               border: Border.all(color: const Color(0xFFEAF0F8)),
             ),
-            child: const Center(
-              child: _EmptyState(
-                icon: Icons.folder_open_rounded,
-                title: 'No project health data',
-                detail:
-                    'Connect a repository to track project quality and delivery.',
-                compact: true,
-              ),
-            ),
+            child: health == null
+                ? const Center(
+                    child: _EmptyState(
+                      icon: Icons.folder_open_rounded,
+                      title: 'Repository signals not measured',
+                      detail:
+                          'Connect or synchronize a repository to load GitHub operational signals.',
+                      compact: true,
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _HealthSignal(
+                                icon: Icons.bolt_rounded,
+                                title: 'Development activity',
+                                value: switch (health.recentActivityStatus) {
+                                  'recently_active' => 'Recently active',
+                                  'no_recent_push' => 'No push in 14 days',
+                                  _ => 'Not measured',
+                                },
+                                color: switch (health.recentActivityStatus) {
+                                  'recently_active' => const Color(0xFF169B62),
+                                  'no_recent_push' => const Color(0xFFD58A13),
+                                  _ => const Color(0xFF8290A4),
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _HealthSignal(
+                                icon: Icons.bug_report_outlined,
+                                title: 'Open issues',
+                                value:
+                                    health.openIssues?.toString() ??
+                                    'Not measured',
+                                color: const Color(0xFF52617A),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _HealthSignal(
+                                icon: Icons.merge_rounded,
+                                title: 'Open pull requests',
+                                value:
+                                    health.openPullRequests?.toString() ??
+                                    'Not measured',
+                                color: const Color(0xFF52617A),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _HealthSignal(
+                                icon: Icons.verified_outlined,
+                                title: 'CI',
+                                value: _ciLabel(health.ciState),
+                                color: _ciColor(health.ciState),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _HealthSignal(
+                                icon: Icons.history_rounded,
+                                title: 'Recently closed issues',
+                                value:
+                                    health.closedIssues30d?.toString() ??
+                                    'Not measured',
+                                color: const Color(0xFF52617A),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _HealthSignal(
+                                icon: Icons.update_rounded,
+                                title: 'Last push',
+                                value: _formatRelativeDate(
+                                  health.lastPushAt ?? health.latestCommitAt,
+                                ),
+                                color: const Color(0xFF52617A),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.schedule_rounded,
+                              size: 12,
+                              color: const Color(0xFF7C8BA2),
+                            ),
+                            const SizedBox(width: 5),
+                            Expanded(
+                              child: InkWell(
+                                onTap: health.oldestOpenPullRequestUrl == null
+                                    ? null
+                                    : () => _openRepositoryUrl(
+                                        health.oldestOpenPullRequestUrl!,
+                                        onAction,
+                                      ),
+                                child: Text(
+                                  health.oldestOpenPullRequestAgeDays == null
+                                      ? !health.oldestOpenPullRequestPresent &&
+                                                health.oldestOpenPullRequestAvailability ==
+                                                    'available'
+                                            ? 'No open pull requests'
+                                            : 'Oldest open PR age: Not measured'
+                                      : 'Oldest open PR: ${health.oldestOpenPullRequestAgeDays} days${health.oldestOpenPullRequestAgeDays! > 14 ? ' · aging' : ''}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: _textStyle(
+                                    color:
+                                        health.oldestOpenPullRequestAgeDays !=
+                                                null &&
+                                            health.oldestOpenPullRequestAgeDays! >
+                                                14
+                                        ? const Color(0xFFD58A13)
+                                        : const Color(0xFF687A96),
+                                    fontSize: 8,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                'Updated ${_formatSyncTime(health.lastUpdatedAt)}',
+                                maxLines: 1,
+                                textAlign: TextAlign.right,
+                                overflow: TextOverflow.ellipsis,
+                                style: _textStyle(
+                                  color: const Color(0xFF687A96),
+                                  fontSize: 8,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),
@@ -2637,17 +4278,23 @@ class _ProjectHealthPanel extends StatelessWidget {
 }
 
 class _QualityMetricsPanel extends StatelessWidget {
-  const _QualityMetricsPanel();
+  const _QualityMetricsPanel({required this.overview, required this.onAction});
+
+  final GitHubRepositoryOverview? overview;
+  final ValueChanged<String> onAction;
 
   @override
   Widget build(BuildContext context) {
+    final signals = overview?.qualitySignals;
+    final ci = signals?.ci;
     return _DashboardCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _SectionHeading(
             title: 'Quality Metrics',
-            subtitle: 'Quality signals from your connected codebase.',
+            subtitle:
+                'GitHub CI and repository hygiene signals · no coverage or code-quality score.',
             icon: Icons.verified_outlined,
           ),
           const SizedBox(height: 12),
@@ -2659,15 +4306,159 @@ class _QualityMetricsPanel extends StatelessWidget {
               borderRadius: BorderRadius.circular(13),
               border: Border.all(color: const Color(0xFFEAF0F8)),
             ),
-            child: const Center(
-              child: _EmptyState(
-                icon: Icons.shield_outlined,
-                title: 'Metrics are not available yet',
-                detail:
-                    'Test coverage, code smells, and security findings will appear here.',
-                compact: true,
-              ),
-            ),
+            child: signals == null
+                ? const Center(
+                    child: _EmptyState(
+                      icon: Icons.shield_outlined,
+                      title: 'Signals not measured',
+                      detail:
+                          'Connect or synchronize a repository to retrieve CI and hygiene data.',
+                      compact: true,
+                    ),
+                  )
+                : Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _QualitySignal(
+                                title: 'CI status',
+                                value: _ciLabel(ci!.state),
+                                color: _ciColor(ci.state),
+                                icon: Icons.verified_outlined,
+                                onTap: ci.url == null
+                                    ? null
+                                    : () =>
+                                          _openRepositoryUrl(ci.url!, onAction),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _QualitySignal(
+                                title: 'Passed checks',
+                                value: ci.passed?.toString() ?? 'Not measured',
+                                color: const Color(0xFF169B62),
+                                icon: Icons.check_circle_outline_rounded,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _QualitySignal(
+                                title: 'Failed checks',
+                                value: ci.failed?.toString() ?? 'Not measured',
+                                color: ci.failed == null
+                                    ? const Color(0xFF8290A4)
+                                    : ci.failed == 0
+                                    ? const Color(0xFF169B62)
+                                    : const Color(0xFFD84848),
+                                icon: Icons.error_outline_rounded,
+                                onTap: ci.url == null
+                                    ? null
+                                    : () =>
+                                          _openRepositoryUrl(ci.url!, onAction),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _QualitySignal(
+                                title: 'Pending checks',
+                                value: ci.pending?.toString() ?? 'Not measured',
+                                color: const Color(0xFFD58A13),
+                                icon: Icons.hourglass_bottom_rounded,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _QualitySignal(
+                                title: 'Tests detected',
+                                value: _boolSignal(signals.testsDetected),
+                                color: _boolSignalColor(signals.testsDetected),
+                                icon: Icons.science_outlined,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _QualitySignal(
+                                title: 'README / license',
+                                value:
+                                    '${_boolShort(signals.readmePresent)} / ${_boolShort(signals.licensePresent)}',
+                                color:
+                                    signals.readmePresent == false ||
+                                        signals.licensePresent == false
+                                    ? const Color(0xFFD58A13)
+                                    : signals.readmePresent == true &&
+                                          signals.licensePresent == true
+                                    ? const Color(0xFF169B62)
+                                    : const Color(0xFF8290A4),
+                                icon: Icons.menu_book_outlined,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            InkWell(
+                              onTap: signals.latestCommitUrl == null
+                                  ? null
+                                  : () => _openRepositoryUrl(
+                                      signals.latestCommitUrl!,
+                                      onAction,
+                                    ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.code_rounded,
+                                    size: 12,
+                                    color: Color(0xFF52617A),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      signals.latestCommitSha == null
+                                          ? 'Default-branch commit: Not measured'
+                                          : 'Default branch commit · ${_shortSha(signals.latestCommitSha!)}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: _textStyle(
+                                        color: const Color(0xFF52617A),
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                  if (signals.latestCommitUrl != null)
+                                    const Icon(
+                                      Icons.open_in_new_rounded,
+                                      size: 10,
+                                      color: Color(0xFF52617A),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              'Last completed check: ${_formatSyncTime(ci.lastCompletedAt)} · detected tests are not proof of passing.',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: _textStyle(
+                                color: const Color(0xFF75859C),
+                                fontSize: 8,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),
@@ -2675,10 +4466,172 @@ class _QualityMetricsPanel extends StatelessWidget {
   }
 }
 
+class _HealthSignal extends StatelessWidget {
+  const _HealthSignal({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String title;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 15, color: color),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _textStyle(color: const Color(0xFF8491A5), fontSize: 7),
+              ),
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _textStyle(
+                  color: color,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _QualitySignal extends StatelessWidget {
+  const _QualitySignal({
+    required this.title,
+    required this.value,
+    required this.color,
+    required this.icon,
+    this.onTap,
+  });
+
+  final String title;
+  final String value;
+  final Color color;
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(9),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 3),
+        child: Row(
+          children: [
+            Icon(icon, size: 15, color: color),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _textStyle(
+                      color: const Color(0xFF8491A5),
+                      fontSize: 7,
+                    ),
+                  ),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _textStyle(
+                      color: color,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (onTap != null)
+              const Icon(
+                Icons.open_in_new_rounded,
+                size: 10,
+                color: Color(0xFF8491A5),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _ciLabel(String state) => switch (state) {
+  'success' => 'Passing',
+  'failure' => 'Failing',
+  'pending' => 'Pending',
+  'not_configured' => 'Not configured',
+  _ => 'Not measured',
+};
+
+Color _ciColor(String state) => switch (state) {
+  'success' => const Color(0xFF169B62),
+  'failure' => const Color(0xFFD84848),
+  'pending' => const Color(0xFFD58A13),
+  _ => const Color(0xFF8290A4),
+};
+
+String _boolSignal(bool? value) => switch (value) {
+  true => 'Detected',
+  false => 'Not detected',
+  null => 'Not measured',
+};
+
+String _boolShort(bool? value) => switch (value) {
+  true => 'Yes',
+  false => 'No',
+  null => '—',
+};
+
+String _shortSha(String sha) => sha.length <= 7 ? sha : sha.substring(0, 7);
+
+Color _boolSignalColor(bool? value) => switch (value) {
+  true => const Color(0xFF169B62),
+  false => const Color(0xFFD58A13),
+  null => const Color(0xFF8290A4),
+};
+
+String _formatRelativeDate(DateTime? date) {
+  if (date == null) return 'Not measured';
+  final delta = DateTime.now().toUtc().difference(date.toUtc());
+  if (delta.isNegative) return 'Just now';
+  if (delta.inDays == 0) return 'Today';
+  if (delta.inDays == 1) return '1 day ago';
+  return '${delta.inDays} days ago';
+}
+
 class _ActivityPanel extends StatelessWidget {
-  const _ActivityPanel({required this.onAction});
+  const _ActivityPanel({
+    required this.onAction,
+    required this.overview,
+    required this.hasRepository,
+  });
 
   final ValueChanged<String> onAction;
+  final GitHubRepositoryOverview? overview;
+  final bool hasRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -2687,24 +4640,78 @@ class _ActivityPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _SectionHeading(
-            title: 'Team Activity',
-            subtitle: 'Recent updates from your team and projects.',
-            icon: Icons.people_outline_rounded,
-            actionLabel: 'View all activity',
-            onAction: () => onAction('Team activity is not available yet.'),
+            title: 'Recent Repository Activity',
+            subtitle: 'Recent commits, issues, and pull requests from GitHub.',
+            icon: Icons.history_rounded,
           ),
           const SizedBox(height: 12),
-          const SizedBox(
+          SizedBox(
             height: 148,
-            child: Center(
-              child: _EmptyState(
-                icon: Icons.forum_outlined,
-                title: 'No recent activity',
-                detail:
-                    'Team updates will appear when your project is connected.',
-                compact: true,
-              ),
-            ),
+            child: overview == null || overview!.recentActivity.isEmpty
+                ? Center(
+                    child: _EmptyState(
+                      icon: Icons.forum_outlined,
+                      title: 'No recent activity',
+                      detail: hasRepository
+                          ? 'GitHub returned no recent commit, issue, or pull request activity.'
+                          : 'Connect a repository to load actual GitHub activity.',
+                      compact: true,
+                    ),
+                  )
+                : ListView.separated(
+                    itemCount: overview!.recentActivity.take(5).length,
+                    separatorBuilder: (_, _) => const Divider(height: 10),
+                    itemBuilder: (context, index) {
+                      final activity = overview!.recentActivity[index];
+                      final icon = switch (activity.type) {
+                        'commit' => Icons.commit_rounded,
+                        'issue' => Icons.bug_report_outlined,
+                        'pull_request' => Icons.merge_rounded,
+                        _ => Icons.history_rounded,
+                      };
+                      return Row(
+                        children: [
+                          Icon(icon, size: 15, color: AppColors.primaryBlue),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  activity.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: _textStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  '${activity.type.replaceAll('_', ' ')}${activity.state == null ? '' : ' · ${activity.state}'} · ${activity.author} · ${_formatSyncTime(activity.date)}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: _textStyle(
+                                    color: const Color(0xFF687A96),
+                                    fontSize: 8,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Open on GitHub',
+                            visualDensity: VisualDensity.compact,
+                            onPressed: () =>
+                                _openRepositoryUrl(activity.url, onAction),
+                            icon: const Icon(
+                              Icons.open_in_new_rounded,
+                              size: 14,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
           ),
         ],
       ),

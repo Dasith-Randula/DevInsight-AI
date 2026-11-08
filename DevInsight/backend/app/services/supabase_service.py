@@ -12,6 +12,7 @@ REQUIRED_TABLES = (
     "profiles",
     "user_preferences",
     "notification_settings",
+    "connected_repositories",
 )
 
 

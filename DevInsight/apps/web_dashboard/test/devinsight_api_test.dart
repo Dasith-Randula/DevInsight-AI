@@ -289,4 +289,171 @@ void main() {
       'manager_home',
     );
   });
+
+  test(
+    'GitHub connection and overview use authenticated API endpoints',
+    () async {
+      final requests = <http.Request>[];
+      final connection = {
+        'id': 'connection-id',
+        'github_repository_id': 123,
+        'repository_full_name': 'acme/repository',
+        'repository_url': 'https://github.com/acme/repository',
+        'repository_owner': 'acme',
+        'repository_name': 'repository',
+        'description': 'A real project',
+        'default_branch': 'main',
+        'primary_language': 'Dart',
+        'is_private': false,
+        'stargazers_count': 4,
+        'forks_count': 1,
+        'connected_at': '2026-11-08T10:00:00Z',
+        'last_synced_at': '2026-11-08T10:00:00Z',
+        'cached_summary': {},
+      };
+      final api = DevInsightApi(
+        baseUrl: 'http://127.0.0.1:8000',
+        client: MockClient((request) async {
+          requests.add(request);
+          if (request.method == 'POST') {
+            return http.Response(jsonEncode(connection), 200);
+          }
+          return http.Response(
+            jsonEncode({
+              'connection': connection,
+              'is_stale': false,
+              'summary': {
+                'open_pull_requests': 3,
+                'resolved_issues_30d': 5,
+                'languages': [
+                  {'name': 'Dart', 'bytes': 100, 'percentage': 100.0},
+                ],
+                'recent_activity': [],
+                'weekly_activity': {
+                  'availability': 'available',
+                  'is_complete': true,
+                  'weeks': [
+                    {'week_start': '2026-11-08', 'commits': 3},
+                  ],
+                  'total_commits': 3,
+                  'branch': 'main',
+                  'period_start': '2026-11-08',
+                  'period_end': '2026-11-14',
+                  'week_boundary': 'Sunday 00:00 UTC',
+                },
+                'repository_health': {
+                  'recent_activity_status': 'recently_active',
+                  'ci_state': 'success',
+                  'open_issues': 2,
+                  'recently_closed_issues_30d': 1,
+                  'open_pull_requests': 3,
+                  'oldest_open_pull_request': {
+                    'availability': 'available',
+                    'pull_request': {
+                      'age_days': 18,
+                      'title': 'Long-running PR',
+                      'url': 'https://github.com/acme/repository/pull/7',
+                    },
+                  },
+                },
+                'quality_signals': {
+                  'ci': {
+                    'availability': 'available',
+                    'state': 'success',
+                    'passed': 2,
+                    'failed': 0,
+                    'pending': 0,
+                  },
+                  'default_branch': 'main',
+                  'readme_present': true,
+                  'license_present': true,
+                  'tests_detected': true,
+                  'latest_commit': {
+                    'sha': 'abcdef123456',
+                    'url': 'https://github.com/acme/repository/commit/abcdef',
+                  },
+                },
+              },
+            }),
+            200,
+          );
+        }),
+      );
+      addTearDown(api.close);
+
+      final saved = await api.connectGitHubRepository(
+        'access-token',
+        'https://github.com/acme/repository.git',
+      );
+      final overview = await api.getGitHubOverview('access-token', saved.id);
+
+      expect(requests[0].url.path, '/api/v1/github/connections');
+      expect(
+        requests[0].headers['Authorization']!.startsWith('Bearer '),
+        isTrue,
+      );
+      expect(
+        requests[0].headers['Authorization']!.endsWith('access-token'),
+        isTrue,
+      );
+      expect(jsonDecode(requests[0].body), {
+        'repository_url': 'https://github.com/acme/repository.git',
+      });
+      expect(overview.connection.fullName, 'acme/repository');
+      expect(overview.openPullRequests, 3);
+      expect(overview.resolvedIssues30d, 5);
+      expect(overview.languages.single.percentage, 100);
+      expect(overview.isStale, isFalse);
+      expect(overview.weeklyActivity!.totalCommits, 3);
+      expect(overview.weeklyActivity!.weeks.single.commits, 3);
+      expect(overview.repositoryHealth!.oldestOpenPullRequestAgeDays, 18);
+      expect(overview.repositoryHealth!.oldestOpenPullRequestPresent, isTrue);
+      expect(overview.qualitySignals!.ci.passed, 2);
+      expect(overview.qualitySignals!.testsDetected, isTrue);
+      expect(overview.qualitySignals!.latestCommitSha, 'abcdef123456');
+    },
+  );
+
+  test('GitHub rate limit response has a safe actionable message', () async {
+    final api = DevInsightApi(
+      baseUrl: 'http://127.0.0.1:8000',
+      client: MockClient((_) async => http.Response('{}', 429)),
+    );
+    addTearDown(api.close);
+
+    await expectLater(
+      api.connectGitHubRepository(
+        'access-token',
+        'https://github.com/acme/repository',
+      ),
+      throwsA(
+        isA<DevInsightApiException>().having(
+          (error) => error.message,
+          'message',
+          'GitHub is rate limiting requests. Please try again later.',
+        ),
+      ),
+    );
+  });
+
+  test('disconnecting a GitHub repository uses its scoped endpoint', () async {
+    late http.Request capturedRequest;
+    final api = DevInsightApi(
+      baseUrl: 'http://127.0.0.1:8000',
+      client: MockClient((request) async {
+        capturedRequest = request;
+        return http.Response('', 204);
+      }),
+    );
+    addTearDown(api.close);
+
+    await api.disconnectGitHubRepository('access-token', 'connection-1');
+
+    expect(capturedRequest.method, 'DELETE');
+    expect(capturedRequest.url.path, '/api/v1/github/connections/connection-1');
+    expect(
+      capturedRequest.headers['Authorization']!.endsWith('access-token'),
+      isTrue,
+    );
+  });
 }

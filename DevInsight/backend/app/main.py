@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
 
+from app.api.github import router as github_router
 from app.api.me import router as me_router
 from app.api.onboarding import router as onboarding_router
 from app.config import get_settings
@@ -57,6 +58,7 @@ app.add_middleware(
 )
 app.include_router(me_router)
 app.include_router(onboarding_router)
+app.include_router(github_router)
 
 
 @app.get("/api/v1/health")
