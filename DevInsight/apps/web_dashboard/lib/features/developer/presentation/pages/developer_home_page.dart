@@ -5,12 +5,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:web_dashboard/core/constants/app_assets.dart';
 import 'package:web_dashboard/core/constants/app_colors.dart';
 import 'package:web_dashboard/core/config/app_config.dart';
 import 'package:web_dashboard/core/services/auth_service.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:web_dashboard/features/developer/presentation/routing/dashboard_destination.dart';
+import 'package:web_dashboard/features/developer/presentation/pages/ai_insights_page.dart';
+import 'package:web_dashboard/features/developer/presentation/pages/analytics_page.dart';
+import 'package:web_dashboard/features/developer/presentation/pages/code_quality_page.dart';
+import 'package:web_dashboard/features/developer/presentation/pages/issues_page.dart';
+import 'package:web_dashboard/features/developer/presentation/pages/my_work_page.dart';
+import 'package:web_dashboard/features/developer/presentation/pages/projects_page.dart';
+import 'package:web_dashboard/features/developer/presentation/pages/pull_requests_page.dart';
+import 'package:web_dashboard/features/developer/presentation/pages/reports_page.dart';
+import 'package:web_dashboard/features/developer/presentation/pages/settings_page.dart';
+import 'package:web_dashboard/features/developer/presentation/pages/team_page.dart';
+import 'package:web_dashboard/features/developer/presentation/widgets/developer_home_sections.dart';
 
 class DeveloperHomePage extends StatefulWidget {
   const DeveloperHomePage({
@@ -49,6 +60,7 @@ class _DeveloperHomePageState extends State<DeveloperHomePage>
   bool _loadingRepository = false;
   bool _refreshingRepository = false;
   int _selectionVersion = 0;
+  DashboardDestination _activeDestination = DashboardDestination.home;
 
   String get _activeRepositoryPreferenceKey =>
       'devinsight.active_repository.${widget.profile.id}';
@@ -377,6 +389,113 @@ class _DeveloperHomePageState extends State<DeveloperHomePage>
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  void _selectDestination(DashboardDestination destination) {
+    if (_activeDestination == destination) return;
+    setState(() => _activeDestination = destination);
+    if (_scrollController.hasClients) _scrollController.jumpTo(0);
+  }
+
+  Widget _buildDestinationContent() {
+    return switch (_activeDestination) {
+      DashboardDestination.home => _DashboardContent(
+        scrollController: _scrollController,
+        nextSectionKey: _nextSectionKey,
+        ambientMotion: _ambientMotionController,
+        firstName: _firstName,
+        role: _role,
+        onAction: _showMessage,
+        repository: _repository,
+        overview: _overview,
+        repositories: _repositories,
+        repositoryError: _repositoryError,
+        loadingRepository: _loadingRepository,
+        refreshingRepository: _refreshingRepository,
+        onConnect: _showConnectRepository,
+        onManage: _showManageRepositories,
+        onRetry: _loadRepositories,
+        onRefresh: _refreshRepository,
+      ),
+      DashboardDestination.projects => ProjectsPage(
+        scrollController: _scrollController,
+        profile: widget.profile,
+        repositories: _repositories,
+        repository: _repository,
+        overview: _overview,
+        loading: _loadingRepository,
+        error: _repositoryError,
+        onConnect: _showConnectRepository,
+        onSelect: _selectRepository,
+        onManage: _showManageRepositories,
+        onRefresh: _refreshRepository,
+        onOpenRepository: (url) => _openRepositoryUrl(url, _showMessage),
+      ),
+      DashboardDestination.myWork => MyWorkPage(
+        scrollController: _scrollController,
+        profile: widget.profile,
+        repository: _repository,
+        overview: _overview,
+        error: _repositoryError,
+        onOpenRepository: (url) => _openRepositoryUrl(url, _showMessage),
+      ),
+      DashboardDestination.issues => IssuesPage(
+        scrollController: _scrollController,
+        repository: _repository,
+        overview: _overview,
+        loading: _loadingRepository,
+        error: _repositoryError,
+        onOpenLink: (url) => _openRepositoryUrl(url, _showMessage),
+      ),
+      DashboardDestination.pullRequests => PullRequestsPage(
+        scrollController: _scrollController,
+        repository: _repository,
+        overview: _overview,
+        loading: _loadingRepository,
+        error: _repositoryError,
+        onOpenLink: (url) => _openRepositoryUrl(url, _showMessage),
+      ),
+      DashboardDestination.codeQuality => CodeQualityPage(
+        scrollController: _scrollController,
+        repository: _repository,
+        overview: _overview,
+        loading: _loadingRepository,
+        error: _repositoryError,
+        onOpenLink: (url) => _openRepositoryUrl(url, _showMessage),
+      ),
+      DashboardDestination.analytics => AnalyticsPage(
+        scrollController: _scrollController,
+        repository: _repository,
+        overview: _overview,
+        loading: _loadingRepository,
+        error: _repositoryError,
+      ),
+      DashboardDestination.aiInsights => AiInsightsPage(
+        scrollController: _scrollController,
+        repository: _repository,
+        overview: _overview,
+        error: _repositoryError,
+      ),
+      DashboardDestination.team => TeamPage(
+        scrollController: _scrollController,
+        repository: _repository,
+        overview: _overview,
+        error: _repositoryError,
+      ),
+      DashboardDestination.reports => ReportsPage(
+        scrollController: _scrollController,
+        repository: _repository,
+        overview: _overview,
+        error: _repositoryError,
+      ),
+      DashboardDestination.settings => SettingsPage(
+        scrollController: _scrollController,
+        profile: widget.profile,
+        repositories: _repositories,
+        repository: _repository,
+        authService: _authService,
+      ),
+    };
+  }
+
   Future<void> _signOut() async {
     try {
       await AuthService().signOut();
@@ -507,21 +626,73 @@ class _DeveloperHomePageState extends State<DeveloperHomePage>
 
   @override
   Widget build(BuildContext context) {
+    return DeveloperDashboardShell(
+      scaffoldKey: _scaffoldKey,
+      profileName: _displayName,
+      role: _role,
+      activeDestination: _activeDestination,
+      scrollController: _scrollController,
+      ambientMotion: _ambientMotionController,
+      onDestinationSelected: _selectDestination,
+      onProfile: _showProfileMenu,
+      onAction: _showMessage,
+      onHelp: () => _showMessage('Support resources are coming soon.'),
+      child: _buildDestinationContent(),
+    );
+  }
+}
+
+class DeveloperDashboardShell extends StatelessWidget {
+  const DeveloperDashboardShell({
+    super.key,
+    required this.scaffoldKey,
+    required this.profileName,
+    required this.role,
+    required this.activeDestination,
+    required this.scrollController,
+    required this.ambientMotion,
+    required this.onDestinationSelected,
+    required this.onProfile,
+    required this.onAction,
+    required this.onHelp,
+    required this.child,
+  });
+
+  final GlobalKey<ScaffoldState> scaffoldKey;
+  final String profileName;
+  final String role;
+  final DashboardDestination activeDestination;
+  final ScrollController scrollController;
+  final Animation<double> ambientMotion;
+  final ValueChanged<DashboardDestination> onDestinationSelected;
+  final VoidCallback onProfile;
+  final ValueChanged<String> onAction;
+  final VoidCallback onHelp;
+  final Widget child;
+
+  void _selectFromDrawer(
+    BuildContext context,
+    DashboardDestination destination,
+  ) {
+    Navigator.of(context).pop();
+    onDestinationSelected(destination);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
+      key: scaffoldKey,
       backgroundColor: const Color(0xFFDFEAFE),
       drawer: Drawer(
         width: 272,
         child: SafeArea(
           child: _Navigation(
             expanded: true,
-            onSelect: (label) {
-              Navigator.of(context).pop();
-              if (label != 'Home') _showMessage('$label is coming soon.');
-            },
+            activeDestination: activeDestination,
+            onSelect: (destination) => _selectFromDrawer(context, destination),
             onHelp: () {
               Navigator.of(context).pop();
-              _showMessage('Support resources are coming soon.');
+              onHelp();
             },
           ),
         ),
@@ -544,9 +715,7 @@ class _DeveloperHomePageState extends State<DeveloperHomePage>
           fit: StackFit.expand,
           children: [
             IgnorePointer(
-              child: _AnimatedDotBackground(
-                animation: _ambientMotionController,
-              ),
+              child: _AnimatedDotBackground(animation: ambientMotion),
             ),
             SafeArea(
               child: LayoutBuilder(
@@ -566,7 +735,7 @@ class _DeveloperHomePageState extends State<DeveloperHomePage>
                           children: [
                             Positioned.fill(
                               child: SingleChildScrollView(
-                                controller: _scrollController,
+                                controller: scrollController,
                                 padding: EdgeInsets.fromLTRB(
                                   constraints.maxWidth < 600 ? 14 : 24,
                                   78,
@@ -578,24 +747,11 @@ class _DeveloperHomePageState extends State<DeveloperHomePage>
                                     constraints: const BoxConstraints(
                                       maxWidth: 1500,
                                     ),
-                                    child: _DashboardContent(
-                                      scrollController: _scrollController,
-                                      nextSectionKey: _nextSectionKey,
-                                      ambientMotion: _ambientMotionController,
-                                      firstName: _firstName,
-                                      role: _role,
-                                      onAction: _showMessage,
-                                      repository: _repository,
-                                      overview: _overview,
-                                      repositories: _repositories,
-                                      repositoryError: _repositoryError,
-                                      loadingRepository: _loadingRepository,
-                                      refreshingRepository:
-                                          _refreshingRepository,
-                                      onConnect: _showConnectRepository,
-                                      onManage: _showManageRepositories,
-                                      onRetry: _loadRepositories,
-                                      onRefresh: _refreshRepository,
+                                    child: KeyedSubtree(
+                                      key: ValueKey(
+                                        'destination-${activeDestination.name}',
+                                      ),
+                                      child: child,
                                     ),
                                   ),
                                 ),
@@ -606,15 +762,18 @@ class _DeveloperHomePageState extends State<DeveloperHomePage>
                               left: 0,
                               right: 0,
                               child: _TopBar(
-                                name: _displayName,
-                                role: _role,
-                                scrollController: _scrollController,
+                                name: profileName,
+                                role: role,
+                                scrollController: scrollController,
                                 onMenu: desktop
                                     ? null
-                                    : () => _scaffoldKey.currentState
+                                    : () => scaffoldKey.currentState
                                           ?.openDrawer(),
-                                onProfile: _showProfileMenu,
-                                onAction: _showMessage,
+                                onProfile: onProfile,
+                                onAction: onAction,
+                                onSettings: () => onDestinationSelected(
+                                  DashboardDestination.settings,
+                                ),
                               ),
                             ),
                           ],
@@ -627,14 +786,9 @@ class _DeveloperHomePageState extends State<DeveloperHomePage>
                           bottom: 0,
                           child: _Navigation(
                             expanded: false,
-                            onSelect: (label) {
-                              if (label != 'Home') {
-                                _showMessage('$label is coming soon.');
-                              }
-                            },
-                            onHelp: () => _showMessage(
-                              'Support resources are coming soon.',
-                            ),
+                            activeDestination: activeDestination,
+                            onSelect: onDestinationSelected,
+                            onHelp: onHelp,
                           ),
                         ),
                     ],
@@ -1272,85 +1426,18 @@ class _DashboardContent extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 44),
             _Reveal(
               controller: scrollController,
-              child: _MetricGrid(
-                key: nextSectionKey,
-                width: width,
+              child: DeveloperHomeSections(
+                scrollController: scrollController,
+                overviewSectionKey: nextSectionKey,
                 overview: overview,
                 hasRepository: repository != null,
                 loading: loadingRepository,
+                onAction: onAction,
+                onOpenRepository: (url) => _openRepositoryUrl(url, onAction),
               ),
-            ),
-            const SizedBox(height: 16),
-            _Reveal(
-              controller: scrollController,
-              child: _ResponsivePair(
-                breakpoint: 820,
-                children: [
-                  _ChartPanel(
-                    title: 'Weekly Productivity',
-                    subtitle:
-                        'Weekly commit activity from the connected repository.',
-                    icon: Icons.insights_rounded,
-                    overview: overview,
-                  ),
-                  _ChartPanel(
-                    title: 'Project Risk Trend',
-                    subtitle:
-                        'Machine-learning risk predictions are not implemented.',
-                    icon: Icons.trending_down_rounded,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _Reveal(
-              controller: scrollController,
-              child: _ResponsivePair(
-                breakpoint: 820,
-                children: [
-                  _TasksPanel(onAction: onAction),
-                  _ContributionPanel(overview: overview),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _Reveal(
-              controller: scrollController,
-              child: _InsightsSection(onAction: onAction),
-            ),
-            const SizedBox(height: 16),
-            _Reveal(
-              controller: scrollController,
-              child: _ResponsivePair(
-                breakpoint: 820,
-                children: [
-                  _ProjectHealthPanel(overview: overview, onAction: onAction),
-                  _QualityMetricsPanel(overview: overview, onAction: onAction),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _Reveal(
-              controller: scrollController,
-              child: _ResponsivePair(
-                breakpoint: 820,
-                children: [
-                  _ActivityPanel(
-                    onAction: onAction,
-                    overview: overview,
-                    hasRepository: repository != null,
-                  ),
-                  _RemindersPanel(onAction: onAction),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _Reveal(
-              controller: scrollController,
-              child: _QuickActions(onAction: onAction),
             ),
           ],
         );
@@ -1481,12 +1568,14 @@ class _ScrollMousePainter extends CustomPainter {
 class _Navigation extends StatefulWidget {
   const _Navigation({
     required this.expanded,
+    required this.activeDestination,
     required this.onSelect,
     required this.onHelp,
   });
 
   final bool expanded;
-  final ValueChanged<String> onSelect;
+  final DashboardDestination activeDestination;
+  final ValueChanged<DashboardDestination> onSelect;
   final VoidCallback onHelp;
 
   @override
@@ -1496,23 +1585,6 @@ class _Navigation extends StatefulWidget {
 class _NavigationState extends State<_Navigation> {
   bool _hovered = false;
   bool _showLabels = false;
-
-  static const _mainItems = [
-    ('Home', Icons.home_rounded),
-    ('Projects', Icons.folder_open_rounded),
-    ('My Work', Icons.bar_chart_rounded),
-    ('Issues', Icons.bug_report_outlined),
-    ('Pull Requests', Icons.merge_rounded),
-    ('Code Quality', Icons.verified_outlined),
-    ('Analytics', Icons.show_chart_rounded),
-    ('AI Insights', Icons.auto_awesome_rounded),
-  ];
-
-  static const _workspaceItems = [
-    ('Team', Icons.people_outline_rounded),
-    ('Reports', Icons.description_outlined),
-    ('Settings', Icons.settings_outlined),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -1570,13 +1642,15 @@ class _NavigationState extends State<_Navigation> {
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: [
-                      for (final item in _mainItems)
+                      for (final item in DashboardDestination.values.where(
+                        (destination) => !destination.isWorkspace,
+                      ))
                         _NavItem(
-                          title: item.$1,
-                          icon: item.$2,
-                          active: item.$1 == 'Home',
+                          title: item.label,
+                          icon: item.icon,
+                          active: item == widget.activeDestination,
                           expanded: showLabels,
-                          onTap: () => widget.onSelect(item.$1),
+                          onTap: () => widget.onSelect(item),
                         ),
                       Padding(
                         padding: EdgeInsets.fromLTRB(
@@ -1600,13 +1674,15 @@ class _NavigationState extends State<_Navigation> {
                                 height: 12,
                               ),
                       ),
-                      for (final item in _workspaceItems)
+                      for (final item in DashboardDestination.values.where(
+                        (destination) => destination.isWorkspace,
+                      ))
                         _NavItem(
-                          title: item.$1,
-                          icon: item.$2,
-                          active: false,
+                          title: item.label,
+                          icon: item.icon,
+                          active: item == widget.activeDestination,
                           expanded: showLabels,
-                          onTap: () => widget.onSelect(item.$1),
+                          onTap: () => widget.onSelect(item),
                         ),
                     ],
                   ),
@@ -1681,6 +1757,7 @@ class _NavItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 3),
       child: Tooltip(
+        key: ValueKey('sidebar-${title.toLowerCase().replaceAll(' ', '-')}'),
         message: expanded ? '' : title,
         child: Material(
           color: active ? const Color(0xFFE6EFFF) : Colors.transparent,
@@ -1729,6 +1806,7 @@ class _TopBar extends StatelessWidget {
     required this.onMenu,
     required this.onProfile,
     required this.onAction,
+    required this.onSettings,
   });
 
   final String name;
@@ -1737,6 +1815,7 @@ class _TopBar extends StatelessWidget {
   final VoidCallback? onMenu;
   final VoidCallback onProfile;
   final ValueChanged<String> onAction;
+  final VoidCallback onSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -1880,7 +1959,7 @@ class _TopBar extends StatelessWidget {
                     _TopBarIcon(
                       icon: Icons.settings_outlined,
                       tooltip: 'Settings',
-                      onPressed: () => onAction('Settings are coming soon.'),
+                      onPressed: onSettings,
                     ),
                   const SizedBox(width: 6),
                   TextButton(
@@ -3048,1967 +3127,6 @@ class _ConnectedStatusIndicatorState extends State<_ConnectedStatusIndicator>
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _MetricGrid extends StatelessWidget {
-  const _MetricGrid({
-    super.key,
-    required this.width,
-    required this.overview,
-    required this.hasRepository,
-    required this.loading,
-  });
-
-  final double width;
-  final GitHubRepositoryOverview? overview;
-  final bool hasRepository;
-  final bool loading;
-
-  List<
-    ({
-      String title,
-      IconData icon,
-      Color accent,
-      Color tint,
-      String value,
-      String detail,
-    })
-  >
-  get _metrics => [
-    (
-      title: 'Assigned Issues',
-      icon: Icons.code_rounded,
-      accent: const Color(0xFF2878F0),
-      tint: const Color(0xFFEAF2FF),
-      value: 'Not linked',
-      detail: 'Personal GitHub identity is not linked',
-    ),
-    (
-      title: 'Resolved Issues',
-      icon: Icons.check_circle_outline_rounded,
-      accent: const Color(0xFF12A878),
-      tint: const Color(0xFFE7F8F1),
-      value: !hasRepository
-          ? 'No repository'
-          : loading
-          ? 'Loading'
-          : overview?.resolvedIssues30d?.toString() ?? 'Unavailable',
-      detail: 'Closed issues in the last 30 days',
-    ),
-    (
-      title: 'Productivity Score',
-      icon: Icons.bolt_rounded,
-      accent: const Color(0xFF1989E8),
-      tint: const Color(0xFFE8F5FF),
-      value: 'Unavailable',
-      detail: 'A validated score is not implemented',
-    ),
-    (
-      title: 'Open Pull Requests',
-      icon: Icons.merge_rounded,
-      accent: const Color(0xFF795BF5),
-      tint: const Color(0xFFF0ECFF),
-      value: !hasRepository
-          ? 'No repository'
-          : loading
-          ? 'Loading'
-          : overview?.openPullRequests?.toString() ?? 'Unavailable',
-      detail: overview?.openPullRequests == 0
-          ? 'No open pull requests'
-          : 'Open GitHub pull requests',
-    ),
-    (
-      title: 'Code Quality',
-      icon: Icons.shield_outlined,
-      accent: const Color(0xFF2C72D5),
-      tint: const Color(0xFFEAF2FF),
-      value: switch (overview?.qualitySignals?.ci.state) {
-        'success' => 'CI passing',
-        'failure' => 'CI failing',
-        'pending' => 'Checks pending',
-        'not_configured' => 'Not configured',
-        _ => 'Not measured',
-      },
-      detail: 'CI status only · not a quality score',
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final columns = width >= 1200
-        ? 5
-        : width >= 760
-        ? 3
-        : 2;
-    const gap = 12.0;
-    final itemWidth = (width - (columns - 1) * gap) / columns;
-    return Wrap(
-      spacing: gap,
-      runSpacing: gap,
-      children: [
-        for (final metric in _metrics)
-          SizedBox(
-            width: itemWidth,
-            child: _MetricCard(
-              title: metric.title,
-              icon: metric.icon,
-              accent: metric.accent,
-              tint: metric.tint,
-              value: metric.value,
-              detail: metric.detail,
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _MetricCard extends StatelessWidget {
-  const _MetricCard({
-    required this.title,
-    required this.icon,
-    required this.accent,
-    required this.tint,
-    required this.value,
-    required this.detail,
-  });
-
-  final String title;
-  final IconData icon;
-  final Color accent;
-  final Color tint;
-  final String value;
-  final String detail;
-
-  @override
-  Widget build(BuildContext context) {
-    return _DashboardCard(
-      padding: const EdgeInsets.all(14),
-      child: SizedBox(
-        height: 112,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 31,
-              height: 31,
-              decoration: BoxDecoration(
-                color: tint,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, size: 17, color: accent),
-            ),
-            const Spacer(),
-            Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: _textStyle(fontSize: 13, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 5),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _textStyle(
-                      color: const Color(0xFF72819A),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                Icon(Icons.info_outline_rounded, size: 13, color: accent),
-              ],
-            ),
-            Text(
-              detail,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: _textStyle(color: const Color(0xFF8A96AA), fontSize: 11),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ResponsivePair extends StatelessWidget {
-  const _ResponsivePair({required this.children, this.breakpoint = 820});
-
-  final List<Widget> children;
-  final double breakpoint;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < breakpoint) {
-          return Column(
-            children: [
-              for (var i = 0; i < children.length; i++) ...[
-                if (i > 0) const SizedBox(height: 14),
-                children[i],
-              ],
-            ],
-          );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (var i = 0; i < children.length; i++) ...[
-              if (i > 0) const SizedBox(width: 14),
-              Expanded(child: children[i]),
-            ],
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _ChartPanel extends StatelessWidget {
-  const _ChartPanel({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    this.overview,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final GitHubRepositoryOverview? overview;
-
-  @override
-  Widget build(BuildContext context) {
-    return _DashboardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionHeading(title: title, subtitle: subtitle, icon: icon),
-          const SizedBox(height: 14),
-          Container(
-            height: 204,
-            width: double.infinity,
-            clipBehavior: Clip.antiAlias,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFF),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFEAF0FA)),
-            ),
-            child: title == 'Weekly Productivity'
-                ? _WeeklyActivityChart(overview: overview)
-                : Stack(
-                    children: [
-                      Positioned.fill(
-                        child: CustomPaint(painter: _ChartGridPainter()),
-                      ),
-                      const Center(
-                        child: _EmptyState(
-                          icon: Icons.show_chart_rounded,
-                          title: 'Risk prediction unavailable',
-                          detail:
-                              'Machine-learning risk prediction is not implemented.',
-                          compact: true,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _WeeklyActivityChart extends StatefulWidget {
-  const _WeeklyActivityChart({required this.overview});
-
-  final GitHubRepositoryOverview? overview;
-
-  @override
-  State<_WeeklyActivityChart> createState() => _WeeklyActivityChartState();
-}
-
-class _WeeklyActivityChartState extends State<_WeeklyActivityChart>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _animationController = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 720),
-  );
-  int? _hoveredWeek;
-
-  GitHubWeeklyActivity? get _activity => widget.overview?.weeklyActivity;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
-      _animationController
-        ..stop()
-        ..value = 1;
-    } else if (_animationController.status == AnimationStatus.dismissed) {
-      _animationController.forward();
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant _WeeklyActivityChart oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.overview?.connection.id != widget.overview?.connection.id ||
-        oldWidget.overview?.connection.lastSyncedAt !=
-            widget.overview?.connection.lastSyncedAt) {
-      _hoveredWeek = null;
-      if (!(MediaQuery.maybeOf(context)?.disableAnimations ?? false)) {
-        _animationController
-          ..value = 0
-          ..forward();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final activity = _activity;
-    if (widget.overview == null) {
-      return const _WeeklyActivityEmpty(
-        title: 'Connect a repository',
-        detail: 'Weekly commit totals will appear after GitHub data is loaded.',
-      );
-    }
-    if (activity == null ||
-        activity.availability != 'available' ||
-        !activity.isComplete ||
-        activity.weeks.length != 8 ||
-        activity.weeks.any((week) => week.commits == null)) {
-      final status = activity?.availability;
-      final message = status == 'processing'
-          ? 'GitHub is preparing weekly statistics. Refresh later to retry.'
-          : status == 'incomplete'
-          ? 'GitHub has not returned a complete 8-week period. Totals are withheld.'
-          : 'Weekly activity is not measured by GitHub yet.';
-      return _WeeklyActivityEmpty(
-        title: status == 'processing'
-            ? 'Statistics processing'
-            : 'Activity unavailable',
-        detail: message,
-      );
-    }
-
-    final weeks = activity.weeks;
-    final total = activity.totalCommits;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(13, 9, 13, 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${total ?? 0} commits · ${activity.branch ?? 'default branch'}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: _textStyle(
-                    color: const Color(0xFF31527E),
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              if (_hoveredWeek case final index?)
-                Text(
-                  '${_weekLabel(weeks[index].weekStart)}: ${weeks[index].commits}',
-                  style: _textStyle(
-                    color: AppColors.primaryBlue,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return MouseRegion(
-                  onHover: (event) {
-                    if (constraints.maxWidth <= 0) return;
-                    final index =
-                        ((event.localPosition.dx / constraints.maxWidth) *
-                                weeks.length)
-                            .floor()
-                            .clamp(0, weeks.length - 1);
-                    if (_hoveredWeek != index) {
-                      setState(() => _hoveredWeek = index);
-                    }
-                  },
-                  onExit: (_) => setState(() => _hoveredWeek = null),
-                  child: AnimatedBuilder(
-                    animation: _animationController,
-                    builder: (context, _) => CustomPaint(
-                      size: Size.infinite,
-                      painter: _WeeklyActivityPainter(
-                        values: weeks.map((week) => week.commits!).toList(),
-                        progress: _animationController.value,
-                        hoveredIndex: _hoveredWeek,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 3),
-          Row(
-            children: [
-              for (final week in weeks)
-                Expanded(
-                  child: Text(
-                    _weekLabel(week.weekStart),
-                    maxLines: 1,
-                    textAlign: TextAlign.center,
-                    style: _textStyle(
-                      color: const Color(0xFF7588A5),
-                      fontSize: 7,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 3),
-          Text(
-            '${_formatDate(activity.periodStart)} – ${_formatDate(activity.periodEnd)} UTC · weeks start ${activity.weekBoundary}',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: _textStyle(color: const Color(0xFF8090A7), fontSize: 7),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _WeeklyActivityEmpty extends StatelessWidget {
-  const _WeeklyActivityEmpty({required this.title, required this.detail});
-
-  final String title;
-  final String detail;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Positioned.fill(child: CustomPaint(painter: _ChartGridPainter())),
-        Center(
-          child: _EmptyState(
-            icon: Icons.insights_rounded,
-            title: title,
-            detail: detail,
-            compact: true,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _WeeklyActivityPainter extends CustomPainter {
-  const _WeeklyActivityPainter({
-    required this.values,
-    required this.progress,
-    required this.hoveredIndex,
-  });
-
-  final List<int> values;
-  final double progress;
-  final int? hoveredIndex;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const left = 20.0;
-    const right = 5.0;
-    const top = 7.0;
-    const bottom = 9.0;
-    final chartWidth = math.max(0.0, size.width - left - right);
-    final chartHeight = math.max(0.0, size.height - top - bottom);
-    if (chartWidth == 0 || chartHeight == 0 || values.isEmpty) return;
-
-    final maximum = math.max(1, values.reduce(math.max));
-    final gridPaint = Paint()
-      ..color = const Color(0xFFDCE8F7)
-      ..strokeWidth = 1;
-    for (var line = 0; line <= 3; line++) {
-      final y = top + chartHeight * line / 3;
-      canvas.drawLine(Offset(left, y), Offset(left + chartWidth, y), gridPaint);
-    }
-
-    final slotWidth = chartWidth / values.length;
-    final barWidth = math.min(20.0, slotWidth * 0.54);
-    for (var index = 0; index < values.length; index++) {
-      final barHeight =
-          chartHeight *
-          values[index] /
-          maximum *
-          Curves.easeOutCubic.transform(progress);
-      final x = left + slotWidth * index + (slotWidth - barWidth) / 2;
-      final rect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(
-          x,
-          top + chartHeight - barHeight,
-          barWidth,
-          math.max(2, barHeight),
-        ),
-        const Radius.circular(4),
-      );
-      final paint = Paint()
-        ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF58CAFF), Color(0xFF2277FF), Color(0xFF0056FF)],
-        ).createShader(rect.outerRect)
-        ..colorFilter = ColorFilter.mode(
-          hoveredIndex == index
-              ? Colors.white.withValues(alpha: 0.18)
-              : Colors.transparent,
-          BlendMode.srcATop,
-        );
-      canvas.drawRRect(rect, paint);
-      if (hoveredIndex == index) {
-        canvas.drawCircle(
-          Offset(x + barWidth / 2, top + chartHeight - barHeight),
-          3.5,
-          Paint()..color = const Color(0xFF0056FF),
-        );
-      }
-    }
-
-    final labelPainter = TextPainter(
-      text: TextSpan(
-        text: maximum.toString(),
-        style: const TextStyle(
-          color: Color(0xFF8393AA),
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    labelPainter.paint(canvas, Offset(0, top - 4));
-    final zeroPainter = TextPainter(
-      text: const TextSpan(
-        text: '0',
-        style: TextStyle(color: Color(0xFF8393AA), fontSize: 8),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    zeroPainter.paint(canvas, Offset(5, top + chartHeight - 4));
-  }
-
-  @override
-  bool shouldRepaint(covariant _WeeklyActivityPainter oldDelegate) =>
-      oldDelegate.values != values ||
-      oldDelegate.progress != progress ||
-      oldDelegate.hoveredIndex != hoveredIndex;
-}
-
-String _weekLabel(DateTime week) =>
-    '${week.month}/${week.day.toString().padLeft(2, '0')}';
-
-String _formatDate(DateTime? date) {
-  if (date == null) return '—';
-  return '${date.month}/${date.day}/${date.year}';
-}
-
-class _ChartGridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFE7EDF8)
-      ..strokeWidth = 1;
-    for (var i = 1; i < 5; i++) {
-      final y = size.height * i / 5;
-      canvas.drawLine(Offset(12, y), Offset(size.width - 12, y), paint);
-    }
-    for (var i = 1; i < 7; i++) {
-      final x = size.width * i / 7;
-      canvas.drawLine(Offset(x, 8), Offset(x, size.height - 8), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ChartGridPainter oldDelegate) => false;
-}
-
-class _TasksPanel extends StatelessWidget {
-  const _TasksPanel({required this.onAction});
-
-  final ValueChanged<String> onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    return _DashboardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionHeading(
-            title: 'My Tasks',
-            subtitle: 'Tasks assigned to you across active projects.',
-            trailing: TextButton(
-              onPressed: () => onAction(
-                'Tasks will be available when a project is connected.',
-              ),
-              child: const Text('View all'),
-            ),
-          ),
-          const SizedBox(height: 12),
-          const _TaskHeaders(),
-          const SizedBox(height: 4),
-          const SizedBox(
-            height: 154,
-            child: Center(
-              child: _EmptyState(
-                icon: Icons.task_alt_rounded,
-                title: 'No tasks yet',
-                detail: 'Tasks will appear here after you connect a project.',
-                compact: true,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TaskHeaders extends StatelessWidget {
-  const _TaskHeaders();
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final labels = constraints.maxWidth < 560
-            ? 'ISSUE  ·  TASK  ·  PRIORITY  ·  STATUS  ·  DUE DATE  ·  PROJECT'
-            : 'ISSUE ID                      TASK                                      PRIORITY       STATUS          DUE DATE       PROJECT';
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF5F8FD),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            labels,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: _textStyle(
-              color: const Color(0xFF8995A9),
-              fontSize: 8,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.25,
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ContributionPanel extends StatelessWidget {
-  const _ContributionPanel({required this.overview});
-
-  final GitHubRepositoryOverview? overview;
-
-  @override
-  Widget build(BuildContext context) {
-    return _DashboardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionHeading(
-            title: 'Repository Languages',
-            subtitle: 'Repository language composition from GitHub.',
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 154,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final languages =
-                    overview?.languages ?? const <GitHubLanguage>[];
-                if (languages.isNotEmpty) {
-                  return ListView(
-                    children: [
-                      for (final language in languages.take(5)) ...[
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                language.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: _textStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              '${language.percentage.toStringAsFixed(1)}%',
-                              style: _textStyle(
-                                color: const Color(0xFF687A96),
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: (language.percentage / 100).clamp(0, 1),
-                            minHeight: 6,
-                            backgroundColor: const Color(0xFFE2EAF6),
-                            color: AppColors.primaryBlue,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                      ],
-                    ],
-                  );
-                }
-                final compact = constraints.maxWidth < 450;
-                final chart = SizedBox(
-                  width: compact ? 112 : 142,
-                  height: compact ? 112 : 142,
-                  child: CustomPaint(
-                    painter: _EmptyDonutPainter(),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.code_rounded,
-                            color: AppColors.primaryBlue,
-                            size: 20,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'No data',
-                            style: _textStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-                const legend = Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _LegendItem(label: 'Languages', value: 'Not available'),
-                    SizedBox(height: 10),
-                    _LegendItem(label: 'Commits', value: 'Not available'),
-                    SizedBox(height: 10),
-                    _LegendItem(label: 'Pull requests', value: 'Not available'),
-                  ],
-                );
-                if (compact) {
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      chart,
-                      const SizedBox(height: 10),
-                      Text(
-                        overview == null
-                            ? 'Connect a repository to view its language composition.'
-                            : 'No language data is available for this repository.',
-                        textAlign: TextAlign.center,
-                        style: _textStyle(
-                          color: const Color(0xFF77869D),
-                          fontSize: 9,
-                        ),
-                      ),
-                    ],
-                  );
-                }
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [chart, legend],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LegendItem extends StatelessWidget {
-  const _LegendItem({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.circle, size: 7, color: Color(0xFF8FA5C9)),
-        const SizedBox(width: 7),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: _textStyle(fontSize: 9, fontWeight: FontWeight.w700),
-            ),
-            Text(
-              value,
-              style: _textStyle(color: const Color(0xFF8190A6), fontSize: 8),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _EmptyDonutPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final paint = Paint()
-      ..color = const Color(0xFFE2EAF6)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 12;
-    canvas.drawArc(rect.deflate(9), 0, 6.283, false, paint);
-    final accent = Paint()
-      ..color = const Color(0xFF94B8F4).withValues(alpha: 0.6)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-    canvas.drawArc(rect.deflate(2), -1.5, 1.5, false, accent);
-  }
-
-  @override
-  bool shouldRepaint(covariant _EmptyDonutPainter oldDelegate) => false;
-}
-
-class _InsightsSection extends StatelessWidget {
-  const _InsightsSection({required this.onAction});
-
-  final ValueChanged<String> onAction;
-
-  static const _insights = [
-    (
-      'Risk prediction unavailable',
-      'Machine-learning risk predictions are not implemented.',
-      Icons.warning_amber_rounded,
-      Color(0xFFEF4444),
-      Color(0xFFFEE2E2),
-      Color(0xFFB91C1C),
-      'Review Changes',
-    ),
-    (
-      'Issue prioritization unavailable',
-      'Validated AI issue-priority recommendations are not implemented.',
-      Icons.lightbulb_outline_rounded,
-      Color(0xFF0056FF),
-      Color(0xFFDBEAFE),
-      Color(0xFF1D4ED8),
-      'Update Priority',
-    ),
-    (
-      'Root-cause analysis unavailable',
-      'AI root-cause analysis is not implemented.',
-      Icons.account_tree_outlined,
-      Color(0xFF7C3AED),
-      Color(0xFFEDE9FE),
-      Color(0xFF6D28D9),
-      'View Analysis',
-    ),
-    (
-      'Workload recommendations unavailable',
-      'Validated team workload recommendations are not implemented.',
-      Icons.auto_awesome_rounded,
-      Color(0xFF06B6D4),
-      Color(0xFFCFFAFE),
-      Color(0xFF0E7490),
-      'Rebalance Workload',
-    ),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return _DashboardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionHeading(
-            title: 'AI Insights',
-            subtitle:
-                'Machine-learning predictions and recommendations are not available yet.',
-            icon: Icons.auto_awesome_rounded,
-            actionLabel: 'View all insights',
-            onAction: () => onAction(
-              'AI predictions and recommendations are not implemented.',
-            ),
-          ),
-          const SizedBox(height: 13),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final columns = constraints.maxWidth >= 1050
-                  ? 4
-                  : constraints.maxWidth >= 600
-                  ? 2
-                  : 1;
-              const gap = 10.0;
-              final cardWidth =
-                  (constraints.maxWidth - (columns - 1) * gap) / columns;
-              return Wrap(
-                spacing: gap,
-                runSpacing: gap,
-                children: [
-                  for (final item in _insights)
-                    SizedBox(
-                      width: cardWidth,
-                      child: _InsightCard(
-                        title: item.$1,
-                        detail: item.$2,
-                        icon: item.$3,
-                        accent: item.$4,
-                        tint: item.$5,
-                        darkAccent: item.$6,
-                        action: item.$7,
-                        onPressed: () => onAction(
-                          '${item.$1} is unavailable until project data is connected.',
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InsightCard extends StatelessWidget {
-  const _InsightCard({
-    required this.title,
-    required this.detail,
-    required this.icon,
-    required this.accent,
-    required this.tint,
-    required this.darkAccent,
-    required this.action,
-    required this.onPressed,
-  });
-
-  final String title;
-  final String detail;
-  final IconData icon;
-  final Color accent;
-  final Color tint;
-  final Color darkAccent;
-  final String action;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return _HoverCard(
-      child: Container(
-        constraints: const BoxConstraints.tightFor(height: 150),
-        padding: const EdgeInsets.all(13),
-        decoration: BoxDecoration(
-          color: tint,
-          border: Border.all(color: accent.withValues(alpha: 0.48)),
-          borderRadius: BorderRadius.circular(13),
-          boxShadow: [
-            BoxShadow(
-              color: accent.withValues(alpha: 0.10),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, size: 17, color: accent),
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _textStyle(
-                      color: darkAccent,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              detail,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: _textStyle(
-                color: const Color(0xFF64748A),
-                fontSize: 12,
-                height: 1.45,
-              ),
-            ),
-            const Spacer(),
-            TextButton(
-              onPressed: onPressed,
-              style: TextButton.styleFrom(
-                foregroundColor: accent,
-                padding: const EdgeInsets.symmetric(horizontal: 9),
-                minimumSize: const Size(0, 29),
-                backgroundColor: Colors.white.withValues(alpha: 0.76),
-                textStyle: _textStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              child: Text(action),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ProjectHealthPanel extends StatelessWidget {
-  const _ProjectHealthPanel({required this.overview, required this.onAction});
-
-  final GitHubRepositoryOverview? overview;
-  final ValueChanged<String> onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    final health = overview?.repositoryHealth;
-    return _DashboardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionHeading(
-            title: 'Project Health',
-            subtitle:
-                'Repository Health — GitHub Signals · push within 14 days; open PRs over 14 days are aging. No ML risk score.',
-            icon: Icons.favorite_border_rounded,
-          ),
-          const SizedBox(height: 12),
-          Container(
-            height: 184,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF7FAFF),
-              borderRadius: BorderRadius.circular(13),
-              border: Border.all(color: const Color(0xFFEAF0F8)),
-            ),
-            child: health == null
-                ? const Center(
-                    child: _EmptyState(
-                      icon: Icons.folder_open_rounded,
-                      title: 'Repository signals not measured',
-                      detail:
-                          'Connect or synchronize a repository to load GitHub operational signals.',
-                      compact: true,
-                    ),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _HealthSignal(
-                                icon: Icons.bolt_rounded,
-                                title: 'Development activity',
-                                value: switch (health.recentActivityStatus) {
-                                  'recently_active' => 'Recently active',
-                                  'no_recent_push' => 'No push in 14 days',
-                                  _ => 'Not measured',
-                                },
-                                color: switch (health.recentActivityStatus) {
-                                  'recently_active' => const Color(0xFF169B62),
-                                  'no_recent_push' => const Color(0xFFD58A13),
-                                  _ => const Color(0xFF8290A4),
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _HealthSignal(
-                                icon: Icons.bug_report_outlined,
-                                title: 'Open issues',
-                                value:
-                                    health.openIssues?.toString() ??
-                                    'Not measured',
-                                color: const Color(0xFF52617A),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _HealthSignal(
-                                icon: Icons.merge_rounded,
-                                title: 'Open pull requests',
-                                value:
-                                    health.openPullRequests?.toString() ??
-                                    'Not measured',
-                                color: const Color(0xFF52617A),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _HealthSignal(
-                                icon: Icons.verified_outlined,
-                                title: 'CI',
-                                value: _ciLabel(health.ciState),
-                                color: _ciColor(health.ciState),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _HealthSignal(
-                                icon: Icons.history_rounded,
-                                title: 'Recently closed issues',
-                                value:
-                                    health.closedIssues30d?.toString() ??
-                                    'Not measured',
-                                color: const Color(0xFF52617A),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _HealthSignal(
-                                icon: Icons.update_rounded,
-                                title: 'Last push',
-                                value: _formatRelativeDate(
-                                  health.lastPushAt ?? health.latestCommitAt,
-                                ),
-                                color: const Color(0xFF52617A),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.schedule_rounded,
-                              size: 12,
-                              color: const Color(0xFF7C8BA2),
-                            ),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child: InkWell(
-                                onTap: health.oldestOpenPullRequestUrl == null
-                                    ? null
-                                    : () => _openRepositoryUrl(
-                                        health.oldestOpenPullRequestUrl!,
-                                        onAction,
-                                      ),
-                                child: Text(
-                                  health.oldestOpenPullRequestAgeDays == null
-                                      ? !health.oldestOpenPullRequestPresent &&
-                                                health.oldestOpenPullRequestAvailability ==
-                                                    'available'
-                                            ? 'No open pull requests'
-                                            : 'Oldest open PR age: Not measured'
-                                      : 'Oldest open PR: ${health.oldestOpenPullRequestAgeDays} days${health.oldestOpenPullRequestAgeDays! > 14 ? ' · aging' : ''}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: _textStyle(
-                                    color:
-                                        health.oldestOpenPullRequestAgeDays !=
-                                                null &&
-                                            health.oldestOpenPullRequestAgeDays! >
-                                                14
-                                        ? const Color(0xFFD58A13)
-                                        : const Color(0xFF687A96),
-                                    fontSize: 8,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                'Updated ${_formatSyncTime(health.lastUpdatedAt)}',
-                                maxLines: 1,
-                                textAlign: TextAlign.right,
-                                overflow: TextOverflow.ellipsis,
-                                style: _textStyle(
-                                  color: const Color(0xFF687A96),
-                                  fontSize: 8,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QualityMetricsPanel extends StatelessWidget {
-  const _QualityMetricsPanel({required this.overview, required this.onAction});
-
-  final GitHubRepositoryOverview? overview;
-  final ValueChanged<String> onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    final signals = overview?.qualitySignals;
-    final ci = signals?.ci;
-    return _DashboardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _SectionHeading(
-            title: 'Quality Metrics',
-            subtitle:
-                'GitHub CI and repository hygiene signals · no coverage or code-quality score.',
-            icon: Icons.verified_outlined,
-          ),
-          const SizedBox(height: 12),
-          Container(
-            height: 184,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFF),
-              borderRadius: BorderRadius.circular(13),
-              border: Border.all(color: const Color(0xFFEAF0F8)),
-            ),
-            child: signals == null
-                ? const Center(
-                    child: _EmptyState(
-                      icon: Icons.shield_outlined,
-                      title: 'Signals not measured',
-                      detail:
-                          'Connect or synchronize a repository to retrieve CI and hygiene data.',
-                      compact: true,
-                    ),
-                  )
-                : Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _QualitySignal(
-                                title: 'CI status',
-                                value: _ciLabel(ci!.state),
-                                color: _ciColor(ci.state),
-                                icon: Icons.verified_outlined,
-                                onTap: ci.url == null
-                                    ? null
-                                    : () =>
-                                          _openRepositoryUrl(ci.url!, onAction),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _QualitySignal(
-                                title: 'Passed checks',
-                                value: ci.passed?.toString() ?? 'Not measured',
-                                color: const Color(0xFF169B62),
-                                icon: Icons.check_circle_outline_rounded,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _QualitySignal(
-                                title: 'Failed checks',
-                                value: ci.failed?.toString() ?? 'Not measured',
-                                color: ci.failed == null
-                                    ? const Color(0xFF8290A4)
-                                    : ci.failed == 0
-                                    ? const Color(0xFF169B62)
-                                    : const Color(0xFFD84848),
-                                icon: Icons.error_outline_rounded,
-                                onTap: ci.url == null
-                                    ? null
-                                    : () =>
-                                          _openRepositoryUrl(ci.url!, onAction),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _QualitySignal(
-                                title: 'Pending checks',
-                                value: ci.pending?.toString() ?? 'Not measured',
-                                color: const Color(0xFFD58A13),
-                                icon: Icons.hourglass_bottom_rounded,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _QualitySignal(
-                                title: 'Tests detected',
-                                value: _boolSignal(signals.testsDetected),
-                                color: _boolSignalColor(signals.testsDetected),
-                                icon: Icons.science_outlined,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _QualitySignal(
-                                title: 'README / license',
-                                value:
-                                    '${_boolShort(signals.readmePresent)} / ${_boolShort(signals.licensePresent)}',
-                                color:
-                                    signals.readmePresent == false ||
-                                        signals.licensePresent == false
-                                    ? const Color(0xFFD58A13)
-                                    : signals.readmePresent == true &&
-                                          signals.licensePresent == true
-                                    ? const Color(0xFF169B62)
-                                    : const Color(0xFF8290A4),
-                                icon: Icons.menu_book_outlined,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            InkWell(
-                              onTap: signals.latestCommitUrl == null
-                                  ? null
-                                  : () => _openRepositoryUrl(
-                                      signals.latestCommitUrl!,
-                                      onAction,
-                                    ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.code_rounded,
-                                    size: 12,
-                                    color: Color(0xFF52617A),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      signals.latestCommitSha == null
-                                          ? 'Default-branch commit: Not measured'
-                                          : 'Default branch commit · ${_shortSha(signals.latestCommitSha!)}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: _textStyle(
-                                        color: const Color(0xFF52617A),
-                                        fontSize: 8,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
-                                  ),
-                                  if (signals.latestCommitUrl != null)
-                                    const Icon(
-                                      Icons.open_in_new_rounded,
-                                      size: 10,
-                                      color: Color(0xFF52617A),
-                                    ),
-                                ],
-                              ),
-                            ),
-                            Text(
-                              'Last completed check: ${_formatSyncTime(ci.lastCompletedAt)} · detected tests are not proof of passing.',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: _textStyle(
-                                color: const Color(0xFF75859C),
-                                fontSize: 8,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HealthSignal extends StatelessWidget {
-  const _HealthSignal({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String title;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 15, color: color),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: _textStyle(color: const Color(0xFF8491A5), fontSize: 7),
-              ),
-              Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: _textStyle(
-                  color: color,
-                  fontSize: 9,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _QualitySignal extends StatelessWidget {
-  const _QualitySignal({
-    required this.title,
-    required this.value,
-    required this.color,
-    required this.icon,
-    this.onTap,
-  });
-
-  final String title;
-  final String value;
-  final Color color;
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(9),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
-        child: Row(
-          children: [
-            Icon(icon, size: 15, color: color),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _textStyle(
-                      color: const Color(0xFF8491A5),
-                      fontSize: 7,
-                    ),
-                  ),
-                  Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _textStyle(
-                      color: color,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (onTap != null)
-              const Icon(
-                Icons.open_in_new_rounded,
-                size: 10,
-                color: Color(0xFF8491A5),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-String _ciLabel(String state) => switch (state) {
-  'success' => 'Passing',
-  'failure' => 'Failing',
-  'pending' => 'Pending',
-  'not_configured' => 'Not configured',
-  _ => 'Not measured',
-};
-
-Color _ciColor(String state) => switch (state) {
-  'success' => const Color(0xFF169B62),
-  'failure' => const Color(0xFFD84848),
-  'pending' => const Color(0xFFD58A13),
-  _ => const Color(0xFF8290A4),
-};
-
-String _boolSignal(bool? value) => switch (value) {
-  true => 'Detected',
-  false => 'Not detected',
-  null => 'Not measured',
-};
-
-String _boolShort(bool? value) => switch (value) {
-  true => 'Yes',
-  false => 'No',
-  null => '—',
-};
-
-String _shortSha(String sha) => sha.length <= 7 ? sha : sha.substring(0, 7);
-
-Color _boolSignalColor(bool? value) => switch (value) {
-  true => const Color(0xFF169B62),
-  false => const Color(0xFFD58A13),
-  null => const Color(0xFF8290A4),
-};
-
-String _formatRelativeDate(DateTime? date) {
-  if (date == null) return 'Not measured';
-  final delta = DateTime.now().toUtc().difference(date.toUtc());
-  if (delta.isNegative) return 'Just now';
-  if (delta.inDays == 0) return 'Today';
-  if (delta.inDays == 1) return '1 day ago';
-  return '${delta.inDays} days ago';
-}
-
-class _ActivityPanel extends StatelessWidget {
-  const _ActivityPanel({
-    required this.onAction,
-    required this.overview,
-    required this.hasRepository,
-  });
-
-  final ValueChanged<String> onAction;
-  final GitHubRepositoryOverview? overview;
-  final bool hasRepository;
-
-  @override
-  Widget build(BuildContext context) {
-    return _DashboardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionHeading(
-            title: 'Recent Repository Activity',
-            subtitle: 'Recent commits, issues, and pull requests from GitHub.',
-            icon: Icons.history_rounded,
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 148,
-            child: overview == null || overview!.recentActivity.isEmpty
-                ? Center(
-                    child: _EmptyState(
-                      icon: Icons.forum_outlined,
-                      title: 'No recent activity',
-                      detail: hasRepository
-                          ? 'GitHub returned no recent commit, issue, or pull request activity.'
-                          : 'Connect a repository to load actual GitHub activity.',
-                      compact: true,
-                    ),
-                  )
-                : ListView.separated(
-                    itemCount: overview!.recentActivity.take(5).length,
-                    separatorBuilder: (_, _) => const Divider(height: 10),
-                    itemBuilder: (context, index) {
-                      final activity = overview!.recentActivity[index];
-                      final icon = switch (activity.type) {
-                        'commit' => Icons.commit_rounded,
-                        'issue' => Icons.bug_report_outlined,
-                        'pull_request' => Icons.merge_rounded,
-                        _ => Icons.history_rounded,
-                      };
-                      return Row(
-                        children: [
-                          Icon(icon, size: 15, color: AppColors.primaryBlue),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  activity.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: _textStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                Text(
-                                  '${activity.type.replaceAll('_', ' ')}${activity.state == null ? '' : ' · ${activity.state}'} · ${activity.author} · ${_formatSyncTime(activity.date)}',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: _textStyle(
-                                    color: const Color(0xFF687A96),
-                                    fontSize: 8,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: 'Open on GitHub',
-                            visualDensity: VisualDensity.compact,
-                            onPressed: () =>
-                                _openRepositoryUrl(activity.url, onAction),
-                            icon: const Icon(
-                              Icons.open_in_new_rounded,
-                              size: 14,
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RemindersPanel extends StatelessWidget {
-  const _RemindersPanel({required this.onAction});
-
-  final ValueChanged<String> onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    return _DashboardCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SectionHeading(
-            title: 'Upcoming & Reminders',
-            subtitle: 'Important events and delivery dates.',
-            icon: Icons.event_note_rounded,
-            actionLabel: 'View calendar',
-            onAction: () => onAction('Project calendar is not available yet.'),
-          ),
-          const SizedBox(height: 12),
-          const SizedBox(
-            height: 148,
-            child: Center(
-              child: _EmptyState(
-                icon: Icons.event_available_outlined,
-                title: 'Nothing scheduled',
-                detail: 'Project milestones and reminders will appear here.',
-                compact: true,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuickActions extends StatelessWidget {
-  const _QuickActions({required this.onAction});
-
-  final ValueChanged<String> onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    return _DashboardCard(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final actions = [
-            ('Run Analysis', Icons.analytics_outlined),
-            ('Generate Report', Icons.description_outlined),
-            ('Explore Projects', Icons.add_rounded),
-          ];
-          final copy = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Get more from DevInsight',
-                style: _textStyle(fontSize: 14, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                'Explore advanced analytics, AI assistance, and reports to improve your workflow.',
-                style: _textStyle(color: const Color(0xFF697A94), fontSize: 10),
-              ),
-            ],
-          );
-          final buttons = Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final action in actions)
-                OutlinedButton.icon(
-                  onPressed: () => onAction('${action.$1} is coming soon.'),
-                  icon: Icon(action.$2, size: 14),
-                  label: Text(action.$1),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF2456AE),
-                    backgroundColor: const Color(0xFFF7FAFF),
-                    side: const BorderSide(color: Color(0xFFDCE7F8)),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 11,
-                      vertical: 10,
-                    ),
-                    textStyle: _textStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-            ],
-          );
-          if (constraints.maxWidth < 820) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [copy, const SizedBox(height: 14), buttons],
-            );
-          }
-          return Row(
-            children: [
-              const _BrandMark(),
-              const SizedBox(width: 12),
-              Expanded(child: copy),
-              const SizedBox(width: 14),
-              buttons,
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _BrandMark extends StatelessWidget {
-  const _BrandMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return Image.asset(
-      AppAssets.devInsightLogo,
-      width: 36,
-      height: 36,
-      fit: BoxFit.contain,
-    );
-  }
-}
-
-class _SectionHeading extends StatelessWidget {
-  const _SectionHeading({
-    required this.title,
-    required this.subtitle,
-    this.icon,
-    this.trailing,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData? icon;
-  final Widget? trailing;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: _textStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  if (icon != null) ...[
-                    const SizedBox(width: 5),
-                    Icon(icon, size: 14, color: const Color(0xFF657D9D)),
-                  ],
-                ],
-              ),
-              const SizedBox(height: 3),
-              Text(
-                subtitle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: _textStyle(color: const Color(0xFF73829A), fontSize: 13),
-              ),
-            ],
-          ),
-        ),
-        ?trailing,
-        if (actionLabel != null && onAction != null)
-          TextButton(
-            onPressed: onAction,
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.primaryBlue,
-              padding: const EdgeInsets.symmetric(horizontal: 3),
-              minimumSize: const Size(0, 26),
-              textStyle: _textStyle(fontSize: 13, fontWeight: FontWeight.w800),
-            ),
-            child: Text(actionLabel!),
-          ),
-      ],
-    );
-  }
-}
-
-class _DashboardCard extends StatelessWidget {
-  const _DashboardCard({
-    required this.child,
-    this.padding = const EdgeInsets.all(16),
-  });
-
-  final Widget child;
-  final EdgeInsetsGeometry padding;
-
-  @override
-  Widget build(BuildContext context) {
-    return _HoverCard(
-      child: Container(
-        width: double.infinity,
-        padding: padding,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xEBFFFFFF), Color(0xE2F0F5FF)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(17),
-          border: Border.all(color: const Color(0xFFDEE8F7)),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFB7CDF2).withValues(alpha: 0.15),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: child,
-      ),
-    );
-  }
-}
-
-class _HoverCard extends StatefulWidget {
-  const _HoverCard({required this.child});
-
-  final Widget child;
-
-  @override
-  State<_HoverCard> createState() => _HoverCardState();
-}
-
-class _HoverCardState extends State<_HoverCard> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOut,
-        transform: Matrix4.translationValues(0, _hovered ? -2 : 0, 0),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(17),
-          boxShadow: _hovered
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF8EB2E8).withValues(alpha: 0.18),
-                    blurRadius: 22,
-                    offset: const Offset(0, 10),
-                  ),
-                ]
-              : const [],
-        ),
-        child: widget.child,
       ),
     );
   }

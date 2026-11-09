@@ -9,6 +9,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:web_dashboard/core/services/auth_service.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
 import 'package:web_dashboard/features/developer/presentation/pages/developer_home_page.dart';
+import 'package:web_dashboard/features/developer/presentation/routing/dashboard_destination.dart';
+import 'package:web_dashboard/features/developer/presentation/widgets/developer_home_sections.dart';
+import 'package:web_dashboard/features/developer/presentation/widgets/dashboard_page_widgets.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
@@ -47,14 +50,23 @@ void main() {
     expect(find.text('Developer Home'), findsNothing);
     expect(find.text('Welcome back, Dasith 👋'), findsOneWidget);
     expect(find.text('No project connected'), findsOneWidget);
-    expect(find.text('Weekly Productivity'), findsOneWidget);
-    expect(find.text('Project Risk Trend'), findsOneWidget);
+    expect(find.text('Your code tells a story.'), findsOneWidget);
+    expect(
+      find.text('Every commit moves the project forward.'),
+      findsOneWidget,
+    );
     expect(find.text('My Tasks'), findsOneWidget);
     expect(find.text('Repository Languages'), findsOneWidget);
-    expect(find.text('AI Insights'), findsOneWidget);
-    expect(find.text('Project Health'), findsOneWidget);
-    expect(find.text('Quality Metrics'), findsOneWidget);
-    expect(find.text('No recent activity'), findsOneWidget);
+    expect(
+      find.text('From development data to intelligent decisions.'),
+      findsOneWidget,
+    );
+    expect(find.text('Build with confidence.'), findsOneWidget);
+    expect(find.text('The work behind every milestone.'), findsOneWidget);
+    expect(
+      find.text('Connect a repository to load actual GitHub activity.'),
+      findsOneWidget,
+    );
     expect(find.text('Nothing scheduled'), findsOneWidget);
     expect(find.text('devinsight-platform'), findsNothing);
     expect(find.text('87/100'), findsNothing);
@@ -140,6 +152,100 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('does not chart incomplete weekly activity', (tester) async {
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final response =
+        jsonDecode(jsonEncode(_overviewResponse)) as Map<String, dynamic>;
+    final summary = response['summary'] as Map<String, dynamic>;
+    final weeklyActivity = summary['weekly_activity'] as Map<String, dynamic>;
+    weeklyActivity['is_complete'] = false;
+    final scrollController = ScrollController();
+    addTearDown(scrollController.dispose);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            controller: scrollController,
+            child: DeveloperHomeSections(
+              overviewSectionKey: GlobalKey(),
+              scrollController: scrollController,
+              overview: GitHubRepositoryOverview.fromJson(response),
+              hasRepository: true,
+              loading: false,
+              onAction: (_) {},
+              onOpenRepository: (_) {},
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 600));
+
+    expect(find.text('Activity not measured'), findsOneWidget);
+    expect(
+      find.text('Weekly activity is unavailable or incomplete.'),
+      findsOneWidget,
+    );
+    expect(find.text('36 commits measured'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('repository ecosystem fits desktop and narrow layouts', (
+    tester,
+  ) async {
+    final response = GitHubRepositoryOverview.fromJson(
+      jsonDecode(jsonEncode(_overviewResponse)) as Map<String, dynamic>,
+    );
+    final scrollController = ScrollController();
+    addTearDown(scrollController.dispose);
+
+    for (final size in [const Size(1280, 900), const Size(390, 844)]) {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: MediaQueryData(size: size, disableAnimations: true),
+            child: Scaffold(
+              body: SingleChildScrollView(
+                controller: scrollController,
+                child: DeveloperHomeSections(
+                  overviewSectionKey: GlobalKey(),
+                  scrollController: scrollController,
+                  overview: response,
+                  hasRepository: true,
+                  loading: false,
+                  onAction: (_) {},
+                  onOpenRepository: (_) {},
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.drag(
+        find.byType(SingleChildScrollView),
+        const Offset(0, -6000),
+      );
+      await tester.pump();
+
+      expect(find.text('SOURCE REPOSITORY'), findsOneWidget);
+      expect(find.text('acme/repository'), findsWidgets);
+      expect(find.text('Commits'), findsOneWidget);
+      expect(find.text('Pull requests'), findsOneWidget);
+      expect(tester.takeException(), isNull, reason: 'viewport $size');
+    }
+
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+  });
+
   testWidgets('connection dialog validates GitHub URLs before submitting', (
     tester,
   ) async {
@@ -218,19 +324,35 @@ void main() {
     await tester.tap(find.text('Connect').last);
     await _pumpDashboard(tester);
 
-    expect(find.text('acme/repository'), findsOneWidget);
+    expect(find.text('acme/repository'), findsNWidgets(2));
     expect(find.text('Owner: acme  ·  Branch: main'), findsOneWidget);
     expect(find.text('Stars: 12  ·  Forks: 3'), findsOneWidget);
     expect(find.text('Open Pull Requests'), findsOneWidget);
     expect(find.text('Dart'), findsOneWidget);
     expect(find.text('Fix dashboard'), findsOneWidget);
     expect(find.text('Connected'), findsOneWidget);
-    expect(find.text('36 commits · main'), findsOneWidget);
+    expect(find.text('36 commits measured'), findsOneWidget);
+    expect(find.text('main'), findsOneWidget);
     expect(find.text('Recently active'), findsOneWidget);
     expect(find.text('Oldest open PR: 18 days · aging'), findsOneWidget);
-    expect(find.text('Default branch commit · abc'), findsOneWidget);
-    expect(find.text('Passing'), findsNWidgets(2));
-    expect(find.text('Detected'), findsOneWidget);
+    expect(find.text('abc'), findsOneWidget);
+    expect(find.text('Passing'), findsNWidgets(3));
+    expect(find.text('Detected'), findsNWidgets(3));
+
+    await tester.tap(find.byKey(const ValueKey('sidebar-projects')));
+    await _pumpDashboard(tester);
+    expect(
+      find.text('Your projects. One connected workspace.'),
+      findsOneWidget,
+    );
+    expect(find.text('acme/repository'), findsWidgets);
+    await tester.tap(find.byKey(const ValueKey('sidebar-analytics')));
+    await _pumpDashboard(tester);
+    expect(
+      find.text('See the bigger picture behind your development.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('acme/repository'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -264,7 +386,7 @@ void main() {
     );
     await _pumpDashboard(tester);
 
-    expect(find.text('acme/repository'), findsOneWidget);
+    expect(find.text('acme/repository'), findsNWidgets(2));
     expect(find.text('Stars: 12  ·  Forks: 3'), findsOneWidget);
     expect(find.text('Fix dashboard'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -322,20 +444,21 @@ void main() {
       ),
     );
     await _pumpDashboard(tester);
-    expect(find.text('acme/repository'), findsOneWidget);
+    expect(find.text('acme/repository'), findsNWidgets(2));
     expect(find.text('2 repositories connected'), findsOneWidget);
 
     await tester.tap(find.byKey(const ValueKey('manage-repositories')));
     await _pumpDashboard(tester);
     expect(find.text('Manage Repositories'), findsOneWidget);
     expect(find.text('acme/second'), findsOneWidget);
-    expect(find.text('acme/repository'), findsNWidgets(2));
+    expect(find.text('acme/repository'), findsNWidgets(3));
     await tester.tap(find.byKey(const ValueKey('repository-connection-2')));
     await _pumpDashboard(tester);
 
-    expect(find.text('acme/second'), findsOneWidget);
+    expect(find.text('acme/second'), findsNWidgets(2));
     expect(find.text('Primary language: Python'), findsOneWidget);
-    expect(find.text('80 commits · main'), findsOneWidget);
+    expect(find.text('80 commits measured'), findsOneWidget);
+    expect(find.text('main'), findsOneWidget);
     final preferences = await SharedPreferences.getInstance();
     expect(
       preferences.getString('devinsight.active_repository.${profile.id}'),
@@ -351,7 +474,7 @@ void main() {
       ),
     );
     await _pumpDashboard(tester);
-    expect(find.text('acme/second'), findsOneWidget);
+    expect(find.text('acme/second'), findsNWidgets(2));
     expect(tester.takeException(), isNull);
   });
 
@@ -416,7 +539,7 @@ void main() {
       await tester.tap(find.text('Disconnect').last);
       await _pumpDashboard(tester);
 
-      expect(find.text('acme/second'), findsNWidgets(2));
+      expect(find.text('acme/second'), findsNWidgets(3));
       expect(find.text('acme/repository'), findsNothing);
       expect(find.text('1 repository connected'), findsOneWidget);
       expect(find.text('Manage Repositories'), findsOneWidget);
@@ -507,6 +630,446 @@ void main() {
 
     expect(topbarColor().a, lessThan(initialOpacity));
     expect(tester.takeException(), isNull);
+  });
+
+  test('dashboard destinations have unique centralized routes', () {
+    final routes = DashboardDestination.values
+        .map((destination) => destination.route)
+        .toSet();
+    expect(routes, hasLength(DashboardDestination.values.length));
+    for (final destination in DashboardDestination.values) {
+      expect(DashboardDestination.fromRoute(destination.route), destination);
+    }
+  });
+
+  testWidgets(
+    'sidebar opens each destination inside the shared dashboard shell',
+    (tester) async {
+      tester.view.physicalSize = const Size(1440, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        const MaterialApp(home: DeveloperHomePage(profile: profile)),
+      );
+      await _pumpDashboard(tester);
+
+      for (final destination in DashboardDestination.values.skip(1)) {
+        await tester.tap(
+          find.byKey(
+            ValueKey(
+              'sidebar-${destination.label.toLowerCase().replaceAll(' ', '-')}',
+            ),
+          ),
+        );
+        await _pumpDashboard(tester);
+        final pageHeading = switch (destination) {
+          DashboardDestination.home => 'Welcome back, Dasith 👋',
+          DashboardDestination.projects =>
+            'Your projects. One connected workspace.',
+          DashboardDestination.myWork => 'Stay focused on what matters.',
+          DashboardDestination.issues => 'Find the issues that matter.',
+          DashboardDestination.pullRequests =>
+            'From code changes to collaboration.',
+          DashboardDestination.codeQuality => 'Build software with confidence.',
+          DashboardDestination.analytics =>
+            'See the bigger picture behind your development.',
+          DashboardDestination.aiInsights => 'Intelligence beyond the code.',
+          DashboardDestination.team => 'Great software is built together.',
+          DashboardDestination.reports =>
+            'Turn engineering intelligence into clarity.',
+          DashboardDestination.settings => 'Your workspace, your preferences.',
+        };
+        expect(find.text(pageHeading), findsOneWidget);
+        expect(
+          find.byKey(ValueKey('destination-${destination.name}')),
+          findsOneWidget,
+        );
+        expect(
+          find.text('This view is ready for connected workspace data.'),
+          findsNothing,
+        );
+        expect(find.byKey(const ValueKey('topbar-surface')), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }
+    },
+  );
+
+  testWidgets('issue and pull request explorers filter real summary records', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final response =
+        jsonDecode(jsonEncode(_overviewResponse)) as Map<String, dynamic>;
+    final summary = response['summary'] as Map<String, dynamic>;
+    summary['recent_activity'] = [
+      {
+        'type': 'issue',
+        'title': 'Document cache behavior',
+        'author': 'maintainer-a',
+        'url': 'https://github.com/acme/repository/issues/42',
+        'number': 42,
+        'state': 'open',
+        'labels': ['documentation'],
+        'created_at': '2026-11-01T10:00:00Z',
+        'date': '2026-11-03T10:00:00Z',
+      },
+      {
+        'type': 'issue',
+        'title': 'Old setup guide',
+        'author': 'maintainer-b',
+        'url': 'https://github.com/acme/repository/issues/41',
+        'number': 41,
+        'state': 'closed',
+        'labels': ['docs'],
+        'created_at': '2026-10-25T10:00:00Z',
+        'closed_at': '2026-10-28T10:00:00Z',
+        'date': '2026-10-28T10:00:00Z',
+      },
+      {
+        'type': 'pull_request',
+        'title': 'Open cache update',
+        'author': 'contributor-a',
+        'url': 'https://github.com/acme/repository/pull/45',
+        'number': 45,
+        'state': 'open',
+        'labels': [],
+        'created_at': '2026-11-02T10:00:00Z',
+        'date': '2026-11-04T10:00:00Z',
+      },
+      {
+        'type': 'pull_request',
+        'title': 'Merge release branch',
+        'author': 'contributor-b',
+        'url': 'https://github.com/acme/repository/pull/44',
+        'number': 44,
+        'state': 'merged',
+        'labels': [],
+        'created_at': '2026-10-20T10:00:00Z',
+        'merged_at': '2026-10-22T10:00:00Z',
+        'date': '2026-10-22T10:00:00Z',
+      },
+    ];
+
+    final api = DevInsightApi(
+      baseUrl: 'http://127.0.0.1:8000',
+      client: MockClient((request) async {
+        if (request.method == 'GET' &&
+            request.url.path == '/api/v1/github/connections') {
+          return http.Response(jsonEncode([_connectionResponse]), 200);
+        }
+        if (request.url.path ==
+            '/api/v1/github/connections/connection-1/overview') {
+          return http.Response(jsonEncode(response), 200);
+        }
+        return http.Response('{}', 404);
+      }),
+    );
+    addTearDown(api.close);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DeveloperHomePage(
+          profile: profile,
+          api: api,
+          authService: _TestAuthService(api),
+        ),
+      ),
+    );
+    await _pumpDashboard(tester);
+
+    await tester.tap(find.byKey(const ValueKey('sidebar-issues')));
+    await _pumpDashboard(tester);
+    expect(find.textContaining('Document cache behavior'), findsWidgets);
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Closed'));
+    await _pumpDashboard(tester);
+    expect(find.textContaining('Old setup guide'), findsWidgets);
+    expect(find.textContaining('Document cache behavior'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('sidebar-pull-requests')));
+    await _pumpDashboard(tester);
+    await tester.tap(find.widgetWithText(ChoiceChip, 'Merged'));
+    await _pumpDashboard(tester);
+    expect(find.text('Merge release branch'), findsOneWidget);
+    expect(find.textContaining('Open cache update'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('workflow labels sit below aligned nodes and adapt on mobile', (
+    tester,
+  ) async {
+    final controller = ScrollController();
+    addTearDown(controller.dispose);
+    const stages = ['Repositories', 'Activity', 'Signals', 'Workspace'];
+    const illustrationKey = ValueKey('workflow-illustration');
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 800,
+              child: DashboardAnimatedWorkflow(
+                controller: controller,
+                stages: stages,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final illustration = tester.getRect(find.byKey(illustrationKey));
+    for (final (index, label) in stages.indexed) {
+      final labelRect = tester.getRect(find.text(label));
+      expect(labelRect.top, greaterThanOrEqualTo(illustration.bottom + 16));
+      expect(
+        labelRect.center.dx,
+        closeTo(
+          illustration.left + illustration.width * (index + .5) / stages.length,
+          1,
+        ),
+      );
+    }
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(
+              width: 320,
+              child: DashboardAnimatedWorkflow(
+                controller: controller,
+                stages: stages,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    for (final label in stages) {
+      expect(find.text(label), findsOneWidget);
+    }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('repository failures are visible on every repository page', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1440, 1000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final api = DevInsightApi(
+      baseUrl: 'http://127.0.0.1:8000',
+      client: MockClient((request) async {
+        if (request.method == 'GET' &&
+            request.url.path == '/api/v1/github/connections') {
+          return http.Response(jsonEncode([_connectionResponse]), 200);
+        }
+        if (request.url.path ==
+            '/api/v1/github/connections/connection-1/overview') {
+          return http.Response('{}', 503);
+        }
+        return http.Response('{}', 404);
+      }),
+    );
+    addTearDown(api.close);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DeveloperHomePage(
+          profile: profile,
+          api: api,
+          authService: _TestAuthService(api),
+        ),
+      ),
+    );
+    await _pumpDashboard(tester);
+
+    for (final destination in [
+      'projects',
+      'my-work',
+      'issues',
+      'pull-requests',
+      'code-quality',
+      'analytics',
+      'ai-insights',
+      'team',
+      'reports',
+    ]) {
+      await tester.tap(find.byKey(ValueKey('sidebar-$destination')));
+      await _pumpDashboard(tester);
+      expect(
+        find.textContaining('Please retry.'),
+        findsWidgets,
+        reason: '$destination should expose the repository load error',
+      );
+    }
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('shared repository notice distinguishes stale snapshots', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: Column(
+            children: [
+              DashboardInlineNotice(message: 'Request failed'),
+              DashboardInlineNotice(
+                message: 'Showing cached data',
+                stale: true,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byIcon(Icons.error_outline_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.cloud_off_outlined), findsOneWidget);
+    expect(find.text('Request failed'), findsOneWidget);
+    expect(find.text('Showing cached data'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('settings persists only supported notification preferences', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final requests = <http.Request>[];
+    final api = DevInsightApi(
+      baseUrl: 'http://127.0.0.1:8000',
+      client: MockClient((request) async {
+        requests.add(request);
+        if (request.method == 'GET' &&
+            request.url.path == '/api/v1/github/connections') {
+          return http.Response('[]', 200);
+        }
+        if (request.method == 'GET' &&
+            request.url.path == '/api/v1/onboarding/state') {
+          return http.Response(
+            jsonEncode({
+              'profile': {
+                'id': profile.id,
+                'full_name': profile.fullName,
+                'username': 'dasith',
+                'role': 'developer',
+                'onboarding_step': 3,
+                'onboarding_completed': true,
+              },
+              'preferences': {'interests': []},
+              'notifications': {
+                'email_enabled': false,
+                'push_enabled': false,
+                'topics': ['Project Updates'],
+              },
+              'next_step': 'developer_home',
+            }),
+            200,
+          );
+        }
+        if (request.method == 'PUT' &&
+            request.url.path == '/api/v1/onboarding/notifications') {
+          return http.Response(
+            jsonEncode({'status': 'saved', 'onboarding_step': 3}),
+            200,
+          );
+        }
+        return http.Response('{}', 404);
+      }),
+    );
+    addTearDown(api.close);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DeveloperHomePage(
+          profile: profile,
+          api: api,
+          authService: _TestAuthService(api),
+        ),
+      ),
+    );
+    await _pumpDashboard(tester);
+    await tester.tap(find.byKey(const ValueKey('sidebar-settings')));
+    await _pumpDashboard(tester);
+    expect(find.text('Your workspace, your preferences.'), findsOneWidget);
+    expect(find.text('Dasith Randula'), findsWidgets);
+
+    await tester.ensureVisible(find.text('Notification preferences').last);
+    await _pumpDashboard(tester);
+    final emailSwitch = find.widgetWithText(
+      SwitchListTile,
+      'Email notifications',
+    );
+    await Scrollable.ensureVisible(
+      tester.element(emailSwitch),
+      alignment: .5,
+      duration: Duration.zero,
+    );
+    await tester.tap(find.text('Email notifications'));
+    await Scrollable.ensureVisible(
+      tester.element(find.text('Save notification preferences')),
+      alignment: .5,
+      duration: Duration.zero,
+    );
+    await tester.tap(find.text('Save notification preferences'));
+    await _pumpDashboard(tester);
+
+    final saveRequest = requests.firstWhere(
+      (request) => request.url.path == '/api/v1/onboarding/notifications',
+    );
+    expect(jsonDecode(saveRequest.body), {
+      'email_enabled': true,
+      'push_enabled': false,
+      'topics': ['Project Updates'],
+    });
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('all destination layouts remain usable at narrow widths', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      const MediaQuery(
+        data: MediaQueryData(size: Size(390, 844), disableAnimations: true),
+        child: MaterialApp(home: DeveloperHomePage(profile: profile)),
+      ),
+    );
+    await _pumpDashboard(tester);
+    for (final destination in DashboardDestination.values.skip(1)) {
+      await tester.tap(find.byTooltip('Open navigation'));
+      await _pumpDashboard(tester);
+      await tester.tap(
+        find.byKey(
+          ValueKey(
+            'sidebar-${destination.label.toLowerCase().replaceAll(' ', '-')}',
+          ),
+        ),
+      );
+      await _pumpDashboard(tester);
+      expect(tester.takeException(), isNull, reason: destination.label);
+    }
   });
 
   testWidgets('sidebar expands on hover and mobile uses a navigation drawer', (
