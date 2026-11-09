@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
+import 'package:web_dashboard/core/theme/app_theme_extension.dart';
 import 'package:web_dashboard/features/developer/presentation/widgets/dashboard_page_widgets.dart';
 
 class ReportsPage extends StatelessWidget {
@@ -120,8 +121,9 @@ class ReportsPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(22),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEAF3FF),
+                  color: context.appTheme.surfaceElevated,
                   borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: context.appTheme.border),
                 ),
                 child: Row(
                   children: [
@@ -134,7 +136,7 @@ class ReportsPage extends StatelessWidget {
                       child: Text(
                         'No report-generation or export endpoint is currently connected. There are no fake downloads or generated report records.',
                         style: dashboardTextStyle(
-                          color: dashboardNavy,
+                          color: context.appTheme.primaryText,
                           size: 11,
                           height: 1.6,
                         ),

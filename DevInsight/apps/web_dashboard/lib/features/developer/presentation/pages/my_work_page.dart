@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
+import 'package:web_dashboard/core/theme/app_theme_extension.dart';
 import 'package:web_dashboard/features/developer/presentation/widgets/dashboard_page_widgets.dart';
 
 class MyWorkPage extends StatelessWidget {
@@ -184,9 +185,9 @@ class _IdentityPanel extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
-      color: const Color(0xFFF4F0FF),
+      color: context.appTheme.surfaceElevated,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFFE7DFFF)),
+      border: Border.all(color: context.appTheme.border),
     ),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,

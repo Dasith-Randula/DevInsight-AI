@@ -35,3 +35,21 @@ class ThemeController extends ChangeNotifier {
     );
   }
 }
+
+class ThemeControllerScope extends InheritedNotifier<ThemeController> {
+  const ThemeControllerScope({
+    super.key,
+    required ThemeController controller,
+    required super.child,
+  }) : super(notifier: controller);
+
+  static ThemeController? maybeOf(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<ThemeControllerScope>()
+      ?.notifier;
+
+  static ThemeController of(BuildContext context) =>
+      maybeOf(context) ??
+      (throw FlutterError(
+        'ThemeControllerScope.of() called without a ThemeControllerScope.',
+      ));
+}

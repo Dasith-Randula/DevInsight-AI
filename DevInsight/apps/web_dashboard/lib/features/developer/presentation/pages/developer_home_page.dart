@@ -9,6 +9,8 @@ import 'package:web_dashboard/core/constants/app_colors.dart';
 import 'package:web_dashboard/core/config/app_config.dart';
 import 'package:web_dashboard/core/services/auth_service.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
+import 'package:web_dashboard/core/theme/app_theme_extension.dart';
+import 'package:web_dashboard/core/theme/theme_controller.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web_dashboard/features/developer/presentation/routing/dashboard_destination.dart';
 import 'package:web_dashboard/features/developer/presentation/pages/ai_insights_page.dart';
@@ -22,6 +24,7 @@ import 'package:web_dashboard/features/developer/presentation/pages/reports_page
 import 'package:web_dashboard/features/developer/presentation/pages/settings_page.dart';
 import 'package:web_dashboard/features/developer/presentation/pages/team_page.dart';
 import 'package:web_dashboard/features/developer/presentation/widgets/developer_home_sections.dart';
+import 'package:web_dashboard/shared/widgets/theme_toggle_button.dart';
 
 class DeveloperHomePage extends StatefulWidget {
   const DeveloperHomePage({
@@ -680,9 +683,10 @@ class DeveloperDashboardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appTheme;
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: const Color(0xFFDFEAFE),
+      backgroundColor: colors.secondaryBackground,
       drawer: Drawer(
         width: 272,
         child: SafeArea(
@@ -697,15 +701,23 @@ class DeveloperDashboardShell extends StatelessWidget {
           ),
         ),
       ),
-      body: Container(
-        decoration: const BoxDecoration(
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 480),
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFFFFFFFF),
-              Color(0xFFF7FAFF),
-              Color(0xFFEEF5FF),
-              Color(0xFFF9FBFF),
-            ],
+            colors: Theme.of(context).brightness == Brightness.dark
+                ? const [
+                    Color(0xFF080D19),
+                    Color(0xFF0B1830),
+                    Color(0xFF102B4B),
+                    Color(0xFF0B1426),
+                  ]
+                : const [
+                    Color(0xFFFFFFFF),
+                    Color(0xFFF7FAFF),
+                    Color(0xFFEEF5FF),
+                    Color(0xFFF9FBFF),
+                  ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             stops: [0, 0.32, 0.72, 1],
@@ -747,11 +759,16 @@ class DeveloperDashboardShell extends StatelessWidget {
                                     constraints: const BoxConstraints(
                                       maxWidth: 1500,
                                     ),
-                                    child: KeyedSubtree(
-                                      key: ValueKey(
-                                        'destination-${activeDestination.name}',
+                                    child: DefaultTextStyle(
+                                      style: TextStyle(
+                                        color: colors.primaryText,
                                       ),
-                                      child: child,
+                                      child: KeyedSubtree(
+                                        key: ValueKey(
+                                          'destination-${activeDestination.name}',
+                                        ),
+                                        child: child,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1588,6 +1605,7 @@ class _NavigationState extends State<_Navigation> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appTheme;
     final expanded = widget.expanded || _hovered;
     final showLabels = widget.expanded || _showLabels;
     return MouseRegion(
@@ -1627,11 +1645,13 @@ class _NavigationState extends State<_Navigation> {
                 : 76,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.58),
+              color: colors.sidebar.withValues(
+                alpha: Theme.of(context).brightness == Brightness.dark
+                    ? 0.96
+                    : 0.58,
+              ),
               border: Border(
-                right: BorderSide(
-                  color: const Color(0xFFDCE7F8).withValues(alpha: 0.78),
-                ),
+                right: BorderSide(color: colors.border.withValues(alpha: 0.78)),
               ),
             ),
             child: Column(
@@ -1669,10 +1689,7 @@ class _NavigationState extends State<_Navigation> {
                                   letterSpacing: 0.8,
                                 ),
                               )
-                            : const Divider(
-                                color: Color(0xFFE6ECF7),
-                                height: 12,
-                              ),
+                            : Divider(color: colors.divider, height: 12),
                       ),
                       for (final item in DashboardDestination.values.where(
                         (destination) => destination.isWorkspace,
@@ -1691,7 +1708,7 @@ class _NavigationState extends State<_Navigation> {
                 Tooltip(
                   message: 'Need Help?',
                   child: Material(
-                    color: const Color(0xFFEDF4FF),
+                    color: colors.surfaceSecondary,
                     borderRadius: BorderRadius.circular(14),
                     child: InkWell(
                       onTap: widget.onHelp,
@@ -1706,9 +1723,9 @@ class _NavigationState extends State<_Navigation> {
                               ? MainAxisAlignment.start
                               : MainAxisAlignment.center,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.help_outline_rounded,
-                              color: AppColors.primaryBlue,
+                              color: Theme.of(context).colorScheme.primary,
                               size: 19,
                             ),
                             if (showLabels) ...[
@@ -1753,14 +1770,19 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? AppColors.primaryBlue : const Color(0xFF596A85);
+    final colors = context.appTheme;
+    final color = active
+        ? Theme.of(context).colorScheme.primary
+        : colors.mutedText;
     return Padding(
       padding: const EdgeInsets.only(bottom: 3),
       child: Tooltip(
         key: ValueKey('sidebar-${title.toLowerCase().replaceAll(' ', '-')}'),
         message: expanded ? '' : title,
         child: Material(
-          color: active ? const Color(0xFFE6EFFF) : Colors.transparent,
+          color: active
+              ? Theme.of(context).colorScheme.primary.withValues(alpha: .14)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(11),
           child: InkWell(
             onTap: onTap,
@@ -1780,7 +1802,7 @@ class _NavItem extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: _textStyle(
-                          color: active ? const Color(0xFF163A91) : color,
+                          color: active ? colors.primaryText : color,
                           fontSize: 12,
                           fontWeight: active
                               ? FontWeight.w800
@@ -1819,6 +1841,8 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appTheme;
+    final themeController = ThemeControllerScope.maybeOf(context);
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < 700;
     return AnimatedBuilder(
@@ -1840,14 +1864,19 @@ class _TopBar extends StatelessWidget {
               margin: const EdgeInsets.fromLTRB(10, 7, 10, 0),
               padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 24),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.93 - scrolled * 0.39),
+                color: colors.topbar.withValues(
+                  alpha: Theme.of(context).brightness == Brightness.dark
+                      ? 0.96 - scrolled * 0.14
+                      : 0.93 - scrolled * 0.39,
+                ),
                 border: Border(
                   bottom: BorderSide(
-                    color: const Color(
-                      0xFFD8E4F6,
-                    ).withValues(alpha: 0.82 - scrolled * 0.24),
+                    color: colors.border.withValues(
+                      alpha: 0.82 - scrolled * 0.24,
+                    ),
                   ),
                 ),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
                 children: [
@@ -1856,7 +1885,7 @@ class _TopBar extends StatelessWidget {
                       onPressed: onMenu,
                       tooltip: 'Open navigation',
                       icon: const Icon(Icons.menu_rounded),
-                      color: const Color(0xFF334567),
+                      color: colors.secondaryText,
                     ),
                   if (!compact)
                     OutlinedButton.icon(
@@ -1866,8 +1895,8 @@ class _TopBar extends StatelessWidget {
                       label: const Text('My Workspace'),
                       iconAlignment: IconAlignment.start,
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF263B62),
-                        side: const BorderSide(color: Color(0xFFE1E9F7)),
+                        foregroundColor: colors.primaryText,
+                        side: BorderSide(color: colors.border),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 10,
@@ -1918,22 +1947,18 @@ class _TopBar extends StatelessWidget {
                                       ),
                                     ),
                               filled: true,
-                              fillColor: const Color(0xFFF5F8FE),
+                              fillColor: colors.surfaceSecondary,
                               contentPadding: const EdgeInsets.symmetric(
                                 vertical: 8,
                               ),
                               isDense: true,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(11),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE5ECF7),
-                                ),
+                                borderSide: BorderSide(color: colors.border),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(11),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE5ECF7),
-                                ),
+                                borderSide: BorderSide(color: colors.border),
                               ),
                             ),
                             style: _textStyle(fontSize: 11),
@@ -1943,6 +1968,10 @@ class _TopBar extends StatelessWidget {
                     ),
                   ),
                   if (!compact) const SizedBox(width: 16),
+                  if (!compact && themeController != null) ...[
+                    ThemeToggleButton(controller: themeController),
+                    const SizedBox(width: 8),
+                  ],
                   _TopBarIcon(
                     icon: Icons.notifications_none_rounded,
                     tooltip: 'Notifications',
@@ -1966,7 +1995,7 @@ class _TopBar extends StatelessWidget {
                     onPressed: onProfile,
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      foregroundColor: const Color(0xFF233552),
+                      foregroundColor: colors.primaryText,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -1996,7 +2025,7 @@ class _TopBar extends StatelessWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: _textStyle(
-                                    color: const Color(0xFF7887A0),
+                                    color: colors.mutedText,
                                     fontSize: 9,
                                   ),
                                 ),
@@ -2265,6 +2294,8 @@ class _BrandIntro extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return LayoutBuilder(
       builder: (context, constraints) {
         final fontSize = (constraints.maxWidth * 0.168).clamp(67.2, 140.8);
@@ -2306,7 +2337,9 @@ class _BrandIntro extends StatelessWidget {
                             Text(
                               'DEV',
                               style: baseStyle.copyWith(
-                                color: const Color(0xFF111C31),
+                                color: isDark
+                                    ? colors.primaryText
+                                    : const Color(0xFF111C31),
                                 letterSpacing: fontSize * 0.05,
                               ),
                             ),
@@ -2345,7 +2378,9 @@ class _BrandIntro extends StatelessWidget {
                   'AI-Powered Software Engineering Intelligence',
                   textAlign: TextAlign.center,
                   style: _textStyle(
-                    color: const Color(0xFF273C61),
+                    color: isDark
+                        ? colors.primaryText
+                        : const Color(0xFF273C61),
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.2,
@@ -2356,7 +2391,9 @@ class _BrandIntro extends StatelessWidget {
                   'Smarter development. Clearer insights. Better decisions.',
                   textAlign: TextAlign.center,
                   style: _textStyle(
-                    color: const Color(0xFF71819C),
+                    color: isDark
+                        ? colors.secondaryText
+                        : const Color(0xFF71819C),
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
                   ),
@@ -2584,6 +2621,8 @@ class _WelcomeHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appTheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final projectPanel = ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: BackdropFilter(
@@ -2593,23 +2632,33 @@ class _WelcomeHero extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                Colors.white.withValues(alpha: 0.88),
-                const Color(0xFFEAF4FF).withValues(alpha: 0.78),
-              ],
+              colors: isDark
+                  ? [colors.surfaceElevated, colors.surfaceSecondary]
+                  : [
+                      Colors.white.withValues(alpha: 0.88),
+                      const Color(0xFFEAF4FF).withValues(alpha: 0.78),
+                    ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+            border: Border.all(
+              color: isDark
+                  ? colors.border
+                  : Colors.white.withValues(alpha: 0.72),
+            ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF08256F).withValues(alpha: 0.10),
+                color: isDark
+                    ? colors.shadow
+                    : const Color(0xFF08256F).withValues(alpha: 0.10),
                 blurRadius: 16,
                 offset: const Offset(0, 7),
               ),
               BoxShadow(
-                color: Colors.white.withValues(alpha: 0.24),
+                color: isDark
+                    ? colors.surfaceSecondary.withValues(alpha: 0.35)
+                    : Colors.white.withValues(alpha: 0.24),
                 blurRadius: 1,
                 spreadRadius: 0.5,
               ),
@@ -2635,7 +2684,7 @@ class _WelcomeHero extends StatelessWidget {
                       Text(
                         'Current Project',
                         style: _textStyle(
-                          color: const Color(0xFF52617A),
+                          color: colors.secondaryText,
                           fontSize: 10,
                         ),
                       ),
@@ -2657,7 +2706,7 @@ class _WelcomeHero extends StatelessWidget {
                   repositoryError ??
                       'Connect a public GitHub repository to load real project data.',
                   style: _textStyle(
-                    color: const Color(0xFF687A96),
+                    color: colors.mutedText,
                     fontSize: 10,
                     height: 1.45,
                   ),
@@ -2711,7 +2760,7 @@ class _WelcomeHero extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: _textStyle(
-                    color: const Color(0xFF687A96),
+                    color: colors.mutedText,
                     fontSize: 10,
                     height: 1.45,
                   ),
@@ -2721,35 +2770,23 @@ class _WelcomeHero extends StatelessWidget {
                   'Owner: ${repository!.owner}  ·  Branch: ${repository!.defaultBranch ?? 'Unknown'}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: _textStyle(
-                    color: const Color(0xFF687A96),
-                    fontSize: 9,
-                  ),
+                  style: _textStyle(color: colors.mutedText, fontSize: 9),
                 ),
                 Text(
                   'Stars: ${repository!.stars}  ·  Forks: ${repository!.forks}',
-                  style: _textStyle(
-                    color: const Color(0xFF687A96),
-                    fontSize: 9,
-                  ),
+                  style: _textStyle(color: colors.mutedText, fontSize: 9),
                 ),
                 Text(
                   'Primary language: ${repository!.primaryLanguage ?? 'Not available'}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: _textStyle(
-                    color: const Color(0xFF687A96),
-                    fontSize: 9,
-                  ),
+                  style: _textStyle(color: colors.mutedText, fontSize: 9),
                 ),
                 Text(
                   '${repositoryError ?? 'Public repository'} · Last synced ${_formatSyncTime(repository!.lastSyncedAt)}${overview?.isStale == true || repositoryError != null ? ' · Cached data may be stale' : ''}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: _textStyle(
-                    color: const Color(0xFF687A96),
-                    fontSize: 9,
-                  ),
+                  style: _textStyle(color: colors.mutedText, fontSize: 9),
                 ),
                 const Divider(height: 18),
                 Row(
@@ -2757,7 +2794,7 @@ class _WelcomeHero extends StatelessWidget {
                     const Icon(
                       Icons.account_tree_rounded,
                       size: 14,
-                      color: Color(0xFF52617A),
+                      color: AppColors.primaryBlue,
                     ),
                     const SizedBox(width: 6),
                     Expanded(
@@ -2766,7 +2803,7 @@ class _WelcomeHero extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: _textStyle(
-                          color: const Color(0xFF52617A),
+                          color: colors.secondaryText,
                           fontSize: 9,
                           fontWeight: FontWeight.w700,
                         ),
@@ -2849,14 +2886,26 @@ class _WelcomeHero extends StatelessWidget {
           ),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(22),
-            gradient: const LinearGradient(
-              colors: [Color(0xCC0341C4), Color(0xCC066BE0), Color(0xCC1795DF)],
+            gradient: LinearGradient(
+              colors: isDark
+                  ? const [
+                      Color(0xFF101D38),
+                      Color(0xFF123568),
+                      Color(0xFF145278),
+                    ]
+                  : const [
+                      Color(0xCC0341C4),
+                      Color(0xCC066BE0),
+                      Color(0xCC1795DF),
+                    ],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF165ADC).withValues(alpha: 0.18),
+                color: isDark
+                    ? colors.shadow.withValues(alpha: 0.9)
+                    : const Color(0xFF165ADC).withValues(alpha: 0.18),
                 blurRadius: 28,
                 offset: const Offset(0, 14),
               ),
@@ -2925,7 +2974,9 @@ class _HeroCopy extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.15),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white.withValues(alpha: 0.12)
+                : Colors.white.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
@@ -2953,7 +3004,7 @@ class _HeroCopy extends StatelessWidget {
           child: Text(
             "Here's what's happening in your projects today. Track progress, spot risks, and make data-driven engineering decisions with DevInsight.",
             style: _textStyle(
-              color: const Color(0xFFE3F0FF),
+              color: context.appTheme.secondaryText,
               fontSize: 12,
               height: 1.55,
             ),
@@ -3267,7 +3318,7 @@ class _RevealState extends State<_Reveal> {
 }
 
 TextStyle _textStyle({
-  Color color = const Color(0xFF182846),
+  Color? color,
   double? fontSize,
   FontWeight? fontWeight,
   double? height,

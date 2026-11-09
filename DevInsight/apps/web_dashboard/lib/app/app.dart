@@ -31,16 +31,16 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: themeController,
-      builder: (context, _) => AnimatedTheme(
-        data: themeController.isDark ? AppTheme.dark : AppTheme.light,
-        duration: const Duration(milliseconds: 380),
-        curve: Curves.easeInOutCubic,
+      builder: (context, _) => ThemeControllerScope(
+        controller: themeController,
         child: MaterialApp(
           title: 'DevInsight',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: themeController.mode,
+          themeAnimationDuration: const Duration(milliseconds: 360),
+          themeAnimationCurve: Curves.easeOutCubic,
           initialRoute: initialRoute,
           home: _startupPage(),
           routes: {
@@ -48,12 +48,10 @@ class App extends StatelessWidget {
             '/landing': (context) =>
                 landingPageBuilder?.call(context) ??
                 LandingPage(themeController: themeController),
-            '/login': (_) => _publicEntryPage(
-              LoginPage(themeController: themeController),
-            ),
-            '/signup': (_) => _publicEntryPage(
-              SignUpPage(themeController: themeController),
-            ),
+            '/login': (_) =>
+                _publicEntryPage(LoginPage(themeController: themeController)),
+            '/signup': (_) =>
+                _publicEntryPage(SignUpPage(themeController: themeController)),
           },
         ),
       ),
