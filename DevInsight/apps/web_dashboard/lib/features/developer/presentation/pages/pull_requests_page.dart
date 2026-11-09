@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
+import 'package:web_dashboard/core/theme/app_theme_extension.dart';
 import 'package:web_dashboard/features/developer/presentation/widgets/dashboard_page_widgets.dart';
 
 enum _PullFilter { all, open, merged, closed }
@@ -194,7 +195,8 @@ class _PullRequestsPageState extends State<PullRequestsPage> {
                       : widget.error != null
                       ? 'Pull request data unavailable'
                       : 'Pull request summary is not available',
-                  description: widget.error ??
+                  description:
+                      widget.error ??
                       'Pull request records are displayed only when provided by GitHub.',
                 )
               else if (allPulls.isEmpty)
@@ -363,9 +365,9 @@ class _PullDetail extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(22),
     decoration: BoxDecoration(
-      color: const Color(0xFFF0F5FF),
+      color: context.appTheme.surfaceElevated,
       borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: dashboardRule),
+      border: Border.all(color: context.appTheme.border),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:web_dashboard/core/theme/app_theme_extension.dart';
 
 const dashboardNavy = Color(0xFF101B33);
 const dashboardBlue = Color(0xFF0056FF);
@@ -12,7 +13,7 @@ const dashboardMuted = Color(0xFF71809A);
 const dashboardRule = Color(0xFFDCE7F5);
 
 TextStyle dashboardTextStyle({
-  Color color = dashboardNavy,
+  Color? color,
   double size = 14,
   FontWeight weight = FontWeight.w500,
   double height = 1.4,
@@ -120,60 +121,75 @@ class DashboardPageHeading extends StatelessWidget {
   final Widget? trailing;
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 28, bottom: 42),
-    child: LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 720;
-        final heading = Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              eyebrow.toUpperCase(),
-              style: dashboardTextStyle(
-                color: dashboardBlue,
-                size: 10,
-                weight: FontWeight.w800,
-              ).copyWith(letterSpacing: 1.4),
-            ),
-            const SizedBox(height: 12),
-            DashboardScrollReveal(
-              controller: controller,
-              delay: const Duration(milliseconds: 70),
-              child: Text(
-                title,
+  Widget build(BuildContext context) {
+    final colors = context.appTheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 28, bottom: 42),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 720;
+          final heading = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                eyebrow.toUpperCase(),
                 style: dashboardTextStyle(
-                  size: compact ? 30 : 40,
+                  color: dashboardBlue,
+                  size: 10,
                   weight: FontWeight.w800,
-                  height: 1.12,
-                ),
+                ).copyWith(letterSpacing: 1.4),
               ),
-            ),
-            const SizedBox(height: 14),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 720),
-              child: DashboardScrollReveal(
+              const SizedBox(height: 12),
+              DashboardScrollReveal(
                 controller: controller,
-                delay: const Duration(milliseconds: 150),
+                delay: const Duration(milliseconds: 70),
                 child: Text(
-                  description,
+                  title,
                   style: dashboardTextStyle(
-                    color: dashboardMuted,
-                    size: 14,
-                    height: 1.65,
+                    color: colors.primaryText,
+                    size: compact ? 30 : 40,
+                    weight: FontWeight.w800,
+                    height: 1.12,
                   ),
                 ),
               ),
-            ),
-          ],
-        );
-        if (trailing == null) return heading;
-        if (compact) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 14),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: DashboardScrollReveal(
+                  controller: controller,
+                  delay: const Duration(milliseconds: 150),
+                  child: Text(
+                    description,
+                    style: dashboardTextStyle(
+                      color: colors.mutedText,
+                      size: 14,
+                      height: 1.65,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+          if (trailing == null) return heading;
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                heading,
+                const SizedBox(height: 20),
+                DashboardScrollReveal(
+                  controller: controller,
+                  delay: const Duration(milliseconds: 230),
+                  child: trailing!,
+                ),
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              heading,
-              const SizedBox(height: 20),
+              Expanded(child: heading),
               DashboardScrollReveal(
                 controller: controller,
                 delay: const Duration(milliseconds: 230),
@@ -181,21 +197,10 @@ class DashboardPageHeading extends StatelessWidget {
               ),
             ],
           );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(child: heading),
-            DashboardScrollReveal(
-              controller: controller,
-              delay: const Duration(milliseconds: 230),
-              child: trailing!,
-            ),
-          ],
-        );
-      },
-    ),
-  );
+        },
+      ),
+    );
+  }
 }
 
 class DashboardSectionHeading extends StatelessWidget {
@@ -211,28 +216,42 @@ class DashboardSectionHeading extends StatelessWidget {
   final String? label;
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      if (label != null) ...[
+  Widget build(BuildContext context) {
+    final colors = context.appTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (label != null) ...[
+          Text(
+            label!.toUpperCase(),
+            style: dashboardTextStyle(
+              color: dashboardBlue,
+              size: 10,
+              weight: FontWeight.w800,
+            ).copyWith(letterSpacing: 1.1),
+          ),
+          const SizedBox(height: 9),
+        ],
         Text(
-          label!.toUpperCase(),
+          title,
           style: dashboardTextStyle(
-            color: dashboardBlue,
-            size: 10,
+            color: colors.primaryText,
+            size: 24,
             weight: FontWeight.w800,
-          ).copyWith(letterSpacing: 1.1),
+          ),
         ),
-        const SizedBox(height: 9),
+        const SizedBox(height: 8),
+        Text(
+          description,
+          style: dashboardTextStyle(
+            color: colors.mutedText,
+            size: 12,
+            height: 1.6,
+          ),
+        ),
       ],
-      Text(title, style: dashboardTextStyle(size: 24, weight: FontWeight.w800)),
-      const SizedBox(height: 8),
-      Text(
-        description,
-        style: dashboardTextStyle(color: dashboardMuted, size: 12, height: 1.6),
-      ),
-    ],
-  );
+    );
+  }
 }
 
 class DashboardMetric extends StatelessWidget {
@@ -250,38 +269,45 @@ class DashboardMetric extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) => Container(
-    constraints: const BoxConstraints(minWidth: 138),
-    padding: const EdgeInsets.only(left: 14, top: 4, bottom: 4),
-    decoration: BoxDecoration(
-      border: Border(
-        left: BorderSide(color: color.withValues(alpha: .55), width: 2),
+  Widget build(BuildContext context) {
+    final colors = context.appTheme;
+    return Container(
+      constraints: const BoxConstraints(minWidth: 138),
+      padding: const EdgeInsets.only(left: 14, top: 4, bottom: 4),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(color: color.withValues(alpha: .55), width: 2),
+        ),
       ),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label.toUpperCase(),
-          style: dashboardTextStyle(
-            color: dashboardMuted,
-            size: 9,
-            weight: FontWeight.w700,
-          ).copyWith(letterSpacing: .6),
-        ),
-        const SizedBox(height: 5),
-        Text(
-          value,
-          style: dashboardTextStyle(size: 24, weight: FontWeight.w800),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          detail,
-          style: dashboardTextStyle(color: dashboardMuted, size: 10),
-        ),
-      ],
-    ),
-  );
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: dashboardTextStyle(
+              color: colors.mutedText,
+              size: 9,
+              weight: FontWeight.w700,
+            ).copyWith(letterSpacing: .6),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            value,
+            style: dashboardTextStyle(
+              color: colors.primaryText,
+              size: 24,
+              weight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            detail,
+            style: dashboardTextStyle(color: colors.mutedText, size: 10),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class DashboardEmptyState extends StatelessWidget {
@@ -299,43 +325,52 @@ class DashboardEmptyState extends StatelessWidget {
   final Widget? action;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-    decoration: const BoxDecoration(
-      border: Border(
-        top: BorderSide(color: dashboardRule),
-        bottom: BorderSide(color: dashboardRule),
+  Widget build(BuildContext context) {
+    final colors = context.appTheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: colors.divider),
+          bottom: BorderSide(color: colors.divider),
+        ),
       ),
-    ),
-    child: LayoutBuilder(
-      builder: (context, constraints) => Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: dashboardBlue, size: 24),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: dashboardTextStyle(weight: FontWeight.w800)),
-                const SizedBox(height: 7),
-                Text(
-                  description,
-                  style: dashboardTextStyle(
-                    color: dashboardMuted,
-                    size: 12,
-                    height: 1.6,
+      child: LayoutBuilder(
+        builder: (context, constraints) => Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: dashboardBlue, size: 24),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: dashboardTextStyle(
+                      color: colors.primaryText,
+                      weight: FontWeight.w800,
+                    ),
                   ),
-                ),
-                if (action != null) ...[const SizedBox(height: 14), action!],
-              ],
+                  const SizedBox(height: 7),
+                  Text(
+                    description,
+                    style: dashboardTextStyle(
+                      color: colors.mutedText,
+                      size: 12,
+                      height: 1.6,
+                    ),
+                  ),
+                  if (action != null) ...[const SizedBox(height: 14), action!],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class DashboardInlineNotice extends StatelessWidget {
@@ -354,10 +389,18 @@ class DashboardInlineNotice extends StatelessWidget {
     margin: const EdgeInsets.only(bottom: 22),
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
     decoration: BoxDecoration(
-      color: stale ? const Color(0xFFFFF7E5) : const Color(0xFFFFF1F0),
+      color: Theme.of(context).brightness == Brightness.dark
+          ? context.appTheme.surfaceSecondary
+          : stale
+          ? const Color(0xFFFFF7E5)
+          : const Color(0xFFFFF1F0),
       borderRadius: BorderRadius.circular(12),
       border: Border.all(
-        color: stale ? const Color(0xFFF2D28A) : const Color(0xFFF3C1BD),
+        color: Theme.of(context).brightness == Brightness.dark
+            ? context.appTheme.border
+            : stale
+            ? const Color(0xFFF2D28A)
+            : const Color(0xFFF3C1BD),
       ),
     ),
     child: Row(
@@ -372,7 +415,9 @@ class DashboardInlineNotice extends StatelessWidget {
           child: Text(
             message,
             style: dashboardTextStyle(
-              color: dashboardNavy,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? context.appTheme.secondaryText
+                  : dashboardNavy,
               size: 10,
               height: 1.5,
             ),

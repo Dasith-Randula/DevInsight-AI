@@ -4,6 +4,7 @@ import 'dart:ui' show Tangent;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
+import 'package:web_dashboard/core/theme/app_theme_extension.dart';
 
 class DeveloperHomeSections extends StatelessWidget {
   const DeveloperHomeSections({
@@ -87,13 +88,12 @@ class DeveloperHomeSections extends StatelessWidget {
   }
 }
 
-const _navy = Color(0xFF101B33);
 const _blue = Color(0xFF0056FF);
 const _muted = Color(0xFF71809A);
 const _line = Color(0xFFDCE7F5);
 
 TextStyle _textStyle({
-  Color color = _navy,
+  Color? color,
   double size = 14,
   FontWeight weight = FontWeight.w500,
   double height = 1.4,
@@ -267,6 +267,7 @@ class _OverviewMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appTheme;
     return Container(
       padding: const EdgeInsets.only(left: 14, top: 4, bottom: 4),
       decoration: const BoxDecoration(
@@ -277,7 +278,11 @@ class _OverviewMetric extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: emphasized ? _blue : _muted),
+              Icon(
+                icon,
+                size: 16,
+                color: emphasized ? _blue : colors.mutedText,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -285,7 +290,7 @@ class _OverviewMetric extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: _textStyle(
-                    color: _muted,
+                    color: colors.mutedText,
                     size: 12,
                     weight: FontWeight.w700,
                   ),
@@ -299,7 +304,7 @@ class _OverviewMetric extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: _textStyle(
-              color: emphasized ? _blue : _navy,
+              color: emphasized ? _blue : colors.primaryText,
               size: value.length > 12 ? 22 : 32,
               weight: FontWeight.w800,
               height: 1.15,
@@ -310,7 +315,7 @@ class _OverviewMetric extends StatelessWidget {
             detail,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: _textStyle(color: _muted, size: 11),
+            style: _textStyle(color: colors.mutedText, size: 11),
           ),
         ],
       ),
@@ -739,10 +744,12 @@ class _RepositoryIntelligenceSection extends StatelessWidget {
                 Expanded(
                   flex: 4,
                   child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: RadialGradient(
-                        colors: [Color(0xFFDCEBFF), Color(0x00EAF3FF)],
-                      ),
+                    decoration: BoxDecoration(
+                      gradient: Theme.of(context).brightness == Brightness.dark
+                          ? null
+                          : const RadialGradient(
+                              colors: [Color(0xFFDCEBFF), Color(0x00EAF3FF)],
+                            ),
                     ),
                     child: artwork,
                   ),
@@ -1485,6 +1492,7 @@ class _TimelineEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appTheme;
     final icon = switch (item.type) {
       'commit' => Icons.commit_rounded,
       'issue' => Icons.bug_report_outlined,
@@ -1507,19 +1515,14 @@ class _TimelineEntry extends StatelessWidget {
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEAF3FF),
+                      color: colors.surfaceElevated,
                       borderRadius: BorderRadius.circular(50),
-                      border: Border.all(color: const Color(0xFFB7D3FF)),
+                      border: Border.all(color: colors.border),
                     ),
                     child: Icon(icon, color: _blue, size: 16),
                   ),
                   if (!isLast)
-                    Expanded(
-                      child: Container(
-                        width: 1,
-                        color: const Color(0xFFB7D3FF),
-                      ),
-                    ),
+                    Expanded(child: Container(width: 1, color: colors.border)),
                 ],
               ),
             ),
@@ -1541,7 +1544,7 @@ class _TimelineEntry extends StatelessWidget {
                       '${item.type.replaceAll('_', ' ')}${item.state == null ? '' : ' · ${item.state}'}  ·  ${item.author}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: _textStyle(color: _muted, size: 11),
+                      style: _textStyle(color: colors.mutedText, size: 11),
                     ),
                   ],
                 ),
@@ -1552,13 +1555,17 @@ class _TimelineEntry extends StatelessWidget {
               padding: const EdgeInsets.only(top: 3),
               child: Text(
                 _timelineDate(item.date ?? item.createdAt),
-                style: _textStyle(color: _muted, size: 11),
+                style: _textStyle(color: colors.mutedText, size: 11),
               ),
             ),
             const SizedBox(width: 8),
-            const Padding(
-              padding: EdgeInsets.only(top: 2),
-              child: Icon(Icons.open_in_new_rounded, size: 14, color: _muted),
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(
+                Icons.open_in_new_rounded,
+                size: 14,
+                color: colors.mutedText,
+              ),
             ),
           ],
         ),
@@ -1734,6 +1741,7 @@ class _EditorialHeading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1750,7 +1758,12 @@ class _EditorialHeading extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 800),
           child: Text(
             title,
-            style: _textStyle(size: 36, weight: FontWeight.w800, height: 1.18),
+            style: _textStyle(
+              color: colors.primaryText,
+              size: 36,
+              weight: FontWeight.w800,
+              height: 1.18,
+            ),
           ),
         ),
         const SizedBox(height: 10),
@@ -1758,7 +1771,11 @@ class _EditorialHeading extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 670),
           child: Text(
             description,
-            style: _textStyle(color: _muted, size: 15, height: 1.7),
+            style: _textStyle(
+              color: colors.secondaryText,
+              size: 15,
+              height: 1.7,
+            ),
           ),
         ),
       ],
@@ -2358,6 +2375,7 @@ class _EngineeringNodeSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appTheme;
     return IgnorePointer(
       ignoring: !visible,
       child: AnimatedOpacity(
@@ -2378,7 +2396,11 @@ class _EngineeringNodeSurface extends StatelessWidget {
                   height: height,
                   padding: const EdgeInsets.symmetric(horizontal: 6),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.96),
+                    color: colors.surfaceElevated.withValues(
+                      alpha: Theme.of(context).brightness == Brightness.dark
+                          ? 0.92
+                          : 0.96,
+                    ),
                     borderRadius: BorderRadius.circular(13),
                     border: Border.all(
                       color: node.color.withValues(
@@ -2405,7 +2427,7 @@ class _EngineeringNodeSurface extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: _textStyle(
-                          color: _navy,
+                          color: colors.primaryText,
                           size: width < 80 ? 8 : 9,
                           weight: FontWeight.w700,
                         ),
@@ -2437,6 +2459,7 @@ class _RepositoryCore extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.appTheme;
     return AnimatedOpacity(
       opacity: visible ? 1 : 0,
       duration: const Duration(milliseconds: 350),
@@ -2450,20 +2473,29 @@ class _RepositoryCore extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [Colors.white, Color(0xFFF0F6FF)],
+              gradient: LinearGradient(
+                colors: Theme.of(context).brightness == Brightness.dark
+                    ? [colors.surfaceElevated, colors.surfaceSecondary]
+                    : const [Colors.white, Color(0xFFF0F6FF)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
-              border: Border.all(color: const Color(0xFF9DC4FF), width: 1.4),
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? colors.border
+                    : const Color(0xFF9DC4FF),
+                width: 1.4,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: _blue.withValues(alpha: 0.14),
                   blurRadius: 28,
                   offset: const Offset(0, 10),
                 ),
-                const BoxShadow(
-                  color: Colors.white,
+                BoxShadow(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? colors.surfaceSecondary.withValues(alpha: 0.35)
+                      : Colors.white,
                   blurRadius: 1,
                   spreadRadius: 1,
                 ),
@@ -2476,7 +2508,9 @@ class _RepositoryCore extends StatelessWidget {
                   width: 38,
                   height: 34,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEAF3FF),
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? colors.surfaceSecondary
+                        : const Color(0xFFEAF3FF),
                     borderRadius: BorderRadius.circular(11),
                   ),
                   child: Stack(
@@ -2493,7 +2527,7 @@ class _RepositoryCore extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.all(1),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: colors.surfaceElevated,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: const Icon(
@@ -2518,7 +2552,7 @@ class _RepositoryCore extends StatelessWidget {
                 Text(
                   'SOURCE REPOSITORY',
                   style: _textStyle(
-                    color: _muted,
+                    color: colors.mutedText,
                     size: 8,
                     weight: FontWeight.w700,
                   ).copyWith(letterSpacing: 0.7),

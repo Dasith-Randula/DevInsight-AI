@@ -83,6 +83,22 @@ class _AnimatedAuraBackgroundState extends State<AnimatedAuraBackground>
               fit: StackFit.expand,
               clipBehavior: Clip.none,
               children: [
+                if (Theme.of(context).brightness == Brightness.dark)
+                  const Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF080D19),
+                            Color(0xFF0B1830),
+                            Color(0xFF102B4B),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 if (authVariant)
                   Positioned.fill(
                     child: DecoratedBox(

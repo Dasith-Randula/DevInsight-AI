@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:web_dashboard/core/services/auth_service.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
+import 'package:web_dashboard/core/theme/app_theme_extension.dart';
+import 'package:web_dashboard/core/theme/theme_controller.dart';
 import 'package:web_dashboard/features/developer/presentation/widgets/dashboard_page_widgets.dart';
+import 'package:web_dashboard/shared/widgets/theme_toggle_button.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({
@@ -286,11 +289,39 @@ class _SettingsPageState extends State<SettingsPage> {
         index: 4,
         title: 'Appearance',
         description: 'The current appearance is inherited from the app theme.',
-        child: const DashboardEmptyState(
-          icon: Icons.palette_outlined,
-          title: 'Theme preference is managed by the app',
-          description:
-              'A persistent theme preference control is not connected here, so no unsaved toggle is offered.',
+        child: Builder(
+          builder: (context) {
+            final controller = ThemeControllerScope.maybeOf(context);
+            if (controller == null) {
+              return const DashboardEmptyState(
+                icon: Icons.palette_outlined,
+                title: 'Theme preference is managed by the app',
+                description:
+                    'Theme controls are available when the application theme controller is active.',
+              );
+            }
+            return Row(
+              children: [
+                ThemeToggleButton(controller: controller),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: AnimatedBuilder(
+                    animation: controller,
+                    builder: (context, _) => Text(
+                      controller.isDark
+                          ? 'Dark mode is active across the application.'
+                          : 'Light mode is active across the application.',
+                      style: dashboardTextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        size: 12,
+                        height: 1.6,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
       _SettingsSection(
@@ -464,7 +495,8 @@ class _CategoryNavigation extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(14),
     decoration: BoxDecoration(
-      color: const Color(0xFFF4F7FC),
+      color: context.appTheme.surfaceElevated,
+      border: Border.all(color: context.appTheme.border),
       borderRadius: BorderRadius.circular(18),
     ),
     child: Column(
@@ -501,7 +533,7 @@ class _CategoryNavigation extends StatelessWidget {
                 dense: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 8),
                 selected: selected == index,
-                selectedTileColor: Colors.white,
+                selectedTileColor: context.appTheme.surfaceSecondary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
