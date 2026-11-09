@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     supabase_url: str | None = None
     supabase_secret_key: str | None = Field(default=None, repr=False)
     supabase_publishable_key: str | None = Field(default=None, repr=False)
+    github_token: str | None = Field(default=None, repr=False)
+    github_cache_minutes: int = Field(default=15, ge=10, le=15)
     cors_allowed_origins: str = ""
 
 

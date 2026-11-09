@@ -70,7 +70,7 @@ void main() {
     await startApp(tester, auth, initialRoute: '/auth');
 
     expect(auth.restoreCalls, 1);
-    expect(find.text('Developer Home'), findsOneWidget);
+    expect(find.text('Welcome back, Developer 👋'), findsOneWidget);
   });
 
   testWidgets(
@@ -88,7 +88,7 @@ void main() {
       await startApp(tester, auth, initialRoute: '/login');
 
       expect(auth.restoreCalls, 1);
-      expect(find.text('Developer Home'), findsOneWidget);
+      expect(find.text('Welcome back, Developer 👋'), findsOneWidget);
     },
   );
 

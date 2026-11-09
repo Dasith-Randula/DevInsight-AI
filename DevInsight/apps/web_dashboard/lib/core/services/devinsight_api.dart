@@ -37,11 +37,11 @@ class CurrentUserProfile {
         'The account response from the server was invalid.',
       );
     }
-    _validateOptionalFields(
-      json,
-      const ['full_name', 'email', 'role'],
-      'The account response from the server was invalid.',
-    );
+    _validateOptionalFields(json, const [
+      'full_name',
+      'email',
+      'role',
+    ], 'The account response from the server was invalid.');
     if (json['onboarding_completed'] != null &&
         json['onboarding_completed'] is! bool) {
       throw const DevInsightApiException(
@@ -88,11 +88,13 @@ class OnboardingProfileData {
         'The saved onboarding profile was invalid.',
       );
     }
-    _validateOptionalFields(
-      json,
-      const ['full_name', 'username', 'organization', 'job_title', 'role'],
-      'The saved onboarding profile was invalid.',
-    );
+    _validateOptionalFields(json, const [
+      'full_name',
+      'username',
+      'organization',
+      'job_title',
+      'role',
+    ], 'The saved onboarding profile was invalid.');
     final onboardingStep = json['onboarding_step'];
     if (onboardingStep != null && onboardingStep is! int) {
       throw const DevInsightApiException(
@@ -227,6 +229,581 @@ class OnboardingCompletion {
   }
 }
 
+class GitHubRepositoryConnection {
+  const GitHubRepositoryConnection({
+    required this.id,
+    required this.githubRepositoryId,
+    required this.fullName,
+    required this.url,
+    required this.owner,
+    required this.name,
+    required this.isPrivate,
+    required this.connectedAt,
+    required this.cachedSummary,
+    this.stars = 0,
+    this.forks = 0,
+    this.description,
+    this.defaultBranch,
+    this.primaryLanguage,
+    this.repositoryCreatedAt,
+    this.repositoryUpdatedAt,
+    this.repositoryPushedAt,
+    this.lastSyncedAt,
+  });
+
+  final String id;
+  final int githubRepositoryId;
+  final String fullName;
+  final String url;
+  final String owner;
+  final String name;
+  final String? description;
+  final String? defaultBranch;
+  final String? primaryLanguage;
+  final DateTime? repositoryCreatedAt;
+  final DateTime? repositoryUpdatedAt;
+  final DateTime? repositoryPushedAt;
+  final bool isPrivate;
+  final int stars;
+  final int forks;
+  final DateTime connectedAt;
+  final DateTime? lastSyncedAt;
+  final Map<String, dynamic> cachedSummary;
+
+  factory GitHubRepositoryConnection.fromJson(Map<String, dynamic> json) {
+    final id = json['id'];
+    final repositoryId = json['github_repository_id'];
+    final fullName = json['repository_full_name'];
+    final url = json['repository_url'];
+    final owner = json['repository_owner'];
+    final name = json['repository_name'];
+    final isPrivate = json['is_private'];
+    final connectedAt = DateTime.tryParse('${json['connected_at'] ?? ''}');
+    final cachedSummary = json['cached_summary'];
+    final stars = json['stargazers_count'] ?? 0;
+    final forks = json['forks_count'] ?? 0;
+    final repositoryCreatedAt = _optionalDate(json['github_created_at']);
+    final repositoryUpdatedAt = _optionalDate(json['github_updated_at']);
+    final repositoryPushedAt = _optionalDate(json['github_pushed_at']);
+    final lastSyncedAt = json['last_synced_at'] == null
+        ? null
+        : DateTime.tryParse('${json['last_synced_at']}');
+    if (id is! String ||
+        repositoryId is! int ||
+        fullName is! String ||
+        url is! String ||
+        owner is! String ||
+        name is! String ||
+        isPrivate is! bool ||
+        stars is! int ||
+        forks is! int ||
+        connectedAt == null ||
+        cachedSummary is! Map<String, dynamic> ||
+        (json['github_created_at'] != null && repositoryCreatedAt == null) ||
+        (json['github_updated_at'] != null && repositoryUpdatedAt == null) ||
+        (json['github_pushed_at'] != null && repositoryPushedAt == null) ||
+        (json['last_synced_at'] != null && lastSyncedAt == null)) {
+      throw const DevInsightApiException(
+        'The GitHub repository response was invalid.',
+      );
+    }
+    _validateOptionalFields(json, const [
+      'description',
+      'default_branch',
+      'primary_language',
+    ], 'The GitHub repository response was invalid.');
+    return GitHubRepositoryConnection(
+      id: id,
+      githubRepositoryId: repositoryId,
+      fullName: fullName,
+      url: url,
+      owner: owner,
+      name: name,
+      description: json['description'],
+      defaultBranch: json['default_branch'],
+      primaryLanguage: json['primary_language'],
+      repositoryCreatedAt: repositoryCreatedAt,
+      repositoryUpdatedAt: repositoryUpdatedAt,
+      repositoryPushedAt: repositoryPushedAt,
+      isPrivate: isPrivate,
+      stars: stars,
+      forks: forks,
+      connectedAt: connectedAt,
+      lastSyncedAt: lastSyncedAt,
+      cachedSummary: cachedSummary,
+    );
+  }
+}
+
+DateTime? _optionalDate(Object? value) {
+  if (value == null) return null;
+  return DateTime.tryParse('$value');
+}
+
+class GitHubLanguage {
+  const GitHubLanguage({
+    required this.name,
+    required this.bytes,
+    required this.percentage,
+  });
+
+  final String name;
+  final int bytes;
+  final double percentage;
+
+  factory GitHubLanguage.fromJson(Map<String, dynamic> json) {
+    final name = json['name'];
+    final bytes = json['bytes'];
+    final percentage = json['percentage'];
+    if (name is! String || bytes is! int || (percentage is! num)) {
+      throw const DevInsightApiException(
+        'The GitHub language data was invalid.',
+      );
+    }
+    return GitHubLanguage(
+      name: name,
+      bytes: bytes,
+      percentage: percentage.toDouble(),
+    );
+  }
+}
+
+class GitHubActivity {
+  const GitHubActivity({
+    required this.type,
+    required this.title,
+    required this.author,
+    required this.url,
+    required this.labels,
+    this.date,
+    this.createdAt,
+    this.closedAt,
+    this.mergedAt,
+    this.number,
+    this.state,
+  });
+
+  final String type;
+  final String title;
+  final String author;
+  final String url;
+  final List<String> labels;
+  final DateTime? date;
+  final DateTime? createdAt;
+  final DateTime? closedAt;
+  final DateTime? mergedAt;
+  final int? number;
+  final String? state;
+
+  factory GitHubActivity.fromJson(Map<String, dynamic> json) {
+    final type = json['type'];
+    final title = json['title'];
+    final author = json['author'];
+    final url = json['url'];
+    final date = json['date'] == null
+        ? null
+        : DateTime.tryParse('${json['date']}');
+    final createdAt = _optionalDate(json['created_at']);
+    final closedAt = _optionalDate(json['closed_at']);
+    final mergedAt = _optionalDate(json['merged_at']);
+    final labels = json['labels'] ?? const <Object>[];
+    if (type is! String ||
+        title is! String ||
+        author is! String ||
+        url is! String ||
+        labels is! List ||
+        labels.any((label) => label is! String) ||
+        (json['date'] != null && date == null) ||
+        (json['created_at'] != null && createdAt == null) ||
+        (json['closed_at'] != null && closedAt == null) ||
+        (json['merged_at'] != null && mergedAt == null) ||
+        (json['number'] != null && json['number'] is! int) ||
+        (json['state'] != null && json['state'] is! String)) {
+      throw const DevInsightApiException(
+        'The GitHub activity response was invalid.',
+      );
+    }
+    return GitHubActivity(
+      type: type,
+      title: title,
+      author: author,
+      url: url,
+      labels: List<String>.from(labels),
+      date: date,
+      createdAt: createdAt,
+      closedAt: closedAt,
+      mergedAt: mergedAt,
+      number: json['number'],
+      state: json['state'],
+    );
+  }
+}
+
+class GitHubWeeklyCommit {
+  const GitHubWeeklyCommit({required this.weekStart, required this.commits});
+
+  final DateTime weekStart;
+  final int? commits;
+
+  factory GitHubWeeklyCommit.fromJson(Map<String, dynamic> json) {
+    final weekStart = DateTime.tryParse('${json['week_start'] ?? ''}');
+    final commits = json['commits'];
+    if (weekStart == null || (commits != null && commits is! int)) {
+      throw const DevInsightApiException(
+        'The weekly repository activity data was invalid.',
+      );
+    }
+    return GitHubWeeklyCommit(weekStart: weekStart, commits: commits as int?);
+  }
+}
+
+class GitHubWeeklyActivity {
+  const GitHubWeeklyActivity({
+    required this.availability,
+    required this.isComplete,
+    required this.weeks,
+    required this.weekBoundary,
+    this.totalCommits,
+    this.branch,
+    this.periodStart,
+    this.periodEnd,
+  });
+
+  final String availability;
+  final bool isComplete;
+  final List<GitHubWeeklyCommit> weeks;
+  final int? totalCommits;
+  final String? branch;
+  final DateTime? periodStart;
+  final DateTime? periodEnd;
+  final String weekBoundary;
+
+  factory GitHubWeeklyActivity.fromJson(Map<String, dynamic> json) {
+    final availability = json['availability'];
+    final complete = json['is_complete'];
+    final rawWeeks = json['weeks'];
+    final total = json['total_commits'];
+    final boundary = json['week_boundary'];
+    final start = _optionalDate(json['period_start']);
+    final end = _optionalDate(json['period_end']);
+    if (availability is! String ||
+        complete is! bool ||
+        rawWeeks is! List ||
+        (total != null && total is! int) ||
+        boundary is! String ||
+        (json['period_start'] != null && start == null) ||
+        (json['period_end'] != null && end == null) ||
+        (json['branch'] != null && json['branch'] is! String)) {
+      throw const DevInsightApiException(
+        'The weekly repository activity data was invalid.',
+      );
+    }
+    try {
+      return GitHubWeeklyActivity(
+        availability: availability,
+        isComplete: complete,
+        weeks: rawWeeks
+            .map(
+              (item) => GitHubWeeklyCommit.fromJson(
+                Map<String, dynamic>.from(item as Map),
+              ),
+            )
+            .toList(),
+        totalCommits: total,
+        branch: json['branch'],
+        periodStart: start,
+        periodEnd: end,
+        weekBoundary: boundary,
+      );
+    } on TypeError {
+      throw const DevInsightApiException(
+        'The weekly repository activity data was invalid.',
+      );
+    }
+  }
+}
+
+class GitHubCiSignals {
+  const GitHubCiSignals({
+    required this.availability,
+    required this.state,
+    this.passed,
+    this.failed,
+    this.pending,
+    this.lastCompletedAt,
+    this.url,
+  });
+
+  final String availability;
+  final String state;
+  final int? passed;
+  final int? failed;
+  final int? pending;
+  final DateTime? lastCompletedAt;
+  final String? url;
+
+  factory GitHubCiSignals.fromJson(Map<String, dynamic> json) {
+    final availability = json['availability'];
+    final state = json['state'];
+    final passed = json['passed'];
+    final failed = json['failed'];
+    final pending = json['pending'];
+    final completed = _optionalDate(json['last_completed_at']);
+    if (availability is! String ||
+        state is! String ||
+        (passed != null && passed is! int) ||
+        (failed != null && failed is! int) ||
+        (pending != null && pending is! int) ||
+        (json['last_completed_at'] != null && completed == null) ||
+        (json['url'] != null && json['url'] is! String)) {
+      throw const DevInsightApiException('The CI status data was invalid.');
+    }
+    return GitHubCiSignals(
+      availability: availability,
+      state: state,
+      passed: passed,
+      failed: failed,
+      pending: pending,
+      lastCompletedAt: completed,
+      url: json['url'],
+    );
+  }
+}
+
+class GitHubRepositoryHealth {
+  const GitHubRepositoryHealth({
+    required this.recentActivityStatus,
+    required this.ciState,
+    this.lastPushAt,
+    this.latestCommitAt,
+    this.openIssues,
+    this.closedIssues30d,
+    this.openPullRequests,
+    this.oldestOpenPullRequestPresent = false,
+    this.oldestOpenPullRequestAgeDays,
+    this.oldestOpenPullRequestAvailability,
+    this.oldestOpenPullRequestUrl,
+    this.oldestOpenPullRequestTitle,
+    this.lastUpdatedAt,
+    this.ciCompletedAt,
+  });
+
+  final String recentActivityStatus;
+  final String ciState;
+  final DateTime? lastPushAt;
+  final DateTime? latestCommitAt;
+  final int? openIssues;
+  final int? closedIssues30d;
+  final int? openPullRequests;
+  final bool oldestOpenPullRequestPresent;
+  final int? oldestOpenPullRequestAgeDays;
+  final String? oldestOpenPullRequestAvailability;
+  final String? oldestOpenPullRequestUrl;
+  final String? oldestOpenPullRequestTitle;
+  final DateTime? lastUpdatedAt;
+  final DateTime? ciCompletedAt;
+
+  factory GitHubRepositoryHealth.fromJson(Map<String, dynamic> json) {
+    final oldest = json['oldest_open_pull_request'];
+    if (oldest != null && oldest is! Map<String, dynamic>) {
+      throw const DevInsightApiException(
+        'The repository health data was invalid.',
+      );
+    }
+    final oldestAvailability = oldest is Map<String, dynamic>
+        ? oldest['availability']
+        : null;
+    final oldestRecord = oldest is Map<String, dynamic>
+        ? oldest['pull_request']
+        : null;
+    if (oldestRecord != null && oldestRecord is! Map<String, dynamic>) {
+      throw const DevInsightApiException(
+        'The repository health data was invalid.',
+      );
+    }
+    final oldestPull = oldestRecord is Map<String, dynamic>
+        ? oldestRecord
+        : null;
+    final openIssues = json['open_issues'];
+    final closedIssues = json['recently_closed_issues_30d'];
+    final openPulls = json['open_pull_requests'];
+    final oldestAge = oldestPull?['age_days'];
+    if ((openIssues != null && openIssues is! int) ||
+        (closedIssues != null && closedIssues is! int) ||
+        (openPulls != null && openPulls is! int) ||
+        (oldestAvailability != null && oldestAvailability is! String) ||
+        (oldestAge != null && oldestAge is! int) ||
+        (oldestPull?['url'] != null && oldestPull?['url'] is! String) ||
+        (oldestPull?['title'] != null && oldestPull?['title'] is! String)) {
+      throw const DevInsightApiException(
+        'The repository health data was invalid.',
+      );
+    }
+    return GitHubRepositoryHealth(
+      recentActivityStatus: json['recent_activity_status'] is String
+          ? json['recent_activity_status'] as String
+          : 'not_measured',
+      ciState: json['ci_state'] is String
+          ? json['ci_state'] as String
+          : 'not_measured',
+      lastPushAt: _optionalDate(json['last_push_at']),
+      latestCommitAt: _optionalDate(json['latest_commit_at']),
+      openIssues: openIssues,
+      closedIssues30d: closedIssues,
+      openPullRequests: openPulls,
+      oldestOpenPullRequestPresent: oldestPull != null,
+      oldestOpenPullRequestAgeDays: oldestAge,
+      oldestOpenPullRequestAvailability: oldestAvailability,
+      oldestOpenPullRequestUrl: oldestPull?['url'],
+      oldestOpenPullRequestTitle: oldestPull?['title'],
+      lastUpdatedAt: _optionalDate(json['repository_updated_at']),
+      ciCompletedAt: _optionalDate(json['ci_completed_at']),
+    );
+  }
+}
+
+class GitHubQualitySignals {
+  const GitHubQualitySignals({
+    required this.ci,
+    required this.defaultBranch,
+    this.readmePresent,
+    this.licensePresent,
+    this.testsDetected,
+    this.latestCommitSha,
+    this.latestCommitUrl,
+  });
+
+  final GitHubCiSignals ci;
+  final String? defaultBranch;
+  final bool? readmePresent;
+  final bool? licensePresent;
+  final bool? testsDetected;
+  final String? latestCommitSha;
+  final String? latestCommitUrl;
+
+  factory GitHubQualitySignals.fromJson(Map<String, dynamic> json) {
+    final ci = json['ci'];
+    final rawLatestCommit = json['latest_commit'];
+    final latestCommit = rawLatestCommit is Map<String, dynamic>
+        ? rawLatestCommit
+        : null;
+    if (ci is! Map<String, dynamic> ||
+        (rawLatestCommit != null && latestCommit == null) ||
+        (json['default_branch'] != null && json['default_branch'] is! String) ||
+        (latestCommit?['sha'] != null && latestCommit?['sha'] is! String) ||
+        (latestCommit?['url'] != null && latestCommit?['url'] is! String) ||
+        (json['readme_present'] != null && json['readme_present'] is! bool) ||
+        (json['license_present'] != null && json['license_present'] is! bool) ||
+        (json['tests_detected'] != null && json['tests_detected'] is! bool)) {
+      throw const DevInsightApiException(
+        'The repository quality signals were invalid.',
+      );
+    }
+    return GitHubQualitySignals(
+      ci: GitHubCiSignals.fromJson(ci),
+      defaultBranch: json['default_branch'],
+      readmePresent: json['readme_present'],
+      licensePresent: json['license_present'],
+      testsDetected: json['tests_detected'],
+      latestCommitSha: latestCommit?['sha'],
+      latestCommitUrl: latestCommit?['url'],
+    );
+  }
+}
+
+class GitHubRepositoryOverview {
+  const GitHubRepositoryOverview({
+    required this.connection,
+    required this.languages,
+    required this.recentActivity,
+    required this.isStale,
+    this.weeklyActivity,
+    this.repositoryHealth,
+    this.qualitySignals,
+    this.openPullRequests,
+    this.resolvedIssues30d,
+    this.throttled = false,
+  });
+
+  final GitHubRepositoryConnection connection;
+  final List<GitHubLanguage> languages;
+  final List<GitHubActivity> recentActivity;
+  final int? openPullRequests;
+  final int? resolvedIssues30d;
+  final bool isStale;
+  final bool throttled;
+  final GitHubWeeklyActivity? weeklyActivity;
+  final GitHubRepositoryHealth? repositoryHealth;
+  final GitHubQualitySignals? qualitySignals;
+
+  factory GitHubRepositoryOverview.fromJson(
+    Map<String, dynamic> json, {
+    bool throttled = false,
+  }) {
+    final connectionData = json['connection'];
+    final summary = json['summary'];
+    final isStale = json['is_stale'];
+    if (connectionData is! Map<String, dynamic> ||
+        summary is! Map<String, dynamic> ||
+        isStale is! bool ||
+        (summary['open_pull_requests'] != null &&
+            summary['open_pull_requests'] is! int) ||
+        (summary['resolved_issues_30d'] != null &&
+            summary['resolved_issues_30d'] is! int) ||
+        summary['languages'] is! List ||
+        summary['recent_activity'] is! List ||
+        (summary['weekly_activity'] != null &&
+            summary['weekly_activity'] is! Map<String, dynamic>) ||
+        (summary['repository_health'] != null &&
+            summary['repository_health'] is! Map<String, dynamic>) ||
+        (summary['quality_signals'] != null &&
+            summary['quality_signals'] is! Map<String, dynamic>)) {
+      throw const DevInsightApiException(
+        'The GitHub repository overview was invalid.',
+      );
+    }
+    final weeklyActivity = summary['weekly_activity'];
+    final repositoryHealth = summary['repository_health'];
+    final qualitySignals = summary['quality_signals'];
+    try {
+      return GitHubRepositoryOverview(
+        connection: GitHubRepositoryConnection.fromJson(connectionData),
+        languages: (summary['languages'] as List)
+            .map(
+              (item) => GitHubLanguage.fromJson(
+                Map<String, dynamic>.from(item as Map),
+              ),
+            )
+            .toList(),
+        recentActivity: (summary['recent_activity'] as List)
+            .map(
+              (item) => GitHubActivity.fromJson(
+                Map<String, dynamic>.from(item as Map),
+              ),
+            )
+            .toList(),
+        openPullRequests: summary['open_pull_requests'],
+        resolvedIssues30d: summary['resolved_issues_30d'],
+        isStale: isStale,
+        throttled: throttled,
+        weeklyActivity: weeklyActivity == null
+            ? null
+            : GitHubWeeklyActivity.fromJson(weeklyActivity),
+        repositoryHealth: repositoryHealth == null
+            ? null
+            : GitHubRepositoryHealth.fromJson(repositoryHealth),
+        qualitySignals: qualitySignals == null
+            ? null
+            : GitHubQualitySignals.fromJson(qualitySignals),
+      );
+    } on TypeError {
+      throw const DevInsightApiException(
+        'The GitHub repository overview was invalid.',
+      );
+    }
+  }
+}
+
 void _validateOptionalFields(
   Map<String, dynamic> values,
   List<String> fields,
@@ -340,12 +917,123 @@ class DevInsightApi {
     return OnboardingCompletion.fromJson(_decodeObject(response));
   }
 
+  Future<GitHubRepositoryConnection> connectGitHubRepository(
+    String accessToken,
+    String repositoryUrl,
+  ) async {
+    final response = await _request(
+      'POST',
+      '/api/v1/github/connections',
+      accessToken: accessToken,
+      body: {'repository_url': repositoryUrl},
+      failureMessage:
+          'DevInsight could not connect this repository. Please try again.',
+      timeout: const Duration(seconds: 60),
+      statusMessages: const {
+        404: 'This public GitHub repository could not be found.',
+        422:
+            'Enter a valid public GitHub repository URL. Private repositories are not supported.',
+        429: 'GitHub is rate limiting requests. Please try again later.',
+        502: 'GitHub is temporarily unavailable. Please try again.',
+      },
+    );
+    return GitHubRepositoryConnection.fromJson(_decodeObject(response));
+  }
+
+  Future<List<GitHubRepositoryConnection>> getGitHubConnections(
+    String accessToken,
+  ) async {
+    final response = await _request(
+      'GET',
+      '/api/v1/github/connections',
+      accessToken: accessToken,
+      failureMessage:
+          'DevInsight could not load your connected repositories. Please retry.',
+    );
+    try {
+      final body = jsonDecode(response.body);
+      if (body is! List) throw const FormatException();
+      return body
+          .map(
+            (item) => GitHubRepositoryConnection.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
+          .toList();
+    } on FormatException {
+      throw const DevInsightApiException(
+        'The connected repositories response was invalid.',
+      );
+    } on TypeError {
+      throw const DevInsightApiException(
+        'The connected repositories response was invalid.',
+      );
+    }
+  }
+
+  Future<GitHubRepositoryOverview> getGitHubOverview(
+    String accessToken,
+    String connectionId,
+  ) async {
+    final response = await _request(
+      'GET',
+      '/api/v1/github/connections/${Uri.encodeComponent(connectionId)}/overview',
+      accessToken: accessToken,
+      failureMessage:
+          'DevInsight could not load repository information. Please retry.',
+    );
+    return GitHubRepositoryOverview.fromJson(_decodeObject(response));
+  }
+
+  Future<void> disconnectGitHubRepository(
+    String accessToken,
+    String connectionId,
+  ) async {
+    await _request(
+      'DELETE',
+      '/api/v1/github/connections/${Uri.encodeComponent(connectionId)}',
+      accessToken: accessToken,
+      failureMessage:
+          'DevInsight could not disconnect this repository. Please try again.',
+      statusMessages: const {
+        404: 'This repository connection was not found. Refresh and try again.',
+      },
+    );
+  }
+
+  Future<GitHubRepositoryOverview> refreshGitHubRepository(
+    String accessToken,
+    String connectionId,
+  ) async {
+    final response = await _request(
+      'POST',
+      '/api/v1/github/connections/${Uri.encodeComponent(connectionId)}/refresh',
+      accessToken: accessToken,
+      failureMessage:
+          'DevInsight could not refresh this repository. Please try again.',
+      timeout: const Duration(seconds: 60),
+      statusMessages: const {
+        404: 'This repository connection could not be found.',
+        429: 'GitHub is rate limiting requests. Please try again later.',
+        502:
+            'GitHub is temporarily unavailable. Your cached data is still available.',
+      },
+    );
+    final body = _decodeObject(response);
+    return GitHubRepositoryOverview.fromJson(
+      body,
+      throttled: body['throttled'] == true,
+    );
+  }
+
   Future<http.Response> _request(
     String method,
     String path, {
     required String accessToken,
     required String failureMessage,
+    Duration timeout = const Duration(seconds: 15),
     Map<String, Object?>? body,
+    Map<int, String> statusMessages = const {},
   }) async {
     try {
       final request = http.Request(method, Uri.parse(baseUrl).resolve(path))
@@ -355,9 +1043,7 @@ class DevInsightApi {
           if (body != null) 'Content-Type': 'application/json',
         });
       if (body != null) request.body = jsonEncode(body);
-      final streamed = await _client
-          .send(request)
-          .timeout(const Duration(seconds: 15));
+      final streamed = await _client.send(request).timeout(timeout);
       final response = await http.Response.fromStream(streamed);
       if (response.statusCode == 401) {
         throw const DevInsightApiException('Your session has expired.');
@@ -366,9 +1052,13 @@ class DevInsightApi {
         throw DevInsightApiException(_conflictMessage(response.body));
       }
       if (response.statusCode == 422) {
-        throw const DevInsightApiException(
-          'Some onboarding details are invalid. Review your selections and try again.',
+        throw DevInsightApiException(
+          statusMessages[422] ??
+              'Some submitted details are invalid. Review them and try again.',
         );
+      }
+      if (statusMessages.containsKey(response.statusCode)) {
+        throw DevInsightApiException(statusMessages[response.statusCode]!);
       }
       if (response.statusCode < 200 || response.statusCode >= 300) {
         throw DevInsightApiException(failureMessage);
