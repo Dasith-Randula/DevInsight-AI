@@ -1,0 +1,11 @@
+﻿repo_name,language,default_branch,folder_name,url
+encode/httpx,Python,master,encode__httpx,https://github.com/encode/httpx.git
+fastapi/fastapi,Python,master,fastapi__fastapi,https://github.com/fastapi/fastapi.git
+pallets/flask,Python,main,pallets__flask,https://github.com/pallets/flask.git
+pydantic/pydantic,Python,main,pydantic__pydantic,https://github.com/pydantic/pydantic.git
+pytest-dev/pytest,Python,main,pytest-dev__pytest,https://github.com/pytest-dev/pytest.git
+felangel/bloc,Dart,master,felangel__bloc,https://github.com/felangel/bloc.git
+rrousselGit/riverpod,Dart,master,rrousselGit__riverpod,https://github.com/rrousselGit/riverpod.git
+cfug/dio,Dart,main,cfug__dio,https://github.com/cfug/dio.git
+firebase/flutterfire,Dart,main,firebase__flutterfire,https://github.com/firebase/flutterfire.git
+fluttercommunity/plus_plugins,Dart,main,fluttercommunity__plus_plugins,https://github.com/fluttercommunity/plus_plugins.git
