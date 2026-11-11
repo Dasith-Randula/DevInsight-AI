@@ -10,7 +10,6 @@ import 'package:web_dashboard/core/config/app_config.dart';
 import 'package:web_dashboard/core/services/auth_service.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
 import 'package:web_dashboard/core/theme/app_theme_extension.dart';
-import 'package:web_dashboard/core/theme/theme_controller.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:web_dashboard/features/developer/presentation/routing/dashboard_destination.dart';
 import 'package:web_dashboard/features/developer/presentation/pages/ai_insights_page.dart';
@@ -24,7 +23,9 @@ import 'package:web_dashboard/features/developer/presentation/pages/reports_page
 import 'package:web_dashboard/features/developer/presentation/pages/settings_page.dart';
 import 'package:web_dashboard/features/developer/presentation/pages/team_page.dart';
 import 'package:web_dashboard/features/developer/presentation/widgets/developer_home_sections.dart';
-import 'package:web_dashboard/shared/widgets/theme_toggle_button.dart';
+import 'package:web_dashboard/shared/widgets/dashboard_chrome.dart';
+import 'package:web_dashboard/shared/widgets/dashboard_scroll_indicator.dart';
+import 'package:web_dashboard/shared/widgets/devinsight_animated_wordmark.dart';
 
 class DeveloperHomePage extends StatefulWidget {
   const DeveloperHomePage({
@@ -690,45 +691,42 @@ class DeveloperDashboardShell extends StatelessWidget {
       drawer: Drawer(
         width: 272,
         child: SafeArea(
-          child: _Navigation(
-            expanded: true,
-            activeDestination: activeDestination,
+          child: DashboardNavigation<DashboardDestination>(
+            primaryItems: DashboardDestination.values
+                .where((destination) => !destination.isWorkspace)
+                .map(
+                  (destination) => DashboardNavigationItem(
+                    value: destination,
+                    label: destination.label,
+                    icon: destination.icon,
+                  ),
+                )
+                .toList(),
+            workspaceItems: DashboardDestination.values
+                .where((destination) => destination.isWorkspace)
+                .map(
+                  (destination) => DashboardNavigationItem(
+                    value: destination,
+                    label: destination.label,
+                    icon: destination.icon,
+                  ),
+                )
+                .toList(),
+            activeValue: activeDestination,
             onSelect: (destination) => _selectFromDrawer(context, destination),
             onHelp: () {
               Navigator.of(context).pop();
               onHelp();
             },
+            expanded: true,
           ),
         ),
       ),
-      body: AnimatedContainer(
-        duration: const Duration(milliseconds: 480),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: Theme.of(context).brightness == Brightness.dark
-                ? const [
-                    Color(0xFF080D19),
-                    Color(0xFF0B1830),
-                    Color(0xFF102B4B),
-                    Color(0xFF0B1426),
-                  ]
-                : const [
-                    Color(0xFFFFFFFF),
-                    Color(0xFFF7FAFF),
-                    Color(0xFFEEF5FF),
-                    Color(0xFFF9FBFF),
-                  ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: [0, 0.32, 0.72, 1],
-          ),
-        ),
+      body: DashboardBackground(
+        animation: ambientMotion,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            IgnorePointer(
-              child: _AnimatedDotBackground(animation: ambientMotion),
-            ),
             SafeArea(
               child: LayoutBuilder(
                 builder: (context, constraints) {
@@ -778,7 +776,7 @@ class DeveloperDashboardShell extends StatelessWidget {
                               top: 0,
                               left: 0,
                               right: 0,
-                              child: _TopBar(
+                              child: DashboardTopBar(
                                 name: profileName,
                                 role: role,
                                 scrollController: scrollController,
@@ -801,11 +799,33 @@ class DeveloperDashboardShell extends StatelessWidget {
                           left: 0,
                           top: 0,
                           bottom: 0,
-                          child: _Navigation(
-                            expanded: false,
-                            activeDestination: activeDestination,
+                          child: DashboardNavigation<DashboardDestination>(
+                            primaryItems: DashboardDestination.values
+                                .where(
+                                  (destination) => !destination.isWorkspace,
+                                )
+                                .map(
+                                  (destination) => DashboardNavigationItem(
+                                    value: destination,
+                                    label: destination.label,
+                                    icon: destination.icon,
+                                  ),
+                                )
+                                .toList(),
+                            workspaceItems: DashboardDestination.values
+                                .where((destination) => destination.isWorkspace)
+                                .map(
+                                  (destination) => DashboardNavigationItem(
+                                    value: destination,
+                                    label: destination.label,
+                                    icon: destination.icon,
+                                  ),
+                                )
+                                .toList(),
+                            activeValue: activeDestination,
                             onSelect: onDestinationSelected,
                             onHelp: onHelp,
+                            expanded: false,
                           ),
                         ),
                     ],
@@ -1271,63 +1291,6 @@ Future<void> _openRepositoryUrl(
   }
 }
 
-class _AnimatedDotBackground extends StatelessWidget {
-  const _AnimatedDotBackground({required this.animation});
-
-  final Animation<double> animation;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(
-      painter: _BlueDotPainter(animation: animation),
-      size: Size.infinite,
-    );
-  }
-}
-
-class _BlueDotPainter extends CustomPainter {
-  const _BlueDotPainter({required this.animation}) : super(repaint: animation);
-
-  final Animation<double> animation;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final glowPaint = Paint();
-    final glows = [
-      (Offset(size.width * 0.86, size.height * 0.12), size.width * 0.42),
-      (Offset(size.width * 0.16, size.height * 0.82), size.width * 0.38),
-      (Offset(size.width * 0.84, size.height * 0.78), size.width * 0.34),
-    ];
-    for (final (center, radius) in glows) {
-      glowPaint.shader = RadialGradient(
-        colors: [
-          const Color(0x183B82F6),
-          const Color(0x0C38A5E8),
-          const Color(0x003B82F6),
-        ],
-        stops: const [0, 0.52, 1],
-      ).createShader(Rect.fromCircle(center: center, radius: radius));
-      canvas.drawRect(Offset.zero & size, glowPaint);
-    }
-
-    const spacing = 44.0;
-    final phase = animation.value * math.pi * 2;
-    for (var row = 0, y = 24.0; y < size.height; row++, y += spacing) {
-      for (var column = 0, x = 22.0; x < size.width; column++, x += spacing) {
-        final wave = math.sin(phase + column * 0.23 + row * 0.18);
-        final radius = 1.0 + (wave + 1) * 0.48;
-        final opacity = 0.11 + (wave + 1) * 0.055;
-        final paint = Paint()..color = Color.fromRGBO(34, 111, 226, opacity);
-        canvas.drawCircle(Offset(x, y + wave * 1.2), radius, paint);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _BlueDotPainter oldDelegate) =>
-      oldDelegate.animation != animation;
-}
-
 class _DashboardContent extends StatelessWidget {
   const _DashboardContent({
     required this.scrollController,
@@ -1393,7 +1356,7 @@ class _DashboardContent extends StatelessWidget {
                     padding: EdgeInsets.only(top: brandTopSpacing),
                     child: _Reveal(
                       controller: scrollController,
-                      child: _BrandIntro(
+                      child: DevInsightAnimatedWordmark(
                         animation: ambientMotion,
                         topPadding: desktopHero ? 16 : 12,
                       ),
@@ -1427,7 +1390,7 @@ class _DashboardContent extends StatelessWidget {
                   if (!desktopHero) const SizedBox(height: 4),
                   Padding(
                     padding: EdgeInsets.only(bottom: desktopHero ? 28 : 0),
-                    child: _ScrollMouseIndicator(
+                    child: DashboardScrollIndicator(
                       onPressed: () {
                         final targetContext = nextSectionKey.currentContext;
                         if (targetContext == null) return;
@@ -1459,613 +1422,6 @@ class _DashboardContent extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-}
-
-class _ScrollMouseIndicator extends StatefulWidget {
-  const _ScrollMouseIndicator({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  State<_ScrollMouseIndicator> createState() => _ScrollMouseIndicatorState();
-}
-
-class _ScrollMouseIndicatorState extends State<_ScrollMouseIndicator>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _wheelMotion = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 1500),
-  );
-  bool? _motionDisabled;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final motionDisabled =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    if (_motionDisabled == motionDisabled) return;
-    _motionDisabled = motionDisabled;
-    if (motionDisabled) {
-      _wheelMotion
-        ..stop()
-        ..value = 0;
-    } else {
-      _wheelMotion.repeat();
-    }
-  }
-
-  @override
-  void dispose() {
-    _wheelMotion.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Semantics(
-        button: true,
-        label: 'Scroll to dashboard content',
-        child: Tooltip(
-          message: 'Scroll to dashboard content',
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              key: const ValueKey('scroll-down-button'),
-              onTap: widget.onPressed,
-              customBorder: const CircleBorder(),
-              child: SizedBox(
-                width: 64,
-                height: 64,
-                child: Center(
-                  child: RepaintBoundary(
-                    child: CustomPaint(
-                      size: const Size(28, 44),
-                      painter: _ScrollMousePainter(animation: _wheelMotion),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ScrollMousePainter extends CustomPainter {
-  const _ScrollMousePainter({required this.animation})
-    : super(repaint: animation);
-
-  final Animation<double> animation;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final mouse = RRect.fromRectAndRadius(
-      Rect.fromLTWH(3, 2, size.width - 6, size.height - 4),
-      const Radius.circular(11),
-    );
-    final glowPaint = Paint()
-      ..color = const Color(0xFF1769E8).withValues(alpha: 0.12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-    final outlinePaint = Paint()
-      ..color = const Color(0xFF1769E8).withValues(alpha: 0.78)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.7
-      ..isAntiAlias = true;
-    canvas
-      ..drawRRect(mouse, glowPaint)
-      ..drawRRect(mouse, outlinePaint);
-
-    final progress = animation.value;
-    final wheelTop = 9 + progress * 10;
-    final wheelOpacity = (1 - progress).clamp(0.0, 1.0);
-    final wheel = RRect.fromRectAndRadius(
-      Rect.fromLTWH(size.width / 2 - 1.2, wheelTop, 2.4, 5),
-      const Radius.circular(2),
-    );
-    canvas.drawRRect(
-      wheel,
-      Paint()
-        ..color = const Color(0xFF1769E8).withValues(alpha: wheelOpacity)
-        ..isAntiAlias = true,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _ScrollMousePainter oldDelegate) =>
-      oldDelegate.animation != animation;
-}
-
-class _Navigation extends StatefulWidget {
-  const _Navigation({
-    required this.expanded,
-    required this.activeDestination,
-    required this.onSelect,
-    required this.onHelp,
-  });
-
-  final bool expanded;
-  final DashboardDestination activeDestination;
-  final ValueChanged<DashboardDestination> onSelect;
-  final VoidCallback onHelp;
-
-  @override
-  State<_Navigation> createState() => _NavigationState();
-}
-
-class _NavigationState extends State<_Navigation> {
-  bool _hovered = false;
-  bool _showLabels = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appTheme;
-    final expanded = widget.expanded || _hovered;
-    final showLabels = widget.expanded || _showLabels;
-    return MouseRegion(
-      onEnter: widget.expanded
-          ? null
-          : (_) {
-              setState(() {
-                _hovered = true;
-                _showLabels = false;
-              });
-            },
-      onExit: widget.expanded
-          ? null
-          : (_) {
-              setState(() {
-                _hovered = false;
-                _showLabels = false;
-              });
-            },
-      child: ClipRRect(
-        borderRadius: BorderRadius.only(
-          topRight: Radius.circular(expanded ? 18 : 0),
-          bottomRight: Radius.circular(expanded ? 18 : 0),
-        ),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            onEnd: () {
-              if (_hovered && !_showLabels) setState(() => _showLabels = true);
-            },
-            width: widget.expanded
-                ? double.infinity
-                : expanded
-                ? 224
-                : 76,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-            decoration: BoxDecoration(
-              color: colors.sidebar.withValues(
-                alpha: Theme.of(context).brightness == Brightness.dark
-                    ? 0.96
-                    : 0.58,
-              ),
-              border: Border(
-                right: BorderSide(color: colors.border.withValues(alpha: 0.78)),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                Expanded(
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
-                      for (final item in DashboardDestination.values.where(
-                        (destination) => !destination.isWorkspace,
-                      ))
-                        _NavItem(
-                          title: item.label,
-                          icon: item.icon,
-                          active: item == widget.activeDestination,
-                          expanded: showLabels,
-                          onTap: () => widget.onSelect(item),
-                        ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(
-                          expanded ? 12 : 0,
-                          14,
-                          0,
-                          8,
-                        ),
-                        child: showLabels
-                            ? Text(
-                                'WORKSPACE',
-                                style: _textStyle(
-                                  color: const Color(0xFF8290A8),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 0.8,
-                                ),
-                              )
-                            : Divider(color: colors.divider, height: 12),
-                      ),
-                      for (final item in DashboardDestination.values.where(
-                        (destination) => destination.isWorkspace,
-                      ))
-                        _NavItem(
-                          title: item.label,
-                          icon: item.icon,
-                          active: item == widget.activeDestination,
-                          expanded: showLabels,
-                          onTap: () => widget.onSelect(item),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Tooltip(
-                  message: 'Need Help?',
-                  child: Material(
-                    color: colors.surfaceSecondary,
-                    borderRadius: BorderRadius.circular(14),
-                    child: InkWell(
-                      onTap: widget.onHelp,
-                      borderRadius: BorderRadius.circular(14),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: expanded ? 12 : 9,
-                          vertical: 11,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: showLabels
-                              ? MainAxisAlignment.start
-                              : MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.help_outline_rounded,
-                              color: Theme.of(context).colorScheme.primary,
-                              size: 19,
-                            ),
-                            if (showLabels) ...[
-                              const SizedBox(width: 10),
-                              Text(
-                                'Need Help?',
-                                style: _textStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.title,
-    required this.icon,
-    required this.active,
-    required this.expanded,
-    required this.onTap,
-  });
-
-  final String title;
-  final IconData icon;
-  final bool active;
-  final bool expanded;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appTheme;
-    final color = active
-        ? Theme.of(context).colorScheme.primary
-        : colors.mutedText;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 3),
-      child: Tooltip(
-        key: ValueKey('sidebar-${title.toLowerCase().replaceAll(' ', '-')}'),
-        message: expanded ? '' : title,
-        child: Material(
-          color: active
-              ? Theme.of(context).colorScheme.primary.withValues(alpha: .14)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(11),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(11),
-            child: SizedBox(
-              height: 39,
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 44,
-                    child: Icon(icon, size: 18, color: color),
-                  ),
-                  if (expanded)
-                    Expanded(
-                      child: Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: _textStyle(
-                          color: active ? colors.primaryText : color,
-                          fontSize: 12,
-                          fontWeight: active
-                              ? FontWeight.w800
-                              : FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TopBar extends StatelessWidget {
-  const _TopBar({
-    required this.name,
-    required this.role,
-    required this.scrollController,
-    required this.onMenu,
-    required this.onProfile,
-    required this.onAction,
-    required this.onSettings,
-  });
-
-  final String name;
-  final String role;
-  final ScrollController scrollController;
-  final VoidCallback? onMenu;
-  final VoidCallback onProfile;
-  final ValueChanged<String> onAction;
-  final VoidCallback onSettings;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appTheme;
-    final themeController = ThemeControllerScope.maybeOf(context);
-    final width = MediaQuery.sizeOf(context).width;
-    final compact = width < 700;
-    return AnimatedBuilder(
-      animation: scrollController,
-      builder: (context, child) {
-        final scrolled = scrollController.hasClients
-            ? (scrollController.offset / 54).clamp(0.0, 1.0)
-            : 0.0;
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: 8 + scrolled * 16,
-              sigmaY: 8 + scrolled * 16,
-            ),
-            child: Container(
-              key: const ValueKey('topbar-surface'),
-              height: 62,
-              margin: const EdgeInsets.fromLTRB(10, 7, 10, 0),
-              padding: EdgeInsets.symmetric(horizontal: compact ? 14 : 24),
-              decoration: BoxDecoration(
-                color: colors.topbar.withValues(
-                  alpha: Theme.of(context).brightness == Brightness.dark
-                      ? 0.96 - scrolled * 0.14
-                      : 0.93 - scrolled * 0.39,
-                ),
-                border: Border(
-                  bottom: BorderSide(
-                    color: colors.border.withValues(
-                      alpha: 0.82 - scrolled * 0.24,
-                    ),
-                  ),
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                children: [
-                  if (onMenu != null)
-                    IconButton(
-                      onPressed: onMenu,
-                      tooltip: 'Open navigation',
-                      icon: const Icon(Icons.menu_rounded),
-                      color: colors.secondaryText,
-                    ),
-                  if (!compact)
-                    OutlinedButton.icon(
-                      onPressed: () =>
-                          onAction('Workspace switching is coming soon.'),
-                      icon: const Icon(Icons.code_rounded, size: 15),
-                      label: const Text('My Workspace'),
-                      iconAlignment: IconAlignment.start,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: colors.primaryText,
-                        side: BorderSide(color: colors.border),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        textStyle: _textStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  if (!compact) const SizedBox(width: 20),
-                  Expanded(
-                    child: Align(
-                      alignment: compact
-                          ? Alignment.centerLeft
-                          : Alignment.center,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 470),
-                        child: SizedBox(
-                          height: 38,
-                          child: TextField(
-                            readOnly: true,
-                            onTap: () => onAction(
-                              'Search will be available when workspace data is connected.',
-                            ),
-                            decoration: InputDecoration(
-                              hintText: compact
-                                  ? 'Search'
-                                  : 'Search projects, issues, PRs, people...',
-                              prefixIcon: const Icon(
-                                Icons.search_rounded,
-                                size: 18,
-                              ),
-                              suffixIcon: compact
-                                  ? null
-                                  : Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: Center(
-                                        widthFactor: 1,
-                                        child: Text(
-                                          'Ctrl + K',
-                                          style: _textStyle(
-                                            color: const Color(0xFF7E8CA4),
-                                            fontSize: 9,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                              filled: true,
-                              fillColor: colors.surfaceSecondary,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 8,
-                              ),
-                              isDense: true,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(11),
-                                borderSide: BorderSide(color: colors.border),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(11),
-                                borderSide: BorderSide(color: colors.border),
-                              ),
-                            ),
-                            style: _textStyle(fontSize: 11),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  if (!compact) const SizedBox(width: 16),
-                  if (!compact && themeController != null) ...[
-                    ThemeToggleButton(controller: themeController),
-                    const SizedBox(width: 8),
-                  ],
-                  _TopBarIcon(
-                    icon: Icons.notifications_none_rounded,
-                    tooltip: 'Notifications',
-                    onPressed: () => onAction('You have no new notifications.'),
-                  ),
-                  if (!compact)
-                    _TopBarIcon(
-                      icon: Icons.help_outline_rounded,
-                      tooltip: 'Help',
-                      onPressed: () =>
-                          onAction('Support resources are coming soon.'),
-                    ),
-                  if (!compact)
-                    _TopBarIcon(
-                      icon: Icons.settings_outlined,
-                      tooltip: 'Settings',
-                      onPressed: onSettings,
-                    ),
-                  const SizedBox(width: 6),
-                  TextButton(
-                    onPressed: onProfile,
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      foregroundColor: colors.primaryText,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        _Avatar(name: name, size: 31),
-                        if (!compact) ...[
-                          const SizedBox(width: 8),
-                          ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 120),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: _textStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                                ),
-                                Text(
-                                  role,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: _textStyle(
-                                    color: colors.mutedText,
-                                    fontSize: 9,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                        const Icon(Icons.keyboard_arrow_down_rounded, size: 17),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _TopBarIcon extends StatelessWidget {
-  const _TopBarIcon({
-    required this.icon,
-    required this.tooltip,
-    required this.onPressed,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onPressed,
-      tooltip: tooltip,
-      icon: Icon(icon, size: 19),
-      color: const Color(0xFF4A5D7A),
-      visualDensity: VisualDensity.compact,
     );
   }
 }
@@ -2112,7 +1468,7 @@ class _ProfileMenu extends StatelessWidget {
           children: [
             Row(
               children: [
-                _Avatar(name: name, size: 42),
+                DashboardAvatar(name: name, size: 42),
                 const SizedBox(width: 11),
                 Expanded(
                   child: Column(
@@ -2245,343 +1601,6 @@ class _ProfileAction extends StatelessWidget {
       ),
     );
   }
-}
-
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.name, required this.size});
-
-  final String name;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final initials = name
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty)
-        .take(2)
-        .map((part) => part[0].toUpperCase())
-        .join();
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF0764F6), Color(0xFF29B7F2)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(size * 0.34),
-      ),
-      child: Text(
-        initials.isEmpty ? 'D' : initials,
-        style: _textStyle(
-          color: Colors.white,
-          fontSize: size * 0.36,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-class _BrandIntro extends StatelessWidget {
-  const _BrandIntro({required this.animation, required this.topPadding});
-
-  final Animation<double> animation;
-  final double topPadding;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.appTheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final fontSize = (constraints.maxWidth * 0.168).clamp(67.2, 140.8);
-        final baseStyle = GoogleFonts.plusJakartaSans(
-          fontSize: fontSize,
-          fontWeight: FontWeight.w900,
-          height: 1,
-          letterSpacing: 3.52,
-        );
-        final insightStyle = baseStyle.copyWith(fontStyle: FontStyle.italic);
-        final outlineWidth = ((fontSize / 1.6) / 26).clamp(2.0, 3.2) * 0.62;
-        return Padding(
-          padding: EdgeInsets.only(top: topPadding, bottom: 12),
-          child: SizedBox(
-            width: double.infinity,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                FittedBox(
-                  key: const ValueKey('devinsight-wordmark'),
-                  fit: BoxFit.scaleDown,
-                  child: AnimatedBuilder(
-                    animation: animation,
-                    builder: (context, child) {
-                      final phase = animation.value;
-                      const fillEnd = 0.60;
-                      const holdEnd = 0.68;
-                      const drainEnd = 0.96;
-                      final fillDuration = fillEnd / 'INSIGHT'.length;
-                      final drainDuration =
-                          (drainEnd - holdEnd) / 'INSIGHT'.length;
-                      return Semantics(
-                        label: 'DevInsight',
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text(
-                              'DEV',
-                              style: baseStyle.copyWith(
-                                color: isDark
-                                    ? colors.primaryText
-                                    : const Color(0xFF111C31),
-                                letterSpacing: fontSize * 0.05,
-                              ),
-                            ),
-                            SizedBox(width: fontSize * 0.05),
-                            for (
-                              var index = 0;
-                              index < 'INSIGHT'.length;
-                              index++
-                            )
-                              _WaterFillLetter(
-                                letter: 'INSIGHT'[index],
-                                style: insightStyle,
-                                outlineWidth: outlineWidth,
-                                progress: _letterFillProgress(
-                                  phase: phase,
-                                  index: index,
-                                  fillDuration: fillDuration,
-                                  fillEnd: fillEnd,
-                                  holdEnd: holdEnd,
-                                  drainEnd: drainEnd,
-                                  drainDuration: drainDuration,
-                                ),
-                                wavePhase: phase * math.pi * 2 + index * 0.9,
-                                rightPadding: index == 'INSIGHT'.length - 1
-                                    ? 0
-                                    : fontSize * 0.025,
-                              ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'AI-Powered Software Engineering Intelligence',
-                  textAlign: TextAlign.center,
-                  style: _textStyle(
-                    color: isDark
-                        ? colors.primaryText
-                        : const Color(0xFF273C61),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  'Smarter development. Clearer insights. Better decisions.',
-                  textAlign: TextAlign.center,
-                  style: _textStyle(
-                    color: isDark
-                        ? colors.secondaryText
-                        : const Color(0xFF71819C),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-double _letterFillProgress({
-  required double phase,
-  required int index,
-  required double fillDuration,
-  required double fillEnd,
-  required double holdEnd,
-  required double drainEnd,
-  required double drainDuration,
-}) {
-  if (phase < fillEnd) {
-    final local = ((phase - index * fillDuration) / fillDuration).clamp(
-      0.0,
-      1.0,
-    );
-    return Curves.easeInOutCubic.transform(local);
-  }
-  if (phase < holdEnd) return 1;
-  if (phase < drainEnd) {
-    final reverseIndex = 'INSIGHT'.length - 1 - index;
-    final local =
-        ((phase - holdEnd - reverseIndex * drainDuration) / drainDuration)
-            .clamp(0.0, 1.0);
-    return 1 - Curves.easeInOutCubic.transform(local);
-  }
-  return 0;
-}
-
-class _WaterFillLetter extends StatelessWidget {
-  const _WaterFillLetter({
-    required this.letter,
-    required this.style,
-    required this.outlineWidth,
-    required this.progress,
-    required this.wavePhase,
-    required this.rightPadding,
-  });
-
-  final String letter;
-  final TextStyle style;
-  final double outlineWidth;
-  final double progress;
-  final double wavePhase;
-  final double rightPadding;
-
-  @override
-  Widget build(BuildContext context) {
-    final painter = _WaterFillPainter(
-      letter: letter,
-      style: style,
-      outlineWidth: outlineWidth,
-      progress: progress,
-      wavePhase: wavePhase,
-    );
-    return Padding(
-      padding: EdgeInsets.only(right: rightPadding),
-      child: Stack(
-        key: ValueKey('wordmark-letter-$letter'),
-        clipBehavior: Clip.none,
-        children: [
-          Padding(
-            padding: EdgeInsets.all(painter.padding),
-            child: Text(
-              letter,
-              style: style.copyWith(color: Colors.transparent),
-              textScaler: TextScaler.noScaling,
-            ),
-          ),
-          Positioned.fill(child: CustomPaint(painter: painter)),
-        ],
-      ),
-    );
-  }
-}
-
-class _WaterFillPainter extends CustomPainter {
-  _WaterFillPainter({
-    required this.letter,
-    required this.style,
-    required this.outlineWidth,
-    required this.progress,
-    required this.wavePhase,
-  }) : _outline = _createPainter(
-         letter,
-         style.copyWith(
-           foreground: Paint()
-             ..style = PaintingStyle.stroke
-             ..strokeWidth = outlineWidth
-             ..strokeJoin = StrokeJoin.bevel
-             ..isAntiAlias = true
-             ..color = const Color(0xFF1769E8),
-         ),
-       ),
-       _fill = _createPainter(letter, _fillStyle(letter, style, outlineWidth)),
-       padding = style.fontSize! * 0.10 + outlineWidth {
-    size = Size(_fill.width + padding * 2, _fill.height + padding * 2);
-  }
-
-  final String letter;
-  final TextStyle style;
-  final double outlineWidth;
-  final double progress;
-  final double wavePhase;
-  final TextPainter _outline;
-  final TextPainter _fill;
-  final double padding;
-  late final Size size;
-
-  static TextPainter _createPainter(String letter, TextStyle style) =>
-      TextPainter(
-        text: TextSpan(text: letter, style: style),
-        textDirection: TextDirection.ltr,
-        textScaler: TextScaler.noScaling,
-      )..layout();
-
-  static TextStyle _fillStyle(
-    String letter,
-    TextStyle style,
-    double outlineWidth,
-  ) {
-    final painter = _createPainter(letter, style);
-    final textPadding = style.fontSize! * 0.10 + outlineWidth;
-    return style.copyWith(
-      foreground: Paint()
-        ..shader =
-            const LinearGradient(
-              begin: Alignment.bottomLeft,
-              end: Alignment.topRight,
-              colors: [Color(0xFF0756D8), Color(0xFF168DF1)],
-            ).createShader(
-              Rect.fromLTWH(
-                textPadding,
-                textPadding,
-                painter.width,
-                painter.height,
-              ),
-            ),
-    );
-  }
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final textOrigin = Offset(padding, padding);
-    if (progress < 1) {
-      _outline.paint(canvas, textOrigin);
-    }
-    if (progress <= 0) return;
-
-    canvas.save();
-    if (progress < 1) {
-      canvas.clipPath(_waterSurface(size), doAntiAlias: true);
-    }
-    _fill.paint(canvas, textOrigin);
-    canvas.restore();
-  }
-
-  Path _waterSurface(Size paintSize) {
-    final level = paintSize.height * (1 - progress);
-    final amplitude = math.min(2.8, paintSize.height * 0.025);
-    final path = Path()..moveTo(0, level + math.sin(wavePhase) * amplitude);
-    for (double x = 2; x < paintSize.width; x += 2) {
-      final y = level + math.sin(wavePhase + x * 0.045) * amplitude;
-      path.lineTo(x, y);
-    }
-    return path
-      ..lineTo(paintSize.width, paintSize.height)
-      ..lineTo(0, paintSize.height)
-      ..close();
-  }
-
-  @override
-  bool shouldRepaint(covariant _WaterFillPainter oldDelegate) =>
-      oldDelegate.progress != progress ||
-      oldDelegate.wavePhase != wavePhase ||
-      oldDelegate.style != style ||
-      oldDelegate.outlineWidth != outlineWidth;
 }
 
 class _WelcomeHero extends StatelessWidget {
@@ -3004,7 +2023,9 @@ class _HeroCopy extends StatelessWidget {
           child: Text(
             "Here's what's happening in your projects today. Track progress, spot risks, and make data-driven engineering decisions with DevInsight.",
             style: _textStyle(
-              color: context.appTheme.secondaryText,
+              color: Theme.of(context).brightness == Brightness.light
+                  ? Colors.white
+                  : context.appTheme.secondaryText,
               fontSize: 12,
               height: 1.55,
             ),

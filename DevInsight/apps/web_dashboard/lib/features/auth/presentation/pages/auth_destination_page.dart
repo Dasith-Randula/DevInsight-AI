@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
 import 'package:web_dashboard/features/developer/presentation/pages/developer_home_page.dart';
+import 'package:web_dashboard/features/manager/presentation/pages/manager_home_page.dart';
 
 class AuthDestinationPage extends StatelessWidget {
   const AuthDestinationPage({
@@ -25,8 +26,11 @@ class AuthDestinationPage extends StatelessWidget {
           role: 'Developer',
         );
 
-    if (title.toLowerCase().contains('developer')) {
-      return DeveloperHomePage(profile: userProfile);
+    switch (userProfile.nextStep) {
+      case 'developer_home':
+        return DeveloperHomePage(profile: userProfile);
+      case 'manager_home':
+        return ManagerHomePage(profile: userProfile);
     }
 
     return Scaffold(
