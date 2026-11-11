@@ -1,0 +1,2259 @@
+{
+  "environment": {
+    "verified_at_local": "2026-11-11T23:05:36.266551+05:30",
+    "project_root": "C:\\Users\\User\\Desktop\\FYP\\Project\\DevInsight-AI\\DevInsight",
+    "git_version": "git version 2.47.1.windows.1",
+    "python_version": "3.14.2",
+    "directories": {
+      "config": true,
+      "data": true,
+      "data/repositories": true,
+      "docs": true,
+      "scripts": true
+    },
+    "required_documents": {
+      "docs/bug_fix_evidence_review.md": true,
+      "docs/repository_selection_first_half.md": true,
+      "docs/rq1_methodology_first_half.md": true,
+      "docs/rq1_first_half_evaluation_summary.md": true
+    },
+    "research_scripts": {
+      "scripts/screen_repositories.ps1": true,
+      "scripts/audit_bug_issues.ps1": true,
+      "scripts/retrieve_bug_issue_timelines.ps1": true,
+      "scripts/build_repository_suitability.ps1": true
+    },
+    "git_branch": "Research",
+    "git_head": "8ae6c8ab8df1eec9d54133444031e25629854e3c",
+    "worktree_status": [
+      "?? data/bug_fix_review.csv",
+      "?? data/bug_fix_review_timeline_cache.json",
+      "?? data/bug_issue_samples_pilot.csv",
+      "?? data/preflight/",
+      "?? data/repository_bug_audit_pilot.csv",
+      "?? docs/rq1_first_half_evaluation_summary.md",
+      "?? docs/rq1_methodology_first_half.md",
+      "?? docs/rq1_pretraining_verification_report.md",
+      "?? scripts/preflight/"
+    ]
+  },
+  "csv_files": {
+    "config/research_repositories.csv": {
+      "path": "config/research_repositories.csv",
+      "exists": true,
+      "readable": true,
+      "row_count": 10,
+      "columns": [
+        "repo_name",
+        "language",
+        "default_branch",
+        "folder_name",
+        "url"
+      ],
+      "missing_required_columns": [],
+      "empty_required_values": {
+        "repo_name": 0,
+        "language": 0,
+        "default_branch": 0,
+        "folder_name": 0,
+        "url": 0
+      },
+      "duplicate_rows": 0,
+      "repository_ids": [
+        "cfug/dio",
+        "encode/httpx",
+        "fastapi/fastapi",
+        "felangel/bloc",
+        "firebase/flutterfire",
+        "fluttercommunity/plus_plugins",
+        "pallets/flask",
+        "pydantic/pydantic",
+        "pytest-dev/pytest",
+        "rrousselGit/riverpod"
+      ],
+      "unknown_repository_ids": [],
+      "status_counts": {},
+      "errors": []
+    },
+    "config/repository_setup_manifest.csv": {
+      "path": "config/repository_setup_manifest.csv",
+      "exists": true,
+      "readable": true,
+      "row_count": 10,
+      "columns": [
+        "Repository",
+        "Language",
+        "DefaultBranch",
+        "CommitSHA",
+        "RemoteURL",
+        "RecordedAtUTC"
+      ],
+      "missing_required_columns": [],
+      "empty_required_values": {
+        "Repository": 0,
+        "Language": 0,
+        "DefaultBranch": 0,
+        "CommitSHA": 0,
+        "RemoteURL": 0,
+        "RecordedAtUTC": 0
+      },
+      "duplicate_rows": 0,
+      "repository_ids": [
+        "cfug/dio",
+        "encode/httpx",
+        "fastapi/fastapi",
+        "felangel/bloc",
+        "firebase/flutterfire",
+        "fluttercommunity/plus_plugins",
+        "pallets/flask",
+        "pydantic/pydantic",
+        "pytest-dev/pytest",
+        "rrousselGit/riverpod"
+      ],
+      "unknown_repository_ids": [],
+      "status_counts": {},
+      "errors": []
+    },
+    "data/repository_screening.csv": {
+      "path": "data/repository_screening.csv",
+      "exists": true,
+      "readable": true,
+      "row_count": 10,
+      "columns": [
+        "Repository",
+        "Language",
+        "Commits",
+        "SourceFiles",
+        "WorkflowFiles",
+        "IssueSample",
+        "PRSample",
+        "BugLikeLabels",
+        "APIStatus",
+        "Decision"
+      ],
+      "missing_required_columns": [],
+      "empty_required_values": {
+        "Repository": 0,
+        "Language": 0,
+        "Commits": 0
+      },
+      "duplicate_rows": 0,
+      "repository_ids": [
+        "cfug/dio",
+        "encode/httpx",
+        "fastapi/fastapi",
+        "felangel/bloc",
+        "firebase/flutterfire",
+        "fluttercommunity/plus_plugins",
+        "pallets/flask",
+        "pydantic/pydantic",
+        "pytest-dev/pytest",
+        "rrousselGit/riverpod"
+      ],
+      "unknown_repository_ids": [],
+      "status_counts": {},
+      "errors": []
+    },
+    "data/repository_bug_audit.csv": {
+      "path": "data/repository_bug_audit.csv",
+      "exists": true,
+      "readable": true,
+      "row_count": 10,
+      "columns": [
+        "Repository",
+        "Language",
+        "LabelUsed",
+        "BugIssueSample",
+        "PRsInSample",
+        "PageLimitReached",
+        "Status"
+      ],
+      "missing_required_columns": [],
+      "empty_required_values": {
+        "Repository": 0,
+        "Status": 0
+      },
+      "duplicate_rows": 0,
+      "repository_ids": [
+        "cfug/dio",
+        "encode/httpx",
+        "fastapi/fastapi",
+        "felangel/bloc",
+        "firebase/flutterfire",
+        "fluttercommunity/plus_plugins",
+        "pallets/flask",
+        "pydantic/pydantic",
+        "pytest-dev/pytest",
+        "rrousselGit/riverpod"
+      ],
+      "unknown_repository_ids": [],
+      "status_counts": {
+        "OK": 10
+      },
+      "errors": []
+    },
+    "data/bug_issue_samples.csv": {
+      "path": "data/bug_issue_samples.csv",
+      "exists": true,
+      "readable": true,
+      "row_count": 30,
+      "columns": [
+        "Repository",
+        "IssueNumber",
+        "Title",
+        "State",
+        "URL",
+        "CreatedAt",
+        "ClosedAt",
+        "VerifiedFixLink"
+      ],
+      "missing_required_columns": [],
+      "empty_required_values": {
+        "Repository": 0,
+        "IssueNumber": 0,
+        "URL": 0,
+        "CreatedAt": 0
+      },
+      "duplicate_rows": 0,
+      "repository_ids": [
+        "cfug/dio",
+        "encode/httpx",
+        "fastapi/fastapi",
+        "felangel/bloc",
+        "firebase/flutterfire",
+        "fluttercommunity/plus_plugins",
+        "pallets/flask",
+        "pydantic/pydantic",
+        "pytest-dev/pytest",
+        "rrousselGit/riverpod"
+      ],
+      "unknown_repository_ids": [],
+      "status_counts": {},
+      "errors": []
+    },
+    "data/bug_fix_review_auto.csv": {
+      "path": "data/bug_fix_review_auto.csv",
+      "exists": true,
+      "readable": true,
+      "row_count": 30,
+      "columns": [
+        "Repository",
+        "IssueNumber",
+        "Title",
+        "IssueURL",
+        "BugEvidence",
+        "FixPRURL",
+        "PRMerged",
+        "FixCommitSHA",
+        "EvidenceURLs",
+        "ReviewStatus",
+        "Reason",
+        "CheckedAtUTC"
+      ],
+      "missing_required_columns": [],
+      "empty_required_values": {
+        "Repository": 0,
+        "IssueNumber": 0,
+        "IssueURL": 0,
+        "FixPRURL": 8,
+        "PRMerged": 8,
+        "FixCommitSHA": 8,
+        "ReviewStatus": 0
+      },
+      "duplicate_rows": 0,
+      "repository_ids": [
+        "cfug/dio",
+        "encode/httpx",
+        "fastapi/fastapi",
+        "felangel/bloc",
+        "firebase/flutterfire",
+        "fluttercommunity/plus_plugins",
+        "pallets/flask",
+        "pydantic/pydantic",
+        "pytest-dev/pytest",
+        "rrousselGit/riverpod"
+      ],
+      "unknown_repository_ids": [],
+      "status_counts": {
+        "VERIFIED_FIX": 11,
+        "NOT_A_BUG": 2,
+        "BUG_NO_FIX_LINK": 3,
+        "UNCLEAR": 4,
+        "CANDIDATE_FIX": 10
+      },
+      "errors": []
+    },
+    "data/repository_suitability_matrix.csv": {
+      "path": "data/repository_suitability_matrix.csv",
+      "exists": true,
+      "readable": true,
+      "row_count": 10,
+      "columns": [
+        "Repository",
+        "Language",
+        "Commits",
+        "SourceFiles",
+        "WorkflowFiles",
+        "BugLabels",
+        "ReviewedIssues",
+        "VerifiedFixes",
+        "CandidateFixes",
+        "BugsWithoutFix",
+        "NotABug",
+        "Unclear",
+        "APIErrors",
+        "SampleAssessment",
+        "Selection"
+      ],
+      "missing_required_columns": [],
+      "empty_required_values": {
+        "Repository": 0,
+        "ReviewedIssues": 0,
+        "VerifiedFixes": 0,
+        "CandidateFixes": 0,
+        "BugsWithoutFix": 0,
+        "NotABug": 0,
+        "Unclear": 0
+      },
+      "duplicate_rows": 0,
+      "repository_ids": [
+        "cfug/dio",
+        "encode/httpx",
+        "fastapi/fastapi",
+        "felangel/bloc",
+        "firebase/flutterfire",
+        "fluttercommunity/plus_plugins",
+        "pallets/flask",
+        "pydantic/pydantic",
+        "pytest-dev/pytest",
+        "rrousselGit/riverpod"
+      ],
+      "unknown_repository_ids": [],
+      "status_counts": {},
+      "errors": []
+    },
+    "data/bug_fix_review.csv": {
+      "path": "data/bug_fix_review.csv",
+      "exists": true,
+      "readable": true,
+      "row_count": 30,
+      "columns": [
+        "Repository",
+        "IssueNumber",
+        "Title",
+        "IssueURL",
+        "BugEvidence",
+        "FixPRURL",
+        "FixCommitSHA",
+        "ReviewStatus",
+        "Notes"
+      ],
+      "missing_required_columns": [],
+      "empty_required_values": {
+        "Repository": 0,
+        "IssueNumber": 0,
+        "ReviewStatus": 0
+      },
+      "duplicate_rows": 0,
+      "repository_ids": [
+        "cfug/dio",
+        "encode/httpx",
+        "fastapi/fastapi",
+        "felangel/bloc",
+        "firebase/flutterfire",
+        "fluttercommunity/plus_plugins",
+        "pallets/flask",
+        "pydantic/pydantic",
+        "pytest-dev/pytest",
+        "rrousselGit/riverpod"
+      ],
+      "unknown_repository_ids": [],
+      "status_counts": {
+        "PENDING": 30
+      },
+      "errors": []
+    },
+    "data/repository_bug_audit_pilot.csv": {
+      "path": "data/repository_bug_audit_pilot.csv",
+      "exists": true,
+      "readable": true,
+      "row_count": 2,
+      "columns": [
+        "Repository",
+        "Language",
+        "LabelUsed",
+        "BugIssueSample",
+        "PRsInSample",
+        "PageLimitReached",
+        "Status"
+      ],
+      "missing_required_columns": [],
+      "empty_required_values": {
+        "Repository": 0,
+        "Status": 0
+      },
+      "duplicate_rows": 0,
+      "repository_ids": [
+        "fastapi/fastapi",
+        "felangel/bloc"
+      ],
+      "unknown_repository_ids": [],
+      "status_counts": {
+        "OK": 2
+      },
+      "errors": []
+    },
+    "data/bug_issue_samples_pilot.csv": {
+      "path": "data/bug_issue_samples_pilot.csv",
+      "exists": true,
+      "readable": true,
+      "row_count": 6,
+      "columns": [
+        "Repository",
+        "IssueNumber",
+        "Title",
+        "State",
+        "URL",
+        "CreatedAt",
+        "ClosedAt",
+        "VerifiedFixLink"
+      ],
+      "missing_required_columns": [],
+      "empty_required_values": {
+        "Repository": 0,
+        "IssueNumber": 0,
+        "URL": 0
+      },
+      "duplicate_rows": 0,
+      "repository_ids": [
+        "fastapi/fastapi",
+        "felangel/bloc"
+      ],
+      "unknown_repository_ids": [],
+      "status_counts": {},
+      "errors": []
+    }
+  },
+  "dataset_relations": {
+    "configured_repository_count": 10,
+    "sample_record_count": 30,
+    "review_record_count": 30,
+    "manual_review_record_count": 30,
+    "sample_duplicate_keys": 0,
+    "review_duplicate_keys": 0,
+    "manual_duplicate_keys": 0,
+    "sample_review_key_mismatches": {
+      "in_sample_not_in_auto_review": [],
+      "in_auto_review_not_in_sample": [],
+      "in_sample_not_in_manual_template": [],
+      "in_manual_template_not_in_sample": []
+    },
+    "unknown_repository_records": {
+      "sample": [],
+      "reviews": [],
+      "by_file": {
+        "config/research_repositories.csv": [],
+        "config/repository_setup_manifest.csv": [],
+        "data/repository_screening.csv": [],
+        "data/repository_bug_audit.csv": [],
+        "data/bug_issue_samples.csv": [],
+        "data/bug_fix_review_auto.csv": [],
+        "data/repository_suitability_matrix.csv": [],
+        "data/bug_fix_review.csv": [],
+        "data/repository_bug_audit_pilot.csv": [],
+        "data/bug_issue_samples_pilot.csv": []
+      }
+    },
+    "invalid_timestamps_by_file_and_field": {},
+    "review_status_counts": {
+      "VERIFIED_FIX": 11,
+      "NOT_A_BUG": 2,
+      "BUG_NO_FIX_LINK": 3,
+      "UNCLEAR": 4,
+      "CANDIDATE_FIX": 10
+    },
+    "reviewed_issue_count_by_repository": {
+      "encode/httpx": 3,
+      "pallets/flask": 3,
+      "pydantic/pydantic": 3,
+      "pytest-dev/pytest": 3,
+      "felangel/bloc": 3,
+      "rrousselGit/riverpod": 3,
+      "cfug/dio": 3,
+      "firebase/flutterfire": 3,
+      "fluttercommunity/plus_plugins": 3,
+      "fastapi/fastapi": 3
+    },
+    "suitability_matrix_status_mismatches": [],
+    "issue_field_failures": [],
+    "fix_evidence_field_failures": [],
+    "fix_records": [
+      {
+        "key": [
+          "encode/httpx",
+          "2985"
+        ],
+        "sha": "c1f3cc58d2c1bca05204f47a9e375998b59ab912",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "true",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "VERIFIED_FIX"
+      },
+      {
+        "key": [
+          "encode/httpx",
+          "2666"
+        ],
+        "sha": "3674f4596841ab92512537a821aeb5ee741d0c61",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "true",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "VERIFIED_FIX"
+      },
+      {
+        "key": [
+          "encode/httpx",
+          "2532"
+        ],
+        "sha": "28ec479b89316d71a15c497db65964d1bfcf3d14",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "true",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "VERIFIED_FIX"
+      },
+      {
+        "key": [
+          "pallets/flask",
+          "4355"
+        ],
+        "sha": "",
+        "valid_sha_format": false,
+        "sha_present": false,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "",
+        "valid_pr_merged_value": false,
+        "valid_checked_at": true,
+        "review_status": "NOT_A_BUG"
+      },
+      {
+        "key": [
+          "pallets/flask",
+          "4297"
+        ],
+        "sha": "190dd4df86874495f56bb088fbd0cb1d9f0e77a0",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "true",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "VERIFIED_FIX"
+      },
+      {
+        "key": [
+          "pallets/flask",
+          "4295"
+        ],
+        "sha": "46b39e2698697408c6f8f8693e526cd1bb085684",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "true",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "VERIFIED_FIX"
+      },
+      {
+        "key": [
+          "pydantic/pydantic",
+          "14266"
+        ],
+        "sha": "",
+        "valid_sha_format": false,
+        "sha_present": false,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "",
+        "valid_pr_merged_value": false,
+        "valid_checked_at": true,
+        "review_status": "BUG_NO_FIX_LINK"
+      },
+      {
+        "key": [
+          "pydantic/pydantic",
+          "14245"
+        ],
+        "sha": "",
+        "valid_sha_format": false,
+        "sha_present": false,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "",
+        "valid_pr_merged_value": false,
+        "valid_checked_at": true,
+        "review_status": "UNCLEAR"
+      },
+      {
+        "key": [
+          "pydantic/pydantic",
+          "14243"
+        ],
+        "sha": "1b0a5bef315dd889d14644a7515da65e19e8b065",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "false",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "CANDIDATE_FIX"
+      },
+      {
+        "key": [
+          "pytest-dev/pytest",
+          "15139"
+        ],
+        "sha": "ed2024d825162d483673cb49490af5e0334aa12f",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "false",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "CANDIDATE_FIX"
+      },
+      {
+        "key": [
+          "pytest-dev/pytest",
+          "15052"
+        ],
+        "sha": "09d0020ff205d1166b9b541efccf19333ca69c3a",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "true",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "VERIFIED_FIX"
+      },
+      {
+        "key": [
+          "pytest-dev/pytest",
+          "15051"
+        ],
+        "sha": "f648fa2ecb39af29c8b70ef603fe7a8fddbcf445",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "false",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "CANDIDATE_FIX"
+      },
+      {
+        "key": [
+          "felangel/bloc",
+          "4893"
+        ],
+        "sha": "",
+        "valid_sha_format": false,
+        "sha_present": false,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "",
+        "valid_pr_merged_value": false,
+        "valid_checked_at": true,
+        "review_status": "UNCLEAR"
+      },
+      {
+        "key": [
+          "felangel/bloc",
+          "4863"
+        ],
+        "sha": "f67396e7444faa2e25b21541f8422d0e843ce14f",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "false",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "CANDIDATE_FIX"
+      },
+      {
+        "key": [
+          "felangel/bloc",
+          "4815"
+        ],
+        "sha": "887af62fe377010f428322fc4479614297fe543f",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "false",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "CANDIDATE_FIX"
+      },
+      {
+        "key": [
+          "rrousselGit/riverpod",
+          "4953"
+        ],
+        "sha": "fea6e5eb867963928202aa5996eb35b074d3f89d",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "true",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "VERIFIED_FIX"
+      },
+      {
+        "key": [
+          "rrousselGit/riverpod",
+          "4951"
+        ],
+        "sha": "4dda33aca48df3c3b18aefae91af809c9278e9cb",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "true",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "VERIFIED_FIX"
+      },
+      {
+        "key": [
+          "rrousselGit/riverpod",
+          "4902"
+        ],
+        "sha": "bed8c806727c8cb19b111f4d1d1a77466cb18cd6",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "false",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "CANDIDATE_FIX"
+      },
+      {
+        "key": [
+          "cfug/dio",
+          "2631"
+        ],
+        "sha": "183054f70a34071cff43cc4788a38d94a10267af",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "false",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "CANDIDATE_FIX"
+      },
+      {
+        "key": [
+          "cfug/dio",
+          "2618"
+        ],
+        "sha": "8e7a8cd25e0b41071c4b51cff45f666470fcd035",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "false",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "CANDIDATE_FIX"
+      },
+      {
+        "key": [
+          "cfug/dio",
+          "2613"
+        ],
+        "sha": "51c67712360d99b0f22bd5377ec2b81ece9f0241",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "false",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "CANDIDATE_FIX"
+      },
+      {
+        "key": [
+          "firebase/flutterfire",
+          "18932"
+        ],
+        "sha": "",
+        "valid_sha_format": false,
+        "sha_present": false,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "",
+        "valid_pr_merged_value": false,
+        "valid_checked_at": true,
+        "review_status": "BUG_NO_FIX_LINK"
+      },
+      {
+        "key": [
+          "firebase/flutterfire",
+          "18931"
+        ],
+        "sha": "",
+        "valid_sha_format": false,
+        "sha_present": false,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "",
+        "valid_pr_merged_value": false,
+        "valid_checked_at": true,
+        "review_status": "UNCLEAR"
+      },
+      {
+        "key": [
+          "firebase/flutterfire",
+          "18928"
+        ],
+        "sha": "",
+        "valid_sha_format": false,
+        "sha_present": false,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "",
+        "valid_pr_merged_value": false,
+        "valid_checked_at": true,
+        "review_status": "BUG_NO_FIX_LINK"
+      },
+      {
+        "key": [
+          "fluttercommunity/plus_plugins",
+          "3994"
+        ],
+        "sha": "c90969566957b183c8f13041254cf8fa479f403c",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "false",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "CANDIDATE_FIX"
+      },
+      {
+        "key": [
+          "fluttercommunity/plus_plugins",
+          "3979"
+        ],
+        "sha": "ae4c228c8b2300c58d41614c7f9765ec61f3f08c",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "true",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "NOT_A_BUG"
+      },
+      {
+        "key": [
+          "fluttercommunity/plus_plugins",
+          "3968"
+        ],
+        "sha": "",
+        "valid_sha_format": false,
+        "sha_present": false,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "",
+        "valid_pr_merged_value": false,
+        "valid_checked_at": true,
+        "review_status": "UNCLEAR"
+      },
+      {
+        "key": [
+          "fastapi/fastapi",
+          "16417"
+        ],
+        "sha": "73c49153dd117ba901add714b0c3565e3c88274f",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "true",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "VERIFIED_FIX"
+      },
+      {
+        "key": [
+          "fastapi/fastapi",
+          "16010"
+        ],
+        "sha": "c2e9c94014bb54a6e3c14db1b4db378829ed4fdd",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "true",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "VERIFIED_FIX"
+      },
+      {
+        "key": [
+          "fastapi/fastapi",
+          "15764"
+        ],
+        "sha": "b516ac70b9ba7e188e616431879651d295c3edfc",
+        "valid_sha_format": true,
+        "sha_present": true,
+        "valid_pr_url": true,
+        "issue_url_matches_key": true,
+        "pr_url_matches_repository": true,
+        "pr_merged_value": "true",
+        "valid_pr_merged_value": true,
+        "valid_checked_at": true,
+        "review_status": "VERIFIED_FIX"
+      }
+    ]
+  },
+  "repositories": [
+    {
+      "repository": "encode/httpx",
+      "language": "Python",
+      "local_path": "data\\repositories\\encode__httpx",
+      "exists": true,
+      "git_worktree_valid": true,
+      "working_tree_status_exit_code": 0,
+      "working_tree_dirty_paths": [],
+      "origin_url": "https://github.com/encode/httpx.git",
+      "origin_matches_config": true,
+      "current_branch": "master",
+      "head": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254",
+      "manifest_head": "b5addb64f0161ff6bfe94c124ef76f6a1fba5254",
+      "head_matches_manifest": true,
+      "configured_default_branch": "master",
+      "configured_default_branch_exists": true,
+      "remote_default_branch": "master",
+      "commit_count_all_refs": 1647,
+      "commit_count_head": 1523,
+      "is_shallow": false,
+      "partial_clone_filter": "blob:none",
+      "origin_is_promisor": true,
+      "source_file_count_head": 60,
+      "source_file_extensions": {
+        ".py": 60
+      },
+      "tree_object_check_exit_code": 0,
+      "missing_tree_object_count": 0,
+      "missing_tree_object_samples": [],
+      "source_blob_check_exit_code": 0,
+      "missing_source_blob_count": 0,
+      "missing_source_blob_samples": [],
+      "object_store": {
+        "count": "0",
+        "size": "0",
+        "in-pack": "21227",
+        "packs": "8",
+        "size-pack": "7307",
+        "prune-packable": "0",
+        "garbage": "0",
+        "size-garbage": "0"
+      },
+      "status": "PASS_LOCAL_INTEGRITY",
+      "errors": [],
+      "target_language_source_file_count_head": 60
+    },
+    {
+      "repository": "fastapi/fastapi",
+      "language": "Python",
+      "local_path": "data\\repositories\\fastapi__fastapi",
+      "exists": true,
+      "git_worktree_valid": true,
+      "working_tree_status_exit_code": 0,
+      "working_tree_dirty_paths": [],
+      "origin_url": "https://github.com/fastapi/fastapi.git",
+      "origin_matches_config": true,
+      "current_branch": "master",
+      "head": "ba5d72bae32807f0af203c45cff695f80fd0f26c",
+      "manifest_head": "ba5d72bae32807f0af203c45cff695f80fd0f26c",
+      "head_matches_manifest": true,
+      "configured_default_branch": "master",
+      "configured_default_branch_exists": true,
+      "remote_default_branch": "master",
+      "commit_count_all_refs": 8173,
+      "commit_count_head": 8047,
+      "is_shallow": false,
+      "partial_clone_filter": "blob:none",
+      "origin_is_promisor": true,
+      "source_file_count_head": 1224,
+      "source_file_extensions": {
+        ".js": 4,
+        ".py": 1220
+      },
+      "tree_object_check_exit_code": 0,
+      "missing_tree_object_count": 0,
+      "missing_tree_object_samples": [],
+      "source_blob_check_exit_code": 0,
+      "missing_source_blob_count": 0,
+      "missing_source_blob_samples": [],
+      "object_store": {
+        "count": "0",
+        "size": "0",
+        "in-pack": "50488",
+        "packs": "2",
+        "size-pack": "25382",
+        "prune-packable": "0",
+        "garbage": "1",
+        "size-garbage": "3095"
+      },
+      "status": "WARNING_GARBAGE_OBJECTS",
+      "errors": [],
+      "target_language_source_file_count_head": 1220
+    },
+    {
+      "repository": "pallets/flask",
+      "language": "Python",
+      "local_path": "data\\repositories\\pallets__flask",
+      "exists": true,
+      "git_worktree_valid": true,
+      "working_tree_status_exit_code": 0,
+      "working_tree_dirty_paths": [],
+      "origin_url": "https://github.com/pallets/flask.git",
+      "origin_matches_config": true,
+      "current_branch": "main",
+      "head": "49943b5a94413a530761350f04e896f76e8d620e",
+      "manifest_head": "49943b5a94413a530761350f04e896f76e8d620e",
+      "head_matches_manifest": true,
+      "configured_default_branch": "main",
+      "configured_default_branch_exists": true,
+      "remote_default_branch": "main",
+      "commit_count_all_refs": 5607,
+      "commit_count_head": 5566,
+      "is_shallow": false,
+      "partial_clone_filter": "blob:none",
+      "origin_is_promisor": true,
+      "source_file_count_head": 83,
+      "source_file_extensions": {
+        ".py": 83
+      },
+      "tree_object_check_exit_code": 0,
+      "missing_tree_object_count": 0,
+      "missing_tree_object_samples": [],
+      "source_blob_check_exit_code": 0,
+      "missing_source_blob_count": 0,
+      "missing_source_blob_samples": [],
+      "object_store": {
+        "count": "0",
+        "size": "0",
+        "in-pack": "17325",
+        "packs": "4",
+        "size-pack": "4844",
+        "prune-packable": "0",
+        "garbage": "0",
+        "size-garbage": "0"
+      },
+      "status": "PASS_LOCAL_INTEGRITY",
+      "errors": [],
+      "target_language_source_file_count_head": 83
+    },
+    {
+      "repository": "pydantic/pydantic",
+      "language": "Python",
+      "local_path": "data\\repositories\\pydantic__pydantic",
+      "exists": true,
+      "git_worktree_valid": true,
+      "working_tree_status_exit_code": 0,
+      "working_tree_dirty_paths": [],
+      "origin_url": "https://github.com/pydantic/pydantic.git",
+      "origin_matches_config": true,
+      "current_branch": "main",
+      "head": "fe5b5ce5581f10626a16dc7ff4159cf3cb6ddbec",
+      "manifest_head": "fe5b5ce5581f10626a16dc7ff4159cf3cb6ddbec",
+      "head_matches_manifest": true,
+      "configured_default_branch": "main",
+      "configured_default_branch_exists": true,
+      "remote_default_branch": "main",
+      "commit_count_all_refs": 9236,
+      "commit_count_head": 5936,
+      "is_shallow": false,
+      "partial_clone_filter": "blob:none",
+      "origin_is_promisor": true,
+      "source_file_count_head": 3309,
+      "source_file_extensions": {
+        ".py": 3157,
+        ".js": 5,
+        ".rs": 145,
+        ".pyi": 2
+      },
+      "tree_object_check_exit_code": 0,
+      "missing_tree_object_count": 0,
+      "missing_tree_object_samples": [],
+      "source_blob_check_exit_code": 0,
+      "missing_source_blob_count": 0,
+      "missing_source_blob_samples": [],
+      "object_store": {
+        "count": "0",
+        "size": "0",
+        "in-pack": "71255",
+        "packs": "2",
+        "size-pack": "16856",
+        "prune-packable": "0",
+        "garbage": "0",
+        "size-garbage": "0"
+      },
+      "status": "PASS_LOCAL_INTEGRITY",
+      "errors": [],
+      "target_language_source_file_count_head": 3157
+    },
+    {
+      "repository": "pytest-dev/pytest",
+      "language": "Python",
+      "local_path": "data\\repositories\\pytest-dev__pytest",
+      "exists": true,
+      "git_worktree_valid": true,
+      "working_tree_status_exit_code": 0,
+      "working_tree_dirty_paths": [],
+      "origin_url": "https://github.com/pytest-dev/pytest.git",
+      "origin_matches_config": true,
+      "current_branch": "main",
+      "head": "1b6f4419c6fe9371a8d8c52c12ed0a1577c2504a",
+      "manifest_head": "1b6f4419c6fe9371a8d8c52c12ed0a1577c2504a",
+      "head_matches_manifest": true,
+      "configured_default_branch": "main",
+      "configured_default_branch_exists": true,
+      "remote_default_branch": "main",
+      "commit_count_all_refs": 19206,
+      "commit_count_head": 17896,
+      "is_shallow": false,
+      "partial_clone_filter": "blob:none",
+      "origin_is_promisor": true,
+      "source_file_count_head": 282,
+      "source_file_extensions": {
+        ".py": 274,
+        ".pyi": 8
+      },
+      "tree_object_check_exit_code": 0,
+      "missing_tree_object_count": 0,
+      "missing_tree_object_samples": [],
+      "source_blob_check_exit_code": 0,
+      "missing_source_blob_count": 0,
+      "missing_source_blob_samples": [],
+      "object_store": {
+        "count": "0",
+        "size": "0",
+        "in-pack": "78400",
+        "packs": "3",
+        "size-pack": "17606",
+        "prune-packable": "0",
+        "garbage": "0",
+        "size-garbage": "0"
+      },
+      "status": "PASS_LOCAL_INTEGRITY",
+      "errors": [],
+      "target_language_source_file_count_head": 274
+    },
+    {
+      "repository": "felangel/bloc",
+      "language": "Dart",
+      "local_path": "data\\repositories\\felangel__bloc",
+      "exists": true,
+      "git_worktree_valid": true,
+      "working_tree_status_exit_code": 0,
+      "working_tree_dirty_paths": [],
+      "origin_url": "https://github.com/felangel/bloc.git",
+      "origin_matches_config": true,
+      "current_branch": "master",
+      "head": "b9be1e252ee24ffbe9f2fb629edc7624b2cfbf05",
+      "manifest_head": "b9be1e252ee24ffbe9f2fb629edc7624b2cfbf05",
+      "head_matches_manifest": true,
+      "configured_default_branch": "master",
+      "configured_default_branch_exists": true,
+      "remote_default_branch": "master",
+      "commit_count_all_refs": 3148,
+      "commit_count_head": 2838,
+      "is_shallow": false,
+      "partial_clone_filter": "blob:none",
+      "origin_is_promisor": true,
+      "source_file_count_head": 704,
+      "source_file_extensions": {
+        ".dart": 616,
+        ".ts": 38,
+        ".kts": 4,
+        ".kt": 33,
+        ".swift": 6,
+        ".h": 2,
+        ".cc": 1,
+        ".java": 2,
+        ".js": 1,
+        ".rs": 1
+      },
+      "tree_object_check_exit_code": 0,
+      "missing_tree_object_count": 0,
+      "missing_tree_object_samples": [],
+      "source_blob_check_exit_code": 0,
+      "missing_source_blob_count": 0,
+      "missing_source_blob_samples": [],
+      "object_store": {
+        "count": "0",
+        "size": "0",
+        "in-pack": "24854",
+        "packs": "2",
+        "size-pack": "23878",
+        "prune-packable": "0",
+        "garbage": "0",
+        "size-garbage": "0"
+      },
+      "status": "PASS_LOCAL_INTEGRITY",
+      "errors": [],
+      "target_language_source_file_count_head": 616
+    },
+    {
+      "repository": "rrousselGit/riverpod",
+      "language": "Dart",
+      "local_path": "data\\repositories\\rrousselGit__riverpod",
+      "exists": true,
+      "git_worktree_valid": true,
+      "working_tree_status_exit_code": 0,
+      "working_tree_dirty_paths": [],
+      "origin_url": "https://github.com/rrousselGit/riverpod.git",
+      "origin_matches_config": true,
+      "current_branch": "master",
+      "head": "c6c37a916d6a646b86cdefcc345f64ee9092ad1b",
+      "manifest_head": "c6c37a916d6a646b86cdefcc345f64ee9092ad1b",
+      "head_matches_manifest": true,
+      "configured_default_branch": "master",
+      "configured_default_branch_exists": true,
+      "remote_default_branch": "master",
+      "commit_count_all_refs": 3390,
+      "commit_count_head": 2656,
+      "is_shallow": false,
+      "partial_clone_filter": "blob:none",
+      "origin_is_promisor": true,
+      "source_file_count_head": 1383,
+      "source_file_extensions": {
+        ".js": 11,
+        ".dart": 1327,
+        ".swift": 3,
+        ".ts": 42
+      },
+      "tree_object_check_exit_code": 0,
+      "missing_tree_object_count": 0,
+      "missing_tree_object_samples": [],
+      "source_blob_check_exit_code": 0,
+      "missing_source_blob_count": 0,
+      "missing_source_blob_samples": [],
+      "object_store": {
+        "count": "0",
+        "size": "0",
+        "in-pack": "96949",
+        "packs": "6",
+        "size-pack": "29398",
+        "prune-packable": "0",
+        "garbage": "0",
+        "size-garbage": "0"
+      },
+      "status": "PASS_LOCAL_INTEGRITY",
+      "errors": [],
+      "target_language_source_file_count_head": 1327
+    },
+    {
+      "repository": "cfug/dio",
+      "language": "Dart",
+      "local_path": "data\\repositories\\cfug__dio",
+      "exists": true,
+      "git_worktree_valid": true,
+      "working_tree_status_exit_code": 0,
+      "working_tree_dirty_paths": [],
+      "origin_url": "https://github.com/cfug/dio.git",
+      "origin_matches_config": true,
+      "current_branch": "main",
+      "head": "f1bef462289b40992d625d4eb2a2f42321217573",
+      "manifest_head": "f1bef462289b40992d625d4eb2a2f42321217573",
+      "head_matches_manifest": true,
+      "configured_default_branch": "main",
+      "configured_default_branch_exists": true,
+      "remote_default_branch": "main",
+      "commit_count_all_refs": 1121,
+      "commit_count_head": 962,
+      "is_shallow": false,
+      "partial_clone_filter": "blob:none",
+      "origin_is_promisor": true,
+      "source_file_count_head": 203,
+      "source_file_extensions": {
+        ".dart": 156,
+        ".kts": 3,
+        ".kt": 2,
+        ".swift": 10,
+        ".h": 16,
+        ".cc": 8,
+        ".cpp": 8
+      },
+      "tree_object_check_exit_code": 0,
+      "missing_tree_object_count": 0,
+      "missing_tree_object_samples": [],
+      "source_blob_check_exit_code": 0,
+      "missing_source_blob_count": 0,
+      "missing_source_blob_samples": [],
+      "object_store": {
+        "count": "0",
+        "size": "0",
+        "in-pack": "6152",
+        "packs": "2",
+        "size-pack": "4213",
+        "prune-packable": "0",
+        "garbage": "0",
+        "size-garbage": "0"
+      },
+      "status": "PASS_LOCAL_INTEGRITY",
+      "errors": [],
+      "target_language_source_file_count_head": 156
+    },
+    {
+      "repository": "firebase/flutterfire",
+      "language": "Dart",
+      "local_path": "data\\repositories\\firebase__flutterfire",
+      "exists": true,
+      "git_worktree_valid": true,
+      "working_tree_status_exit_code": 0,
+      "working_tree_dirty_paths": [],
+      "origin_url": "https://github.com/firebase/flutterfire.git",
+      "origin_matches_config": true,
+      "current_branch": "main",
+      "head": "fb1ae7f1d828eead68aa651c9765860514c3ebea",
+      "manifest_head": "fb1ae7f1d828eead68aa651c9765860514c3ebea",
+      "head_matches_manifest": true,
+      "configured_default_branch": "main",
+      "configured_default_branch_exists": true,
+      "remote_default_branch": "main",
+      "commit_count_all_refs": 5470,
+      "commit_count_head": 4592,
+      "is_shallow": false,
+      "partial_clone_filter": "blob:none",
+      "origin_is_promisor": true,
+      "source_file_count_head": 1498,
+      "source_file_extensions": {
+        ".ts": 2,
+        ".dart": 942,
+        ".java": 45,
+        ".kt": 93,
+        ".swift": 204,
+        ".h": 104,
+        ".cpp": 64,
+        ".mm": 2,
+        ".m": 31,
+        ".kts": 6,
+        ".js": 4,
+        ".cc": 1
+      },
+      "tree_object_check_exit_code": 0,
+      "missing_tree_object_count": 0,
+      "missing_tree_object_samples": [],
+      "source_blob_check_exit_code": 0,
+      "missing_source_blob_count": 0,
+      "missing_source_blob_samples": [],
+      "object_store": {
+        "count": "0",
+        "size": "0",
+        "in-pack": "87776",
+        "packs": "2",
+        "size-pack": "18157",
+        "prune-packable": "0",
+        "garbage": "0",
+        "size-garbage": "0"
+      },
+      "status": "PASS_LOCAL_INTEGRITY",
+      "errors": [],
+      "target_language_source_file_count_head": 942
+    },
+    {
+      "repository": "fluttercommunity/plus_plugins",
+      "language": "Dart",
+      "local_path": "data\\repositories\\fluttercommunity__plus_plugins",
+      "exists": true,
+      "git_worktree_valid": true,
+      "working_tree_status_exit_code": 0,
+      "working_tree_dirty_paths": [],
+      "origin_url": "https://github.com/fluttercommunity/plus_plugins.git",
+      "origin_matches_config": true,
+      "current_branch": "main",
+      "head": "907994b0e52c2c11ae2f2ccc08d0658e1c73dbaf",
+      "manifest_head": "907994b0e52c2c11ae2f2ccc08d0658e1c73dbaf",
+      "head_matches_manifest": true,
+      "configured_default_branch": "main",
+      "configured_default_branch_exists": true,
+      "remote_default_branch": "main",
+      "commit_count_all_refs": 2393,
+      "commit_count_head": 2384,
+      "is_shallow": false,
+      "partial_clone_filter": "blob:none",
+      "origin_is_promisor": true,
+      "source_file_count_head": 399,
+      "source_file_extensions": {
+        ".kts": 35,
+        ".java": 21,
+        ".kt": 19,
+        ".dart": 138,
+        ".swift": 62,
+        ".h": 64,
+        ".m": 13,
+        ".cc": 12,
+        ".cpp": 34,
+        ".c": 1
+      },
+      "tree_object_check_exit_code": 0,
+      "missing_tree_object_count": 0,
+      "missing_tree_object_samples": [],
+      "source_blob_check_exit_code": 0,
+      "missing_source_blob_count": 0,
+      "missing_source_blob_samples": [],
+      "object_store": {
+        "count": "0",
+        "size": "0",
+        "in-pack": "20853",
+        "packs": "2",
+        "size-pack": "4135",
+        "prune-packable": "0",
+        "garbage": "0",
+        "size-garbage": "0"
+      },
+      "status": "PASS_LOCAL_INTEGRITY",
+      "errors": [],
+      "target_language_source_file_count_head": 138
+    }
+  ],
+  "verified_fix_commits": [
+    {
+      "repository": "encode/httpx",
+      "issue_number": "2985",
+      "review_status": "VERIFIED_FIX",
+      "fix_pr_url": "https://github.com/encode/httpx/pull/2986",
+      "pr_merged_recorded": "true",
+      "sha": "c1f3cc58d2c1bca05204f47a9e375998b59ab912",
+      "sha_format_valid": true,
+      "recorded_sha_role": "SINGLE_PARENT_COMMIT_ROLE_UNCONFIRMED",
+      "pr_number": "2986",
+      "pr_reference_status": "LOCAL_PR_REFERENCE_FOUND",
+      "pr_reference_commits": [
+        {
+          "sha": "b471f01d668b9ef730e8843531b07b1c21b74c47",
+          "subject": "Allow URLs where username or password contains unescaped '@'. (#2986)",
+          "metadata_status": "AVAILABLE",
+          "role": "PR_REFERENCED_SINGLE_PARENT_COMMIT",
+          "parent_count": 1,
+          "parents": [
+            "5b5f6d8e172910371b5901f6e21717097274c513"
+          ],
+          "reachable_from_head": true,
+          "diff_status": "DIFF_UNAVAILABLE",
+          "diff_exit_code": 128,
+          "diff_error": "warning: lazy fetching disabled; some objects may not be available\nfatal: could not fetch 02ccc86a03522e8ce3cd716ef5d1e5c91d00d326 from promisor remote",
+          "diff_comparison": "PARENT_TO_COMMIT",
+          "changed_files": null,
+          "changed_file_count": null,
+          "source_files_changed": null,
+          "additions": null,
+          "deletions": null
+        }
+      ],
+      "implementation_trace_status": "RECORDED_SHA_HAS_NO_SOURCE_DIFF; LOCAL_PR_REFERENCE_SOURCE_DIFF_UNAVAILABLE",
+      "repo_exists": true,
+      "commit_found": true,
+      "local_object_status": "OBJECT_AVAILABLE",
+      "object_type": "commit",
+      "reachable_from_head": false,
+      "ancestry_status": "NOT_REACHABLE_FROM_HEAD",
+      "parent_count": 1,
+      "parents": [
+        "0d2cb6bcfae09501b09d0bfa5c820a7424389431"
+      ],
+      "diff_status": "DIFF_AVAILABLE",
+      "diff_exit_code": 0,
+      "diff_error": null,
+      "diff_comparison": "PARENT_TO_COMMIT",
+      "changed_files": [
+        "CHANGELOG.md"
+      ],
+      "changed_file_count": 1,
+      "source_files_changed": [],
+      "additions": 1,
+      "deletions": 1,
+      "commit_timestamp": 1701943549,
+      "commit_subject": "Update CHANGELOG.md",
+      "classification": "REQUIRES_MERGE_MAPPING",
+      "evidence": [
+        "git cat-file -t: commit",
+        "git merge-base --is-ancestor <sha> HEAD: NOT_REACHABLE_FROM_HEAD",
+        "parent count: 1",
+        "diff: DIFF_AVAILABLE (1/1/1)",
+        "local PR-reference search: LOCAL_PR_REFERENCE_FOUND"
+      ]
+    },
+    {
+      "repository": "encode/httpx",
+      "issue_number": "2666",
+      "review_status": "VERIFIED_FIX",
+      "fix_pr_url": "https://github.com/encode/httpx/pull/2667",
+      "pr_merged_recorded": "true",
+      "sha": "3674f4596841ab92512537a821aeb5ee741d0c61",
+      "sha_format_valid": true,
+      "recorded_sha_role": "SINGLE_PARENT_COMMIT_ROLE_UNCONFIRMED",
+      "pr_number": "2667",
+      "pr_reference_status": "LOCAL_PR_REFERENCE_FOUND",
+      "pr_reference_commits": [
+        {
+          "sha": "c1cc6b2462e95b84315c67bd5aefb33df73d06c4",
+          "subject": "Fixes #2666: None is the default value of file for httpx.NetRCAuth (#2667)",
+          "metadata_status": "AVAILABLE",
+          "role": "PR_REFERENCED_SINGLE_PARENT_COMMIT",
+          "parent_count": 1,
+          "parents": [
+            "4b5a92e88e03443c2619f0905d756b159f9f0222"
+          ],
+          "reachable_from_head": true,
+          "diff_status": "DIFF_AVAILABLE",
+          "diff_exit_code": 0,
+          "diff_error": null,
+          "diff_comparison": "PARENT_TO_COMMIT",
+          "changed_files": [
+            "httpx/_auth.py"
+          ],
+          "changed_file_count": 1,
+          "source_files_changed": [
+            "httpx/_auth.py"
+          ],
+          "additions": 1,
+          "deletions": 1
+        }
+      ],
+      "implementation_trace_status": "RECORDED_SHA_DIFF_AVAILABLE; LOCAL_PR_REFERENCE_SOURCE_DIFF_AVAILABLE",
+      "repo_exists": true,
+      "commit_found": true,
+      "local_object_status": "OBJECT_AVAILABLE",
+      "object_type": "commit",
+      "reachable_from_head": false,
+      "ancestry_status": "NOT_REACHABLE_FROM_HEAD",
+      "parent_count": 1,
+      "parents": [
+        "4b5a92e88e03443c2619f0905d756b159f9f0222"
+      ],
+      "diff_status": "DIFF_AVAILABLE",
+      "diff_exit_code": 0,
+      "diff_error": null,
+      "diff_comparison": "PARENT_TO_COMMIT",
+      "changed_files": [
+        "httpx/_auth.py"
+      ],
+      "changed_file_count": 1,
+      "source_files_changed": [
+        "httpx/_auth.py"
+      ],
+      "additions": 1,
+      "deletions": 1,
+      "commit_timestamp": 1681808239,
+      "commit_subject": "Fixes #2666: None is the default value of file for httpx.NetRCAuth",
+      "classification": "REQUIRES_MERGE_MAPPING",
+      "evidence": [
+        "git cat-file -t: commit",
+        "git merge-base --is-ancestor <sha> HEAD: NOT_REACHABLE_FROM_HEAD",
+        "parent count: 1",
+        "diff: DIFF_AVAILABLE (1/1/1)",
+        "Source paths: httpx/_auth.py",
+        "local PR-reference search: LOCAL_PR_REFERENCE_FOUND"
+      ]
+    },
+    {
+      "repository": "encode/httpx",
+      "issue_number": "2532",
+      "review_status": "VERIFIED_FIX",
+      "fix_pr_url": "https://github.com/encode/httpx/pull/2535",
+      "pr_merged_recorded": "true",
+      "sha": "28ec479b89316d71a15c497db65964d1bfcf3d14",
+      "sha_format_valid": true,
+      "recorded_sha_role": "SINGLE_PARENT_COMMIT_ROLE_UNCONFIRMED",
+      "pr_number": "2535",
+      "pr_reference_status": "LOCAL_PR_REFERENCE_FOUND",
+      "pr_reference_commits": [
+        {
+          "sha": "59914c7690573d5f9b17bce4172405294cb08278",
+          "subject": "Add `NetRCAuth()` class. (#2535)",
+          "metadata_status": "AVAILABLE",
+          "role": "PR_REFERENCED_SINGLE_PARENT_COMMIT",
+          "parent_count": 1,
+          "parents": [
+            "7947b56076db933079ec0c33d1f81406e33008e7"
+          ],
+          "reachable_from_head": true,
+          "diff_status": "DIFF_UNAVAILABLE",
+          "diff_exit_code": 128,
+          "diff_error": "warning: lazy fetching disabled; some objects may not be available\nfatal: could not fetch 64bd5fc58c3c0573203734225d4ccfe9cc8731b8 from promisor remote",
+          "diff_comparison": "PARENT_TO_COMMIT",
+          "changed_files": null,
+          "changed_file_count": null,
+          "source_files_changed": null,
+          "additions": null,
+          "deletions": null
+        }
+      ],
+      "implementation_trace_status": "RECORDED_SHA_DIFF_AVAILABLE; LOCAL_PR_REFERENCE_SOURCE_DIFF_UNAVAILABLE",
+      "repo_exists": true,
+      "commit_found": true,
+      "local_object_status": "OBJECT_AVAILABLE",
+      "object_type": "commit",
+      "reachable_from_head": false,
+      "ancestry_status": "NOT_REACHABLE_FROM_HEAD",
+      "parent_count": 1,
+      "parents": [
+        "363838498c83445ec68ccf8797a098bf5ab6b85c"
+      ],
+      "diff_status": "DIFF_AVAILABLE",
+      "diff_exit_code": 0,
+      "diff_error": null,
+      "diff_comparison": "PARENT_TO_COMMIT",
+      "changed_files": [
+        "tests/client/test_auth.py",
+        "tests/fixtures/.netrc-nopassword"
+      ],
+      "changed_file_count": 2,
+      "source_files_changed": [
+        "tests/client/test_auth.py"
+      ],
+      "additions": 43,
+      "deletions": 1,
+      "commit_timestamp": 1673522409,
+      "commit_subject": "Add tests for netrc file with no password",
+      "classification": "REQUIRES_MERGE_MAPPING",
+      "evidence": [
+        "git cat-file -t: commit",
+        "git merge-base --is-ancestor <sha> HEAD: NOT_REACHABLE_FROM_HEAD",
+        "parent count: 1",
+        "diff: DIFF_AVAILABLE (2/43/1)",
+        "Source paths: tests/client/test_auth.py",
+        "local PR-reference search: LOCAL_PR_REFERENCE_FOUND"
+      ]
+    },
+    {
+      "repository": "pallets/flask",
+      "issue_number": "4297",
+      "review_status": "VERIFIED_FIX",
+      "fix_pr_url": "https://github.com/pallets/flask/pull/4487",
+      "pr_merged_recorded": "true",
+      "sha": "190dd4df86874495f56bb088fbd0cb1d9f0e77a0",
+      "sha_format_valid": true,
+      "recorded_sha_role": "SINGLE_PARENT_COMMIT_ROLE_UNCONFIRMED",
+      "pr_number": "4487",
+      "pr_reference_status": "LOCAL_PR_REFERENCE_FOUND",
+      "pr_reference_commits": [
+        {
+          "sha": "cb7cd1e79b280d3fd80978ca82ae52881525a476",
+          "subject": "Merge pull request #4487 from pallets/typing-errorhandler",
+          "metadata_status": "AVAILABLE",
+          "role": "MERGE_COMMIT",
+          "parent_count": 2,
+          "parents": [
+            "0ef1e65f6ab0da680d171d49e1a56a2b0ecee05d",
+            "190dd4df86874495f56bb088fbd0cb1d9f0e77a0"
+          ],
+          "reachable_from_head": true,
+          "diff_status": "DIFF_UNAVAILABLE",
+          "diff_exit_code": 128,
+          "diff_error": "warning: lazy fetching disabled; some objects may not be available\nfatal: could not fetch fd46c84cbdeaa37caaf0849e25c6610f96c6d60e from promisor remote",
+          "diff_comparison": "FIRST_PARENT_TO_COMMIT",
+          "changed_files": null,
+          "changed_file_count": null,
+          "source_files_changed": null,
+          "additions": null,
+          "deletions": null
+        }
+      ],
+      "implementation_trace_status": "RECORDED_SHA_DIFF_AVAILABLE; LOCAL_PR_REFERENCE_SOURCE_DIFF_UNAVAILABLE",
+      "repo_exists": true,
+      "commit_found": true,
+      "local_object_status": "OBJECT_AVAILABLE",
+      "object_type": "commit",
+      "reachable_from_head": true,
+      "ancestry_status": "REACHABLE_FROM_HEAD",
+      "parent_count": 1,
+      "parents": [
+        "88863288225d5ee13a79c463f2a39391b6a52c61"
+      ],
+      "diff_status": "DIFF_AVAILABLE",
+      "diff_exit_code": 0,
+      "diff_error": null,
+      "diff_comparison": "PARENT_TO_COMMIT",
+      "changed_files": [
+        "src/flask/app.py",
+        "src/flask/helpers.py",
+        "src/flask/typing.py"
+      ],
+      "changed_file_count": 3,
+      "source_files_changed": [
+        "src/flask/app.py",
+        "src/flask/helpers.py",
+        "src/flask/typing.py"
+      ],
+      "additions": 15,
+      "deletions": 9,
+      "commit_timestamp": 1647358335,
+      "commit_subject": "don't use AnyStr for ResponseValue type",
+      "classification": "REACHABLE_FROM_HEAD",
+      "evidence": [
+        "git cat-file -t: commit",
+        "git merge-base --is-ancestor <sha> HEAD: REACHABLE_FROM_HEAD",
+        "parent count: 1",
+        "diff: DIFF_AVAILABLE (3/15/9)",
+        "Source paths: src/flask/app.py, src/flask/helpers.py, src/flask/typing.py",
+        "local PR-reference search: LOCAL_PR_REFERENCE_FOUND"
+      ]
+    },
+    {
+      "repository": "pallets/flask",
+      "issue_number": "4295",
+      "review_status": "VERIFIED_FIX",
+      "fix_pr_url": "https://github.com/pallets/flask/pull/4298",
+      "pr_merged_recorded": "true",
+      "sha": "46b39e2698697408c6f8f8693e526cd1bb085684",
+      "sha_format_valid": true,
+      "recorded_sha_role": "SINGLE_PARENT_COMMIT_ROLE_UNCONFIRMED",
+      "pr_number": "4298",
+      "pr_reference_status": "LOCAL_PR_REFERENCE_FOUND",
+      "pr_reference_commits": [
+        {
+          "sha": "b831e8507c8849899ea3b30eb4b6af19de2bf06a",
+          "subject": "Merge pull request #4298 from delicb/fix/issue4295",
+          "metadata_status": "AVAILABLE",
+          "role": "MERGE_COMMIT",
+          "parent_count": 2,
+          "parents": [
+            "372066983fb206d4871a4a98c8db8b3953ce4394",
+            "46b39e2698697408c6f8f8693e526cd1bb085684"
+          ],
+          "reachable_from_head": true,
+          "diff_status": "DIFF_AVAILABLE",
+          "diff_exit_code": 0,
+          "diff_error": null,
+          "diff_comparison": "FIRST_PARENT_TO_COMMIT",
+          "changed_files": [
+            "CHANGES.rst",
+            "src/flask/typing.py"
+          ],
+          "changed_file_count": 2,
+          "source_files_changed": [
+            "src/flask/typing.py"
+          ],
+          "additions": 2,
+          "deletions": 8
+        }
+      ],
+      "implementation_trace_status": "RECORDED_SHA_DIFF_AVAILABLE; LOCAL_PR_REFERENCE_SOURCE_DIFF_AVAILABLE",
+      "repo_exists": true,
+      "commit_found": true,
+      "local_object_status": "OBJECT_AVAILABLE",
+      "object_type": "commit",
+      "reachable_from_head": true,
+      "ancestry_status": "REACHABLE_FROM_HEAD",
+      "parent_count": 1,
+      "parents": [
+        "372066983fb206d4871a4a98c8db8b3953ce4394"
+      ],
+      "diff_status": "DIFF_AVAILABLE",
+      "diff_exit_code": 0,
+      "diff_error": null,
+      "diff_comparison": "PARENT_TO_COMMIT",
+      "changed_files": [
+        "CHANGES.rst",
+        "src/flask/typing.py"
+      ],
+      "changed_file_count": 2,
+      "source_files_changed": [
+        "src/flask/typing.py"
+      ],
+      "additions": 2,
+      "deletions": 8,
+      "commit_timestamp": 1637012124,
+      "commit_subject": "fix errorhandler type check",
+      "classification": "REACHABLE_FROM_HEAD",
+      "evidence": [
+        "git cat-file -t: commit",
+        "git merge-base --is-ancestor <sha> HEAD: REACHABLE_FROM_HEAD",
+        "parent count: 1",
+        "diff: DIFF_AVAILABLE (2/2/8)",
+        "Source paths: src/flask/typing.py",
+        "local PR-reference search: LOCAL_PR_REFERENCE_FOUND"
+      ]
+    },
+    {
+      "repository": "pytest-dev/pytest",
+      "issue_number": "15052",
+      "review_status": "VERIFIED_FIX",
+      "fix_pr_url": "https://github.com/pytest-dev/pytest/pull/15053",
+      "pr_merged_recorded": "true",
+      "sha": "09d0020ff205d1166b9b541efccf19333ca69c3a",
+      "sha_format_valid": true,
+      "recorded_sha_role": "SINGLE_PARENT_COMMIT_ROLE_UNCONFIRMED",
+      "pr_number": "15053",
+      "pr_reference_status": "LOCAL_PR_REFERENCE_FOUND",
+      "pr_reference_commits": [
+        {
+          "sha": "56a92c19d4a71152c594726efc9deb5f0e126e99",
+          "subject": "Merge pull request #15053 from bluetech/showfixtures-item-lineno",
+          "metadata_status": "AVAILABLE",
+          "role": "MERGE_COMMIT",
+          "parent_count": 2,
+          "parents": [
+            "99ab2acccff15f757260a1e1fbb0d2a47fc01041",
+            "09d0020ff205d1166b9b541efccf19333ca69c3a"
+          ],
+          "reachable_from_head": true,
+          "diff_status": "DIFF_AVAILABLE",
+          "diff_exit_code": 0,
+          "diff_error": null,
+          "diff_comparison": "FIRST_PARENT_TO_COMMIT",
+          "changed_files": [
+            "changelog/15052.bugfix.rst",
+            "src/_pytest/compat.py",
+            "testing/python/fixtures.py",
+            "testing/python/show_fixtures_per_test.py"
+          ],
+          "changed_file_count": 4,
+          "source_files_changed": [
+            "src/_pytest/compat.py",
+            "testing/python/fixtures.py",
+            "testing/python/show_fixtures_per_test.py"
+          ],
+          "additions": 46,
+          "deletions": 45
+        }
+      ],
+      "implementation_trace_status": "RECORDED_SHA_DIFF_AVAILABLE; LOCAL_PR_REFERENCE_SOURCE_DIFF_AVAILABLE",
+      "repo_exists": true,
+      "commit_found": true,
+      "local_object_status": "OBJECT_AVAILABLE",
+      "object_type": "commit",
+      "reachable_from_head": true,
+      "ancestry_status": "REACHABLE_FROM_HEAD",
+      "parent_count": 1,
+      "parents": [
+        "99ab2acccff15f757260a1e1fbb0d2a47fc01041"
+      ],
+      "diff_status": "DIFF_AVAILABLE",
+      "diff_exit_code": 0,
+      "diff_error": null,
+      "diff_comparison": "PARENT_TO_COMMIT",
+      "changed_files": [
+        "changelog/15052.bugfix.rst",
+        "src/_pytest/compat.py",
+        "testing/python/fixtures.py",
+        "testing/python/show_fixtures_per_test.py"
+      ],
+      "changed_file_count": 4,
+      "source_files_changed": [
+        "src/_pytest/compat.py",
+        "testing/python/fixtures.py",
+        "testing/python/show_fixtures_per_test.py"
+      ],
+      "additions": 46,
+      "deletions": 45,
+      "commit_timestamp": 1789647516,
+      "commit_subject": "fixtures: fix lineno off-by-one in --fixtures/--fixtures-per-test and a couple of error messages",
+      "classification": "REACHABLE_FROM_HEAD",
+      "evidence": [
+        "git cat-file -t: commit",
+        "git merge-base --is-ancestor <sha> HEAD: REACHABLE_FROM_HEAD",
+        "parent count: 1",
+        "diff: DIFF_AVAILABLE (4/46/45)",
+        "Source paths: src/_pytest/compat.py, testing/python/fixtures.py, testing/python/show_fixtures_per_test.py",
+        "local PR-reference search: LOCAL_PR_REFERENCE_FOUND"
+      ]
+    },
+    {
+      "repository": "rrousselGit/riverpod",
+      "issue_number": "4953",
+      "review_status": "VERIFIED_FIX",
+      "fix_pr_url": "https://github.com/rrousselGit/riverpod/pull/4954",
+      "pr_merged_recorded": "true",
+      "sha": "fea6e5eb867963928202aa5996eb35b074d3f89d",
+      "sha_format_valid": true,
+      "recorded_sha_role": "MERGE_COMMIT",
+      "pr_number": "4954",
+      "pr_reference_status": "LOCAL_PR_REFERENCE_FOUND",
+      "pr_reference_commits": [
+        {
+          "sha": "a4174afa33a754d4bfed7116ff37c72ec97e2463",
+          "subject": "Fix obsolete stream dependency retention across rebuilds (#4954)",
+          "metadata_status": "AVAILABLE",
+          "role": "PR_REFERENCED_SINGLE_PARENT_COMMIT",
+          "parent_count": 1,
+          "parents": [
+            "d7f2ba1420aa36010a54265e4cd7df58f10631b0"
+          ],
+          "reachable_from_head": true,
+          "diff_status": "DIFF_UNAVAILABLE",
+          "diff_exit_code": 128,
+          "diff_error": "warning: lazy fetching disabled; some objects may not be available\nfatal: could not fetch 34b28d6c7da0d13356e0e998703eb39d161e66ad from promisor remote",
+          "diff_comparison": "PARENT_TO_COMMIT",
+          "changed_files": null,
+          "changed_file_count": null,
+          "source_files_changed": null,
+          "additions": null,
+          "deletions": null
+        }
+      ],
+      "implementation_trace_status": "RECORDED_SHA_DIFF_UNAVAILABLE; LOCAL_PR_REFERENCE_SOURCE_DIFF_UNAVAILABLE",
+      "repo_exists": true,
+      "commit_found": true,
+      "local_object_status": "OBJECT_AVAILABLE",
+      "object_type": "commit",
+      "reachable_from_head": false,
+      "ancestry_status": "NOT_REACHABLE_FROM_HEAD",
+      "parent_count": 2,
+      "parents": [
+        "526e5ff3fab0aa58e4bef9735802463fb3b5d730",
+        "d7f2ba1420aa36010a54265e4cd7df58f10631b0"
+      ],
+      "diff_status": "DIFF_UNAVAILABLE",
+      "diff_exit_code": 128,
+      "diff_error": "warning: lazy fetching disabled; some objects may not be available\nfatal: could not fetch d1cecfd89104b142790f4ddc990a806e06c8d6da from promisor remote",
+      "diff_comparison": "FIRST_PARENT_TO_COMMIT",
+      "changed_files": null,
+      "changed_file_count": null,
+      "source_files_changed": null,
+      "additions": null,
+      "deletions": null,
+      "commit_timestamp": 1793372847,
+      "commit_subject": "Merge branch 'master' into fix/issue-4953",
+      "classification": "REQUIRES_MERGE_MAPPING",
+      "evidence": [
+        "git cat-file -t: commit",
+        "git merge-base --is-ancestor <sha> HEAD: NOT_REACHABLE_FROM_HEAD",
+        "parent count: 2",
+        "diff: DIFF_UNAVAILABLE (None/None/None)",
+        "diff unavailable: warning: lazy fetching disabled; some objects may not be available\nfatal: could not fetch d1cecfd89104b142790f4ddc990a806e06c8d6da from promisor remote",
+        "local PR-reference search: LOCAL_PR_REFERENCE_FOUND"
+      ]
+    },
+    {
+      "repository": "rrousselGit/riverpod",
+      "issue_number": "4951",
+      "review_status": "VERIFIED_FIX",
+      "fix_pr_url": "https://github.com/rrousselGit/riverpod/pull/4952",
+      "pr_merged_recorded": "true",
+      "sha": "4dda33aca48df3c3b18aefae91af809c9278e9cb",
+      "sha_format_valid": true,
+      "recorded_sha_role": "MERGE_COMMIT",
+      "pr_number": "4952",
+      "pr_reference_status": "LOCAL_PR_REFERENCE_FOUND",
+      "pr_reference_commits": [
+        {
+          "sha": "4b481dcaf9f00a18e0b6dd68d3e9e0e84d23d2bd",
+          "subject": "Fix the only_use_keep_alive_inside_keep_alive message and correction (#4952)",
+          "metadata_status": "AVAILABLE",
+          "role": "PR_REFERENCED_SINGLE_PARENT_COMMIT",
+          "parent_count": 1,
+          "parents": [
+            "debde1ef2ced91056fbc9fdfe5c7cf1b198c4e5c"
+          ],
+          "reachable_from_head": true,
+          "diff_status": "DIFF_UNAVAILABLE",
+          "diff_exit_code": 128,
+          "diff_error": "warning: lazy fetching disabled; some objects may not be available\nfatal: could not fetch 8d402f62365451d8a724b144f0007d511a5bfa6b from promisor remote",
+          "diff_comparison": "PARENT_TO_COMMIT",
+          "changed_files": null,
+          "changed_file_count": null,
+          "source_files_changed": null,
+          "additions": null,
+          "deletions": null
+        }
+      ],
+      "implementation_trace_status": "RECORDED_SHA_DIFF_UNAVAILABLE; LOCAL_PR_REFERENCE_SOURCE_DIFF_UNAVAILABLE",
+      "repo_exists": true,
+      "commit_found": true,
+      "local_object_status": "OBJECT_AVAILABLE",
+      "object_type": "commit",
+      "reachable_from_head": false,
+      "ancestry_status": "NOT_REACHABLE_FROM_HEAD",
+      "parent_count": 2,
+      "parents": [
+        "7aaa4c63edccfbf5bc73edb1a61c09305e128f09",
+        "debde1ef2ced91056fbc9fdfe5c7cf1b198c4e5c"
+      ],
+      "diff_status": "DIFF_UNAVAILABLE",
+      "diff_exit_code": 128,
+      "diff_error": "warning: lazy fetching disabled; some objects may not be available\nfatal: could not fetch 1838423227bc487c079bb40573280a231eb1aa2e from promisor remote",
+      "diff_comparison": "FIRST_PARENT_TO_COMMIT",
+      "changed_files": null,
+      "changed_file_count": null,
+      "source_files_changed": null,
+      "additions": null,
+      "deletions": null,
+      "commit_timestamp": 1793943967,
+      "commit_subject": "Merge remote-tracking branch 'origin/master' into pr4952-merge",
+      "classification": "REQUIRES_MERGE_MAPPING",
+      "evidence": [
+        "git cat-file -t: commit",
+        "git merge-base --is-ancestor <sha> HEAD: NOT_REACHABLE_FROM_HEAD",
+        "parent count: 2",
+        "diff: DIFF_UNAVAILABLE (None/None/None)",
+        "diff unavailable: warning: lazy fetching disabled; some objects may not be available\nfatal: could not fetch 1838423227bc487c079bb40573280a231eb1aa2e from promisor remote",
+        "local PR-reference search: LOCAL_PR_REFERENCE_FOUND"
+      ]
+    },
+    {
+      "repository": "fastapi/fastapi",
+      "issue_number": "16417",
+      "review_status": "VERIFIED_FIX",
+      "fix_pr_url": "https://github.com/fastapi/fastapi/pull/16418",
+      "pr_merged_recorded": "true",
+      "sha": "73c49153dd117ba901add714b0c3565e3c88274f",
+      "sha_format_valid": true,
+      "recorded_sha_role": null,
+      "pr_number": "16418",
+      "pr_reference_status": "LOCAL_PR_REFERENCE_FOUND",
+      "pr_reference_commits": [
+        {
+          "sha": "1d4953d2e528b58cfb09bbc28fb25dcda227c6ea",
+          "subject": "🐛 Allow startup when automatic OpenTelemetry configuration fails (#16418)",
+          "metadata_status": "AVAILABLE",
+          "role": "PR_REFERENCED_SINGLE_PARENT_COMMIT",
+          "parent_count": 1,
+          "parents": [
+            "3e33a03bdaa3a89f27d5e0c390c4ba9032f14b5e"
+          ],
+          "reachable_from_head": true,
+          "diff_status": "DIFF_UNAVAILABLE",
+          "diff_exit_code": 128,
+          "diff_error": "warning: lazy fetching disabled; some objects may not be available\nfatal: could not fetch 641aea43c0033b3da2d64d2bf9d3f140bc5fab46 from promisor remote",
+          "diff_comparison": "PARENT_TO_COMMIT",
+          "changed_files": null,
+          "changed_file_count": null,
+          "source_files_changed": null,
+          "additions": null,
+          "deletions": null
+        }
+      ],
+      "implementation_trace_status": "LOCALLY_MAPPED_SOURCE_DIFF_UNAVAILABLE",
+      "repo_exists": true,
+      "commit_found": false,
+      "local_object_status": "OBJECT_UNAVAILABLE_LOCALLY",
+      "object_type": null,
+      "reachable_from_head": null,
+      "ancestry_status": "NOT_CHECKED",
+      "parent_count": null,
+      "parents": [],
+      "diff_status": "DIFF_NOT_ATTEMPTED",
+      "diff_exit_code": null,
+      "diff_error": null,
+      "diff_comparison": null,
+      "changed_files": null,
+      "changed_file_count": null,
+      "source_files_changed": null,
+      "additions": null,
+      "deletions": null,
+      "commit_timestamp": null,
+      "commit_subject": null,
+      "classification": "RECORDED_SHA_UNAVAILABLE_LOCALLY",
+      "evidence": [
+        "git cat-file -t <sha> did not resolve locally: fatal: git cat-file: could not get object info"
+      ]
+    },
+    {
+      "repository": "fastapi/fastapi",
+      "issue_number": "16010",
+      "review_status": "VERIFIED_FIX",
+      "fix_pr_url": "https://github.com/fastapi/fastapi/pull/16011",
+      "pr_merged_recorded": "true",
+      "sha": "c2e9c94014bb54a6e3c14db1b4db378829ed4fdd",
+      "sha_format_valid": true,
+      "recorded_sha_role": null,
+      "pr_number": "16011",
+      "pr_reference_status": "LOCAL_PR_REFERENCE_FOUND",
+      "pr_reference_commits": [
+        {
+          "sha": "eb75fd078e83aed935016bcdf0705cd58bbf0d0e",
+          "subject": "🐛 Fix frontend fallback support for doted paths like `/users/john.doe` (#16011)",
+          "metadata_status": "AVAILABLE",
+          "role": "PR_REFERENCED_SINGLE_PARENT_COMMIT",
+          "parent_count": 1,
+          "parents": [
+            "9b8410bdc9fa1fd679ea7e65b926535c7045ab87"
+          ],
+          "reachable_from_head": true,
+          "diff_status": "DIFF_UNAVAILABLE",
+          "diff_exit_code": 128,
+          "diff_error": "warning: lazy fetching disabled; some objects may not be available\nfatal: could not fetch 433cea2751e3f75ed91b4a4870b9a0bdef7c1cef from promisor remote",
+          "diff_comparison": "PARENT_TO_COMMIT",
+          "changed_files": null,
+          "changed_file_count": null,
+          "source_files_changed": null,
+          "additions": null,
+          "deletions": null
+        }
+      ],
+      "implementation_trace_status": "LOCALLY_MAPPED_SOURCE_DIFF_UNAVAILABLE",
+      "repo_exists": true,
+      "commit_found": false,
+      "local_object_status": "OBJECT_UNAVAILABLE_LOCALLY",
+      "object_type": null,
+      "reachable_from_head": null,
+      "ancestry_status": "NOT_CHECKED",
+      "parent_count": null,
+      "parents": [],
+      "diff_status": "DIFF_NOT_ATTEMPTED",
+      "diff_exit_code": null,
+      "diff_error": null,
+      "diff_comparison": null,
+      "changed_files": null,
+      "changed_file_count": null,
+      "source_files_changed": null,
+      "additions": null,
+      "deletions": null,
+      "commit_timestamp": null,
+      "commit_subject": null,
+      "classification": "RECORDED_SHA_UNAVAILABLE_LOCALLY",
+      "evidence": [
+        "git cat-file -t <sha> did not resolve locally: fatal: git cat-file: could not get object info"
+      ]
+    },
+    {
+      "repository": "fastapi/fastapi",
+      "issue_number": "15764",
+      "review_status": "VERIFIED_FIX",
+      "fix_pr_url": "https://github.com/fastapi/fastapi/pull/15765",
+      "pr_merged_recorded": "true",
+      "sha": "b516ac70b9ba7e188e616431879651d295c3edfc",
+      "sha_format_valid": true,
+      "recorded_sha_role": null,
+      "pr_number": "15765",
+      "pr_reference_status": "LOCAL_PR_REFERENCE_FOUND",
+      "pr_reference_commits": [
+        {
+          "sha": "b78c82262f5170831ebd3f27873b09d8e579bac2",
+          "subject": "🚨 Fix typing checks for APIRoute (#15765)",
+          "metadata_status": "AVAILABLE",
+          "role": "PR_REFERENCED_SINGLE_PARENT_COMMIT",
+          "parent_count": 1,
+          "parents": [
+            "e0f8cadf094bb4cb7a21e7757333d5dfbae46712"
+          ],
+          "reachable_from_head": true,
+          "diff_status": "DIFF_UNAVAILABLE",
+          "diff_exit_code": 128,
+          "diff_error": "warning: lazy fetching disabled; some objects may not be available\nfatal: could not fetch f33b964794f243ed5b6d5a5da3213d8b73ca5b95 from promisor remote",
+          "diff_comparison": "PARENT_TO_COMMIT",
+          "changed_files": null,
+          "changed_file_count": null,
+          "source_files_changed": null,
+          "additions": null,
+          "deletions": null
+        }
+      ],
+      "implementation_trace_status": "LOCALLY_MAPPED_SOURCE_DIFF_UNAVAILABLE",
+      "repo_exists": true,
+      "commit_found": false,
+      "local_object_status": "OBJECT_UNAVAILABLE_LOCALLY",
+      "object_type": null,
+      "reachable_from_head": null,
+      "ancestry_status": "NOT_CHECKED",
+      "parent_count": null,
+      "parents": [],
+      "diff_status": "DIFF_NOT_ATTEMPTED",
+      "diff_exit_code": null,
+      "diff_error": null,
+      "diff_comparison": null,
+      "changed_files": null,
+      "changed_file_count": null,
+      "source_files_changed": null,
+      "additions": null,
+      "deletions": null,
+      "commit_timestamp": null,
+      "commit_subject": null,
+      "classification": "RECORDED_SHA_UNAVAILABLE_LOCALLY",
+      "evidence": [
+        "git cat-file -t <sha> did not resolve locally: fatal: git cat-file: could not get object info"
+      ]
+    }
+  ],
+  "timeline_cache": {
+    "exists": true,
+    "valid_json": true,
+    "record_count": 30,
+    "complete_count": 30,
+    "incomplete_count": 0,
+    "timeline_event_count": 231,
+    "cross_reference_event_count": 38,
+    "issue_key_mismatches": []
+  },
+  "summary": {
+    "repositories_configured": 10,
+    "repositories_with_valid_local_git_and_object_checks": 10,
+    "repositories_shallow": 0,
+    "repository_object_check_failures": 0,
+    "repositories_with_object_store_warnings": 1,
+    "verified_fix_records": 11,
+    "verified_fix_commits_found": 8,
+    "verified_fix_commits_reachable": 3,
+    "verified_fix_source_changes": 5,
+    "verified_fix_diffs_unavailable": 2,
+    "verified_fix_local_pr_references_found": 11,
+    "verified_fix_local_pr_source_diff_available_records": 3,
+    "verified_fix_local_pr_source_diff_unavailable_records": 8,
+    "verified_fix_classifications": {
+      "REQUIRES_MERGE_MAPPING": 5,
+      "REACHABLE_FROM_HEAD": 3,
+      "RECORDED_SHA_UNAVAILABLE_LOCALLY": 3
+    }
+  }
+}
