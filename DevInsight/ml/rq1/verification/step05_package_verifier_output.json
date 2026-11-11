@@ -1,0 +1,79 @@
+{
+  "assertion_count": 23,
+  "assertions": {
+    "all_negative_baseline_detects_no_positive_samples": true,
+    "all_required_evaluation_figures_exist": true,
+    "critical_scientific_limitations_are_explicit": true,
+    "dataset_and_split_checksums_match_all_prior_manifests": true,
+    "dataset_attribution_and_license_present": true,
+    "experiment_manifest_valid_and_consistent": true,
+    "feature_order_labels_and_release_assignments_unchanged": true,
+    "git_ignored_artifact_policy_is_documented_and_effective": true,
+    "metrics_and_model_artifacts_match_package_manifest": true,
+    "model_checksums_match_training_and_evaluation_provenance": true,
+    "no_tracked_or_staged_files_changed": true,
+    "proposal_alignment_and_implementation_status_documented": true,
+    "reproducibility_guide_references_existing_commands": true,
+    "runtime_environment_matches_recorded_manifest": true,
+    "saved_metrics_match_final_report_and_confusion_arithmetic": true,
+    "step1_evidence_and_validator_output_exist": true,
+    "step1_known_conflicting_vector_warning_is_preserved": true,
+    "step1_source_hash_release_schema_and_counts_verified": true,
+    "step2_independent_verifier_passes": true,
+    "step3_independent_verifier_passes": true,
+    "step4_independent_verifier_pass_is_recorded": true,
+    "step5_deliverables_contain_no_common_secret_patterns": true,
+    "training_and_evaluation_configurations_are_consistent": true
+  },
+  "git": {
+    "staged_changes": [],
+    "tracked_changes": []
+  },
+  "prerequisite_verifiers": {
+    "step1": {
+      "core_assertions_true": 10,
+      "known_conflicting_vector_warning": true,
+      "validator_exit": 0
+    },
+    "step2": {
+      "assertion_count": 17,
+      "status": "PASS"
+    },
+    "step3": {
+      "assertion_count": 16,
+      "status": "PASS"
+    },
+    "step4": {
+      "assertion_count": 25,
+      "evidence": "verified separately; Step 5 reads its report without rerunning its output-writing evaluator",
+      "status": "PASS"
+    }
+  },
+  "source_sha256": {
+    "metrics_json": "83c600cb0f6301ba37423f2dd1c1fd9d32e17df2540627f93de16c6f41857816",
+    "random_forest_model": "09d4d67e915b3025e1f5f52e294d22c3d74c900eec2df7635f5d2002912ec681",
+    "test_csv": "ca4c71b7b22f3efd1a32d52781df9ac7c5410bfeddf3da94dd78068cae8469b7",
+    "train_csv": "1767f58d2664adfeb2c62dee4f8b139852c8336810da7253ca617153985f7f0d",
+    "validation_csv": "9b4b765bda5a874e4ff59c7db095db2a2276fe34167c5e931d26d2c218bf70ad",
+    "workbook": "364ab30e660ba3d78644ac717d28bb224e03648f9ad06b42a3453daee2ae0c31",
+    "xgboost_model": "c6f1ebf8b78a34562cb6e90e20e4ec4be2ea6bc5f91466873beb5da59a3a4678"
+  },
+  "status": "PASS",
+  "test_results": {
+    "class_counts": {
+      "0": 459,
+      "1": 11
+    },
+    "figures_verified": [
+      "confusion_test.png",
+      "confusion_validation.png",
+      "precision_recall_test.png",
+      "precision_recall_validation.png",
+      "roc_test.png",
+      "roc_validation.png",
+      "test_model_comparison.png"
+    ],
+    "rows": 470,
+    "threshold": 0.5
+  }
+}
