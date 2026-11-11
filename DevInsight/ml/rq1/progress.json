@@ -1,0 +1,92 @@
+{
+  "project": "DevInsight RQ1 ML Development",
+  "updated_date": "2026-11-12",
+  "baseline_estimated_first_half_technical_completion_percent": 76,
+  "estimated_technical_completion_percent": 96,
+  "completion_note": "Planning estimate for the agreed first-half technical scope only. Steps 1–5 passed and their 4-, 4-, 5-, 4-, and 3-point planning weights were added. This is not a measure of model accuracy, full FYP completion, production readiness, or complete RQ1 research; the remaining four percentage points belong to separate first-half technical finalization work.",
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "Dataset Selection & Validation",
+      "weight_percentage_points": 4,
+      "status": "PASSED",
+      "actual_verification_result": "Downloaded and checksummed the CC BY 4.0 Zenodo 4625975 regenerated PROMISE/BPD workbook. Validated five versioned JEdit class-level sheets: 1247 rows total, consistent 8-column schemas with six numeric features, binary Defect labels with both classes, no missing values, no within-release full-record duplicates, and release overlap/duplicate/conflict risks documented. The cited Alhusain paper verifies that at least one source defect maps to faulty and zero defects to not-faulty. Proposed release-order design is jedit_4_1 training, jedit_4_2 validation, jedit_4_3 testing; no split or model was created.",
+      "evidence_report_path": "ml/rq1/verification/step01_verification_report.md",
+      "date": "2026-11-12",
+      "known_limitations": [
+        "Java class-level benchmark, not DevInsight's Python/Dart GitHub file-level target.",
+        "Release identifiers are ordered, but calendar release dates and label-observation windows were not independently verified.",
+        "The proposed jedit_4_3 holdout contains only 11 positive rows.",
+        "Cross-release class, feature-vector, and exact-record overlap exists; labels change across some releases.",
+        "One within-release conflicting feature-vector group occurs in jedit_4_0 and one in jedit_4_3; neither was altered.",
+        "The workbook does not retain underlying defect counts, issue links, or whether labels are cumulative/version-bounded."
+      ],
+      "next_permitted_action": "Step 1 complete; continue only to the explicitly requested next step."
+    },
+    {
+      "step_number": 2,
+      "name": "Preprocessing & Data Splitting",
+      "weight_percentage_points": 4,
+      "status": "PASSED",
+      "actual_verification_result": "Generated train/validation/test CSVs from jedit_4_1/jedit_4_2/jedit_4_3 without row removal, transformations, or random redistribution. Independent verifier passed all 17 assertions for source integrity, release assignments, class counts, schema, values, traceability, output hashes, overlap audits, and no model training/metrics.",
+      "evidence_report_path": "ml/rq1/verification/step02_verification_report.md",
+      "date": "2026-11-12",
+      "known_limitations": [
+        "Release-order split; calendar dates and label-observation windows are not verified.",
+        "The full test release contains only 11 positive labels.",
+        "Feature vectors repeat within and across partitions, including conflicting-label matches; matching vectors do not establish class identity.",
+        "The benchmark is Java class-level, not DevInsight's Python/Dart GitHub file corpus."
+      ],
+      "next_permitted_action": "Main Step 3 may begin only when explicitly requested. Use the fixed CSVs; keep jedit_4_3 as the primary test and report its predefined novel-vector cohort only as a diagnostic."
+    },
+    {
+      "step_number": 3,
+      "name": "Random Forest & XGBoost Training",
+      "weight_percentage_points": 5,
+      "status": "PASSED",
+      "actual_verification_result": "Trained fixed RandomForestClassifier and XGBClassifier using only the verified 197-row jedit_4_1 training CSV. Model artifacts were saved with provenance. The training verifier passed 16 assertions, including artifact loading/checksums, fitted classes/features, training class counts, training-only class weighting, fixed input hashes, finite bounded training probabilities, deterministic repeat-fit probabilities, and no held-out rows/metrics.",
+      "evidence_report_path": "ml/rq1/verification/step03_verification_report.md",
+      "date": "2026-11-12",
+      "known_limitations": [
+        "Java class-level benchmark, not DevInsight's Python/Dart GitHub file corpus.",
+        "Release-order split, not verified chronology; class prevalence shifts across releases.",
+        "Final test has only 11 positive rows and overlapping/conflicting feature vectors.",
+        "No validation/test prediction, model selection, or performance evaluation was performed."
+      ],
+      "next_permitted_action": "Main Step 4 may begin only when explicitly requested. Preserve the fixed test set and use a declared evaluation protocol; do not infer performance from training probabilities."
+    },
+    {
+      "step_number": 4,
+      "name": "Model Evaluation & Comparison",
+      "weight_percentage_points": 4,
+      "status": "PASSED",
+      "actual_verification_result": "Evaluated the frozen Random Forest and XGBoost artifacts plus a deterministic all-negative baseline at the predeclared 0.50 threshold on validation, full test, and the predefined novel-feature-vector diagnostic subset. The independent verifier passed 25 assertions, independently recomputed metrics, and confirmed a repeated evaluation matched. No retraining or test-based tuning/model selection occurred.",
+      "evidence_report_path": "ml/rq1/verification/step04_verification_report.md",
+      "date": "2026-11-12",
+      "known_limitations": [
+        "Java class-level benchmark, not Python/Dart GitHub files.",
+        "Release-order split, not verified chronology; test prevalence is 2.34% versus 38.07% in training.",
+        "Final test has only 11 positive examples and feature-vector overlap; positive precision is low at threshold 0.50.",
+        "Results are benchmark evaluation, not production performance or external repository generalization."
+      ],
+      "next_permitted_action": "Complete; preserve the evaluation protocol, results, predictions, and documented limitations."
+    },
+    {
+      "step_number": 5,
+      "name": "Final RQ1 Experiment Package",
+      "weight_percentage_points": 3,
+      "status": "PASSED",
+      "actual_verification_result": "Created the final experiment report, proposal alignment, reproducibility guide, experiment manifest, and independent package verifier. The Step 5 verifier passed all 23 assertions; Step 2, Step 3, and Step 4 verifiers passed 17, 16, and 25 assertions. The Step 1 validator exited successfully with the known documented conflicting-feature-vector warning. No new model artifact was trained or saved, and no tuning occurred; the Step 3 integrity verifier performed its documented deterministic repeat-fit check in memory.",
+      "evidence_report_path": "ml/rq1/verification/step05_verification_report.md",
+      "date": "2026-11-12",
+      "known_limitations": [
+        "Java class-level benchmark, not file-level data from the ten selected GitHub repositories.",
+        "Release-order split, not fully verified chronology; only 11 positive test rows and a strong prevalence shift.",
+        "Repeated/conflicting feature vectors and unknown defect-observation windows limit interpretation.",
+        "Test precision is low; neither model is production ready.",
+        "Raw workbook, processed CSVs, model artifacts, virtual environment, predictions, and figures are Git-ignored and must be obtained or regenerated."
+      ],
+      "next_permitted_action": "RQ1 preliminary ML development milestone is complete. Remaining four percentage points are separate first-half technical finalization work; do not infer full FYP completion, production readiness, or completed RQ1 research."
+    }
+  ]
+}

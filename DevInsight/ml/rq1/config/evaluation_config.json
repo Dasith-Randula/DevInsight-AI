@@ -1,0 +1,144 @@
+{
+  "config_version": 1,
+  "protocol_frozen_before_evaluation": true,
+  "dataset": "Regenerated PROMISE/BPD JEdit",
+  "prediction_unit": "Java class within a JEdit release",
+  "split_type": "release-order holdout; not a verified chronological split",
+  "feature_names": [
+    "CBO",
+    "DCC",
+    "ExportCoupling",
+    "ImportCoupling",
+    "NOM",
+    "WMC"
+  ],
+  "target_name": "Defect",
+  "positive_class": 1,
+  "primary_threshold": 0.5,
+  "threshold_selection": "Fixed before evaluation; no validation or test tuning.",
+  "models": [
+    "random_forest",
+    "xgboost",
+    "majority_class_baseline"
+  ],
+  "baseline": {
+    "name": "majority_class_baseline",
+    "definition": "Deterministically predict Defect=0 for every record; no fitting."
+  },
+  "evaluation_order": [
+    "validation",
+    "test",
+    "test_novel_feature_vectors_diagnostic"
+  ],
+  "releases": {
+    "training": "jedit_4_1",
+    "validation": "jedit_4_2",
+    "test": "jedit_4_3",
+    "diagnostic": "jedit_4_3"
+  },
+  "inputs": {
+    "training_csv": {
+      "path": "ml/rq1/datasets/processed/train.csv",
+      "sha256": "1767f58d2664adfeb2c62dee4f8b139852c8336810da7253ca617153985f7f0d"
+    },
+    "validation_csv": {
+      "path": "ml/rq1/datasets/processed/validation.csv",
+      "sha256": "9b4b765bda5a874e4ff59c7db095db2a2276fe34167c5e931d26d2c218bf70ad"
+    },
+    "test_csv": {
+      "path": "ml/rq1/datasets/processed/test.csv",
+      "sha256": "ca4c71b7b22f3efd1a32d52781df9ac7c5410bfeddf3da94dd78068cae8469b7"
+    },
+    "source_workbook": {
+      "path": "ml/rq1/datasets/raw/promise_regenerated_candidates.xlsx",
+      "sha256": "364ab30e660ba3d78644ac717d28bb224e03648f9ad06b42a3453daee2ae0c31"
+    },
+    "split_manifest": "ml/rq1/reports/step02_split_manifest.json",
+    "training_manifest": "ml/rq1/results/step03_training_manifest.json",
+    "model_artifacts": {
+      "random_forest": {
+        "path": "ml/rq1/models/random_forest.joblib",
+        "sha256": "09d4d67e915b3025e1f5f52e294d22c3d74c900eec2df7635f5d2002912ec681"
+      },
+      "xgboost": {
+        "path": "ml/rq1/models/xgboost.joblib",
+        "sha256": "c6f1ebf8b78a34562cb6e90e20e4ec4be2ea6bc5f91466873beb5da59a3a4678"
+      }
+    }
+  },
+  "expected_sample_counts": {
+    "train": {
+      "rows": 197,
+      "class_counts": {
+        "0": 122,
+        "1": 75
+      }
+    },
+    "validation": {
+      "rows": 225,
+      "class_counts": {
+        "0": 178,
+        "1": 47
+      }
+    },
+    "test": {
+      "rows": 470,
+      "class_counts": {
+        "0": 459,
+        "1": 11
+      }
+    },
+    "test_novel_feature_vectors_diagnostic": {
+      "rows": 366,
+      "class_counts": {
+        "0": 355,
+        "1": 11
+      }
+    }
+  },
+  "metric_policy": {
+    "confusion_matrix_order": [
+      [
+        "TN",
+        "FP"
+      ],
+      [
+        "FN",
+        "TP"
+      ]
+    ],
+    "precision_recall_f1_positive_label": 1,
+    "zero_division": 0,
+    "undefined_metric_serialization": null,
+    "roc_auc": "Calculated from positive-class scores when both target classes are present; otherwise null.",
+    "average_precision": "Reported as Average Precision; not described as accuracy.",
+    "trapezoidal_pr_auc": "Separately calculated by trapezoidal integration over the precision-recall curve.",
+    "recall_uncertainty": {
+      "method": "Wilson score interval",
+      "confidence_level": 0.95,
+      "interpretation": "Descriptive interval for the observed positive recall; not a generalization guarantee."
+    }
+  },
+  "diagnostic_subset": {
+    "definition": "Test rows whose exact six-feature vector is absent from both selected training and validation releases.",
+    "primary_test_unchanged": true,
+    "independent_test_claim": false
+  },
+  "outputs": {
+    "metrics_json": "ml/rq1/results/step04_evaluation_metrics.json",
+    "comparison_csv": "ml/rq1/results/step04_model_comparison.csv",
+    "predictions_csv": "ml/rq1/results/predictions/step04_predictions.csv",
+    "figures_directory": "ml/rq1/results/figures",
+    "evaluation_report": "ml/rq1/reports/step04_model_evaluation.md",
+    "verification_report": "ml/rq1/verification/step04_verification_report.md"
+  },
+  "evaluation_environment": {
+    "python": "3.14.2",
+    "numpy": "2.4.1",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.8.0",
+    "xgboost": "3.1.3",
+    "joblib": "1.5.3",
+    "matplotlib": "3.11.2"
+  }
+}
