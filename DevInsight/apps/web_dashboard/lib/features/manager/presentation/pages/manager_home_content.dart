@@ -30,11 +30,49 @@ class ManagerHomeView extends StatelessWidget {
         const SizedBox(height: 52),
         KeyedSubtree(
           key: data.currentProjectKey,
-          child: const DashboardSectionHeading(
-            label: 'Current project',
-            title: 'Start with the connected work.',
-            description:
-                'Repository details and signals below come from the connected GitHub snapshot. Missing values are shown as unavailable, not as zero.',
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              const heading = DashboardSectionHeading(
+                label: 'Current project',
+                title: 'Start with the connected work.',
+                description:
+                    'Repository details and signals below come from the connected GitHub snapshot. Missing values are shown as unavailable, not as zero.',
+              );
+              final Widget? action = data.repositories.length > 1
+                  ? TextButton.icon(
+                      onPressed: () =>
+                          data.onNavigate(ManagerDestination.projects),
+                      icon: const Icon(Icons.swap_horiz_rounded),
+                      label: const Text('Change project'),
+                    )
+                  : data.repositories.length == 1
+                  ? TextButton.icon(
+                      onPressed: data.onConnectRepository,
+                      icon: const Icon(Icons.add_link_rounded),
+                      label: const Text('Connect another repository'),
+                    )
+                  : null;
+              if (action == null) return heading;
+              if (constraints.maxWidth < 700) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    heading,
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: action,
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  const Expanded(child: heading),
+                  const SizedBox(width: 16),
+                  action,
+                ],
+              );
+            },
           ),
         ),
         const SizedBox(height: 18),
@@ -199,6 +237,7 @@ class _ManagerHomeIntroduction extends StatelessWidget {
                 description:
                     'A focused view of repository activity, open work, and collaboration signals to support better project decisions.',
                 tag: 'PROJECT MANAGER WORKSPACE',
+                animation: animation,
                 actions: [
                   FilledButton.icon(
                     onPressed: () =>

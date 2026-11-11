@@ -663,24 +663,27 @@ class DashboardGlassSurface extends StatelessWidget {
       borderRadius: BorderRadius.circular(borderRadius),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-        child: Container(
-          width: width,
-          padding: padding,
-          decoration: BoxDecoration(
-            color: colors.surfaceElevated.withValues(alpha: dark ? .86 : .74),
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: Border.all(
-              color: colors.border.withValues(alpha: dark ? .82 : .72),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: colors.shadow.withValues(alpha: dark ? .45 : .7),
-                blurRadius: 28,
-                offset: const Offset(0, 14),
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            width: width,
+            padding: padding,
+            decoration: BoxDecoration(
+              color: colors.surfaceElevated.withValues(alpha: dark ? .86 : .74),
+              borderRadius: BorderRadius.circular(borderRadius),
+              border: Border.all(
+                color: colors.border.withValues(alpha: dark ? .82 : .72),
               ),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: colors.shadow.withValues(alpha: dark ? .45 : .7),
+                  blurRadius: 28,
+                  offset: const Offset(0, 14),
+                ),
+              ],
+            ),
+            child: child,
           ),
-          child: child,
         ),
       ),
     );

@@ -393,83 +393,92 @@ class _ManagerHomePageState extends State<ManagerHomePage>
       showDashboardGlassDialog<void>(
         context: context,
         barrierLabel: 'Close profile menu',
-        builder: (dialogContext) => DashboardGlassSurface(
-          width: 340,
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
+        builder: (dialogContext) => ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(dialogContext).height,
+          ),
+          child: DashboardGlassSurface(
+            width: 340,
+            padding: const EdgeInsets.all(14),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  DashboardAvatar(name: _displayName(), size: 42),
-                  const SizedBox(width: 11),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _displayName(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: Theme.of(
-                              dialogContext,
-                            ).colorScheme.onSurface,
-                          ),
+                  Row(
+                    children: [
+                      DashboardAvatar(name: _displayName(), size: 42),
+                      const SizedBox(width: 11),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _displayName(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: Theme.of(
+                                  dialogContext,
+                                ).colorScheme.onSurface,
+                              ),
+                            ),
+                            Text(
+                              widget.profile.email?.trim().isNotEmpty == true
+                                  ? widget.profile.email!
+                                  : 'Email unavailable',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.plusJakartaSans(fontSize: 10),
+                            ),
+                          ],
                         ),
-                        Text(
-                          widget.profile.email?.trim().isNotEmpty == true
-                              ? widget.profile.email!
-                              : 'Email unavailable',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.plusJakartaSans(fontSize: 10),
-                        ),
-                      ],
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        tooltip: 'Close',
+                        icon: const Icon(Icons.close_rounded, size: 18),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: _ManagerRoleTag(
+                      role: _roleLabel(widget.profile.role),
                     ),
                   ),
-                  IconButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    tooltip: 'Close',
-                    icon: const Icon(Icons.close_rounded, size: 18),
+                  const Divider(height: 20),
+                  _ProfileMenuItem(
+                    icon: Icons.person_outline_rounded,
+                    label: 'Account details',
+                    onTap: () {
+                      Navigator.of(dialogContext).pop();
+                      _showProfileDetails();
+                    },
+                  ),
+                  _ProfileMenuItem(
+                    icon: Icons.settings_outlined,
+                    label: 'Settings',
+                    onTap: () {
+                      Navigator.of(dialogContext).pop();
+                      _selectDestination(ManagerDestination.settings);
+                    },
+                  ),
+                  _ProfileMenuItem(
+                    icon: Icons.logout_rounded,
+                    label: 'Sign out',
+                    color: const Color(0xFFCE4242),
+                    onTap: () {
+                      Navigator.of(dialogContext).pop();
+                      _signOut();
+                    },
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: _ManagerRoleTag(role: _roleLabel(widget.profile.role)),
-              ),
-              const Divider(height: 20),
-              _ProfileMenuItem(
-                icon: Icons.person_outline_rounded,
-                label: 'Account details',
-                onTap: () {
-                  Navigator.of(dialogContext).pop();
-                  _showProfileDetails();
-                },
-              ),
-              _ProfileMenuItem(
-                icon: Icons.settings_outlined,
-                label: 'Settings',
-                onTap: () {
-                  Navigator.of(dialogContext).pop();
-                  _selectDestination(ManagerDestination.settings);
-                },
-              ),
-              _ProfileMenuItem(
-                icon: Icons.logout_rounded,
-                label: 'Sign out',
-                color: const Color(0xFFCE4242),
-                onTap: () {
-                  Navigator.of(dialogContext).pop();
-                  _signOut();
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ),

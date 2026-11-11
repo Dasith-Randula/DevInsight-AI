@@ -19,6 +19,15 @@ class ManagerProjectsView extends StatelessWidget {
               'Select a repository to set the active project context across this Manager workspace. Details and comparisons use only returned GitHub data.',
         ),
         _ConnectionError(data: data),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: data.loading ? null : data.onConnectRepository,
+            icon: const Icon(Icons.add_link_rounded),
+            label: const Text('Connect repository'),
+          ),
+        ),
+        const SizedBox(height: 18),
         Row(
           children: [
             const Expanded(
@@ -53,13 +62,6 @@ class ManagerProjectsView extends StatelessWidget {
             description:
                 data.error ??
                 'Connect a public GitHub repository to start a shared project workspace. No sample projects are shown.',
-            action: data.loading
-                ? null
-                : FilledButton.icon(
-                    onPressed: data.onConnectRepository,
-                    icon: const Icon(Icons.add_link_rounded),
-                    label: const Text('Connect repository'),
-                  ),
           )
         else
           for (final (index, repository) in data.repositories.indexed)

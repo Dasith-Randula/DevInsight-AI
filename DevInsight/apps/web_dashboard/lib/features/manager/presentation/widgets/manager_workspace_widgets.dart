@@ -5,6 +5,7 @@ class _ManagerHero extends StatelessWidget {
     required this.title,
     required this.description,
     required this.tag,
+    required this.animation,
     required this.actions,
     required this.greeting,
     required this.role,
@@ -13,6 +14,7 @@ class _ManagerHero extends StatelessWidget {
   final String title;
   final String description;
   final String tag;
+  final Animation<double> animation;
   final List<Widget> actions;
   final String greeting;
   final String role;
@@ -128,7 +130,7 @@ class _ManagerHero extends StatelessWidget {
             children: [
               Expanded(child: content),
               const SizedBox(width: 30),
-              const _HeroOrbit(),
+              _HeroOrbit(animation: animation),
             ],
           );
         },
@@ -138,56 +140,102 @@ class _ManagerHero extends StatelessWidget {
 }
 
 class _HeroOrbit extends StatelessWidget {
-  const _HeroOrbit();
+  const _HeroOrbit({required this.animation});
+
+  final Animation<double> animation;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 210,
-      height: 210,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          for (final size in [196.0, 145.0, 92.0])
-            Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withValues(alpha: .24)),
-              ),
-            ),
-          Container(
-            width: 62,
-            height: 62,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: .16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withValues(alpha: .14),
-                  blurRadius: 22,
+    return AnimatedBuilder(
+      animation: animation,
+      child: const Icon(
+        Icons.account_tree_rounded,
+        color: Colors.white,
+        size: 28,
+      ),
+      builder: (context, icon) {
+        final progress = animation.value;
+        final phase = progress * 2 * math.pi;
+        final pulse = (math.sin(phase) + 1) / 2;
+        final ringSizes = [196.0, 145.0, 92.0];
+        final ringSpeeds = [1.0, -0.72, 0.48];
+
+        return Transform.translate(
+          offset: Offset(0, math.sin(phase) * 2),
+          child: SizedBox(
+            width: 210,
+            height: 210,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                for (final (index, size) in ringSizes.indexed)
+                  Transform.rotate(
+                    angle: phase * ringSpeeds[index],
+                    child: Transform.scale(
+                      scaleY: .97,
+                      child: Container(
+                        width: size,
+                        height: size,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: .24),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                for (final (index, orbit) in [
+                  (phase, 80.0),
+                  (-phase + 1.4, 58.0),
+                ].indexed)
+                  Transform.translate(
+                    offset: Offset(
+                      math.cos(orbit.$1) * orbit.$2,
+                      math.sin(orbit.$1) * orbit.$2,
+                    ),
+                    child: Container(
+                      width: index == 0 ? 10 : 8,
+                      height: index == 0 ? 10 : 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: index == 0
+                            ? const Color(0xFF9FF4FF)
+                            : const Color(0xFFB4D6FF),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (index == 0
+                                    ? const Color(0xFF9FF4FF)
+                                    : const Color(0xFFB4D6FF))
+                                .withValues(alpha: .72),
+                            blurRadius: 12,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                Container(
+                  width: 62,
+                  height: 62,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withValues(alpha: .16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withValues(
+                          alpha: .1 + pulse * .08,
+                        ),
+                        blurRadius: 18 + pulse * 8,
+                      ),
+                    ],
+                  ),
+                  child: icon,
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.account_tree_rounded,
-              color: Colors.white,
-              size: 28,
-            ),
           ),
-          const Positioned(
-            top: 24,
-            right: 27,
-            child: Icon(Icons.circle, size: 10, color: Color(0xFF9FF4FF)),
-          ),
-          const Positioned(
-            bottom: 35,
-            left: 18,
-            child: Icon(Icons.circle, size: 8, color: Color(0xFFB4D6FF)),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

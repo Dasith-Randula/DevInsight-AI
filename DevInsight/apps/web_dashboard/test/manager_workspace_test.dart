@@ -83,6 +83,9 @@ void main() {
       await tester.tap(find.byKey(ValueKey(key)));
       await tester.pump(const Duration(milliseconds: 100));
       expect(find.text(heading), findsOneWidget);
+      if (key == 'manager-nav-projects') {
+        expect(find.text('Connect repository'), findsOneWidget);
+      }
       expect(tester.takeException(), isNull);
     }
     await tester.pump(const Duration(milliseconds: 250));
@@ -110,6 +113,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('manager-nav-projects')));
     await tester.pump(const Duration(milliseconds: 100));
     expect(find.text('Every connected repository, in view.'), findsOneWidget);
+    expect(find.text('Connect repository'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pump(const Duration(milliseconds: 250));
   });
