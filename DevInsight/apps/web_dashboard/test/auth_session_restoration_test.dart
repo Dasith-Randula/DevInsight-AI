@@ -6,6 +6,7 @@ import 'package:web_dashboard/core/services/connectivity_service.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
 import 'package:web_dashboard/core/theme/theme_controller.dart';
 import 'package:web_dashboard/features/auth/presentation/pages/auth_destination_page.dart';
+import 'package:web_dashboard/features/manager/presentation/pages/manager_home_page.dart';
 import 'package:web_dashboard/features/onboarding/presentation/pages/onboarding_flow_page.dart';
 
 class _OnlineConnectivityService extends ConnectivityService {
@@ -107,7 +108,8 @@ void main() {
       await startApp(tester, auth, initialRoute: '/auth');
 
       expect(auth.restoreCalls, 1);
-      expect(find.text('Project Manager Home'), findsOneWidget);
+      expect(find.byType(ManagerHomePage), findsOneWidget);
+      expect(find.text('Project clarity starts here.'), findsOneWidget);
     },
   );
 

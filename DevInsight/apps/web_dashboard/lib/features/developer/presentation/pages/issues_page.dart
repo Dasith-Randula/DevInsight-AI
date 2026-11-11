@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
+import 'package:web_dashboard/core/theme/app_theme_extension.dart';
 import 'package:web_dashboard/features/developer/presentation/widgets/dashboard_page_widgets.dart';
 
 enum _IssueFilter { all, open, closed }
@@ -154,8 +155,12 @@ class _IssuesPageState extends State<IssuesPage> {
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .72),
-                  border: Border.all(color: dashboardRule),
+                  color: context.appTheme.surfaceElevated.withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? .92
+                        : .72,
+                  ),
+                  border: Border.all(color: context.appTheme.border),
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Column(
@@ -237,7 +242,8 @@ class _IssuesPageState extends State<IssuesPage> {
                           : widget.error != null
                           ? 'Issue data unavailable'
                           : 'Issue summary is not available',
-                      description: widget.error ??
+                      description:
+                          widget.error ??
                           'Issue rows are drawn from real GitHub repository data. No sample records are inserted.',
                     );
                   }

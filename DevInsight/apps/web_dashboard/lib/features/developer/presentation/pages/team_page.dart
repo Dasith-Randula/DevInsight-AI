@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:web_dashboard/core/services/devinsight_api.dart';
+import 'package:web_dashboard/core/theme/app_theme_extension.dart';
 import 'package:web_dashboard/features/developer/presentation/widgets/dashboard_page_widgets.dart';
 
 class TeamPage extends StatelessWidget {
@@ -50,7 +51,8 @@ class TeamPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(26),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEAF3FF),
+                  color: context.appTheme.surfaceElevated,
+                  border: Border.all(color: context.appTheme.border),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Column(
